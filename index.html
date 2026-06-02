@@ -54,9 +54,9 @@
         .perf-tab { background:transparent; color:#64748b; border-color:#e2e8f0; cursor:pointer; }
         .perf-tab:hover { background:#f1f5f9; }
         .perf-tab-active { background:#1e3a5f !important; color:#fff !important; border-color:#1e3a5f !important; }
-        .term { border-bottom:1.5px dashed #c9a84c; cursor:help; position:relative; display:inline; }
-        .term::after { content:attr(data-tooltip); position:absolute; bottom:125%; left:50%; transform:translateX(-50%); background:#1e3a5f; color:#fff; padding:7px 13px; border-radius:9px; font-size:12px; font-weight:500; line-height:1.5; width:max-content; max-width:260px; white-space:normal; opacity:0; pointer-events:none; transition:opacity 0.18s; z-index:9999; box-shadow:0 4px 20px rgba(0,0,0,0.28); font-family:'Outfit',sans-serif !important; }
-        .term:hover::after { opacity:1; }
+        .term-icon { display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px; background:#c9a84c; color:#1e3a5f; border-radius:50%; font-size:8px; font-weight:900; margin-left:3px; cursor:help; position:relative; vertical-align:super; line-height:1; flex-shrink:0; font-family:'Outfit',sans-serif !important; }
+        .term-icon::after { content:attr(data-tooltip); position:absolute; bottom:150%; left:50%; transform:translateX(-50%); background:#1e3a5f; color:#fff; padding:8px 14px; border-radius:10px; font-size:12px; font-weight:500; line-height:1.5; width:max-content; max-width:260px; white-space:normal; opacity:0; pointer-events:none; transition:opacity 0.18s; z-index:9999; box-shadow:0 4px 20px rgba(0,0,0,0.28); font-family:'Outfit',sans-serif !important; }
+        .term-icon:hover::after { opacity:1; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-900 font-sans h-screen flex flex-col md:flex-row overflow-hidden">
@@ -1528,7 +1528,7 @@
             acceptNode: function (n) {
                 var tag = (n.parentNode || {}).tagName || '';
                 if (/^(SCRIPT|STYLE|NOSCRIPT)$/.test(tag)) return NodeFilter.FILTER_REJECT;
-                if ((n.parentNode.className || '').indexOf('term') > -1) return NodeFilter.FILTER_REJECT;
+                if ((n.parentNode.className || '').indexOf('term-icon') > -1) return NodeFilter.FILTER_REJECT;
                 return rTest.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
             }
         }, false);
@@ -1540,7 +1540,7 @@
         nodes.forEach(function (node) {
             var html = node.nodeValue.replace(rReplace, function (match) {
                 var def = (TERMS[match] || '').replace(/"/g, '&quot;');
-                return '<span class="term" data-term="' + match + '" data-tooltip="' + def + '">' + match + '</span>';
+                return match + '<span class="term-icon" data-term="' + match + '" data-tooltip="' + def + '">?</span>';
             });
             if (html !== node.nodeValue) {
                 var wrap = document.createElement('span');
@@ -1552,11 +1552,11 @@
 
     // Tooltip hover events
     document.addEventListener('mouseover', function (e) {
-        var el = e.target.closest && e.target.closest('.term');
+        var el = e.target.closest && e.target.closest('.term-icon');
         if (el) { el._hs = Date.now(); t('tooltip_start', { term: el.dataset.term }); }
     });
     document.addEventListener('mouseout', function (e) {
-        var el = e.target.closest && e.target.closest('.term');
+        var el = e.target.closest && e.target.closest('.term-icon');
         if (el && el._hs) {
             var dur = Date.now() - el._hs;
             t('tooltip_hover', { term: el.dataset.term, ms: dur, read: dur > 2000 });
