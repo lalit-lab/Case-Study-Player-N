@@ -1379,7 +1379,9 @@
     function sendSheet(event, extra) {
         var payload = JSON.stringify({ cid: cid, event: event, extra: extra || {}, visit: visits, url: location.pathname });
         try {
-            fetch(SHEET_URL, { method: 'POST', body: payload }).catch(function(){});
+            var form = new FormData();
+            form.append('data', payload);
+            fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: form }).catch(function(){});
         } catch(e) {}
     }
 
