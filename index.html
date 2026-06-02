@@ -1353,5 +1353,100 @@
         blurInversionImages();
     };
 </script>
+
+<script>
+// ── TRACKING ─────────────────────────────────────────────────────
+(function () {
+    // Per-user ID: send links as ?cid=rahul, ?cid=priya etc.
+    var p = new URLSearchParams(location.search);
+    var cid = p.get('cid') || localStorage.getItem('_cid') || 'anon_' + Math.random().toString(36).slice(2, 8);
+    if (p.get('cid')) localStorage.setItem('_cid', cid);
+
+    function t(event, extra) {
+        window.clarity && clarity('event', event);
+        if (extra) window.clarity && clarity('set', event + '_meta', JSON.stringify(extra).slice(0, 200));
+    }
+
+    // Identity
+    window.clarity && clarity('set', 'user_id', cid);
+    t('session_start');
+
+    // Patch tab navigation
+    var _nav = window.navigate;
+    window.navigate = function (tabId) { t('tab_' + tabId); _nav(tabId); };
+
+    // Patch sub-tab navigation (Performance Matrix)
+    var _navPerf = window.navigatePerf;
+    window.navigatePerf = function (tabId) { t('subtab_' + tabId); _navPerf(tabId); };
+
+    // Patch Intel cross-link
+    var _navEvidence = window.navigateToEvidence;
+    window.navigateToEvidence = function (target) { t('intel_crosslink', { target: target }); _navEvidence(target); };
+
+    // Patch sidebar toggle
+    var _sidebar = window.toggleSidebar;
+    window.toggleSidebar = function () {
+        var hidden = document.getElementById('sidebar').style.minWidth === '0px';
+        t('sidebar_' + (hidden ? 'open' : 'close'));
+        _sidebar();
+    };
+
+    // Video tracking
+    document.querySelectorAll('video').forEach(function (video) {
+        var src = (video.querySelector('source') || {}).src || '';
+        var clip = src.split('/').pop().replace('.mp4', '') || 'unknown';
+        var milestones = [25, 50, 75, 95];
+        var plays = 0;
+
+        video.addEventListener('play',  function () { plays++; t('video_play',  { clip: clip, replay: plays > 1 }); });
+        video.addEventListener('pause', function () {
+            var pct = video.duration ? Math.round(video.currentTime / video.duration * 100) : 0;
+            t('video_pause', { clip: clip, pct: pct });
+        });
+        video.addEventListener('ended', function () { t('video_ended', { clip: clip }); });
+        video.addEventListener('timeupdate', function () {
+            if (!video.duration) return;
+            var pct = Math.floor(video.currentTime / video.duration * 100);
+            milestones = milestones.filter(function (m) {
+                if (pct >= m) { t('video_' + m + 'pct', { clip: clip }); return false; }
+                return true;
+            });
+        });
+    });
+
+    // Print signal (highest intent)
+    window.addEventListener('beforeprint', function () { t('print'); });
+
+    // Copy signal (what they verified)
+    document.addEventListener('copy', function () {
+        var sel = window.getSelection ? window.getSelection().toString().trim().slice(0, 100) : '';
+        t('copy', { text: sel });
+    });
+
+    // Tab focus loss > 30s (pulled in a colleague, or went to research)
+    var hiddenAt = null;
+    document.addEventListener('visibilitychange', function () {
+        if (document.hidden) { hiddenAt = Date.now(); }
+        else if (hiddenAt) {
+            var away = Date.now() - hiddenAt;
+            if (away > 30000) t('focus_return', { away_s: Math.round(away / 1000) });
+            hiddenAt = null;
+        }
+    });
+
+    // Rage click (3+ clicks within 50px / 1s = expected-clickable but isn't)
+    var clicks = [];
+    document.addEventListener('click', function (e) {
+        var now = Date.now();
+        clicks.push({ x: e.clientX, y: e.clientY, t: now });
+        clicks = clicks.filter(function (c) { return now - c.t < 1000; });
+        var nearby = clicks.filter(function (c) { return Math.abs(c.x - e.clientX) < 50 && Math.abs(c.y - e.clientY) < 50; });
+        if (nearby.length >= 3) t('rage_click', { x: Math.round(e.clientX), y: Math.round(e.clientY) });
+    });
+
+    window.__cid = cid;
+})();
+// ── END TRACKING ──────────────────────────────────────────────────
+</script>
 </body>
 </html>
