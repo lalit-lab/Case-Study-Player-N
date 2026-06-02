@@ -54,6 +54,9 @@
         .perf-tab { background:transparent; color:#64748b; border-color:#e2e8f0; cursor:pointer; }
         .perf-tab:hover { background:#f1f5f9; }
         .perf-tab-active { background:#1e3a5f !important; color:#fff !important; border-color:#1e3a5f !important; }
+        .term { border-bottom:1.5px dashed #c9a84c; cursor:help; position:relative; display:inline; }
+        .term::after { content:attr(data-tooltip); position:absolute; bottom:125%; left:50%; transform:translateX(-50%); background:#1e3a5f; color:#fff; padding:7px 13px; border-radius:9px; font-size:12px; font-weight:500; line-height:1.5; width:max-content; max-width:260px; white-space:normal; opacity:0; pointer-events:none; transition:opacity 0.18s; z-index:9999; box-shadow:0 4px 20px rgba(0,0,0,0.28); font-family:'Outfit',sans-serif !important; }
+        .term:hover::after { opacity:1; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-900 font-sans h-screen flex flex-col md:flex-row overflow-hidden">
@@ -92,9 +95,15 @@
         </button>
     </nav>
 
-    <div class="p-6 border-t border-slate-100 bg-slate-50">
-        <div class="text-sm text-slate-500 font-mono uppercase tracking-widest mb-1">Powered by</div>
+    <div class="p-6 border-t border-slate-100 bg-slate-50 space-y-4">
+        <a id="cta-book" href="mailto:lalitrajput876587@gmail.com?subject=Consultation%20Request%20%E2%80%94%20Player%20N%20Integrity%20Dossier"
+           style="display:block;width:100%;text-align:center;background:#1e3a5f;color:#c9a84c;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;font-size:13px;padding:12px 16px;border-radius:14px;text-decoration:none;box-shadow:0 4px 16px rgba(30,58,95,0.3);transition:opacity 0.2s;"
+           onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
+            <i class="fa-solid fa-calendar-check" style="margin-right:8px;"></i> Book a Consultation
+        </a>
+        <div class="text-sm text-slate-500 font-mono uppercase tracking-widest">Powered by</div>
         <div class="im-logo text-lg uppercase">Integrity Mentors</div>
+        <div style="font-size:10px;color:#94a3b8;font-family:monospace;line-height:1.4;">This page is privately shared and use is logged for product improvement.</div>
     </div>
 </aside>
 
@@ -1357,33 +1366,49 @@
 <script>
 // ── TRACKING ─────────────────────────────────────────────────────
 (function () {
-    // Per-user ID: send links as ?cid=rahul, ?cid=priya etc.
+
+    // ── USER ID & SESSION COUNT ──────────────────────────────────
     var p = new URLSearchParams(location.search);
     var cid = p.get('cid') || localStorage.getItem('_cid') || 'anon_' + Math.random().toString(36).slice(2, 8);
     if (p.get('cid')) localStorage.setItem('_cid', cid);
+    var visits = parseInt(localStorage.getItem('_visits') || '0') + 1;
+    localStorage.setItem('_visits', String(visits));
 
     function t(event, extra) {
-        window.clarity && clarity('event', event);
-        if (extra) window.clarity && clarity('set', event + '_meta', JSON.stringify(extra).slice(0, 200));
+        if (!window.clarity) return;
+        clarity('event', event);
+        if (extra) clarity('set', event + '_d', JSON.stringify(extra).slice(0, 200));
     }
 
-    // Identity
-    window.clarity && clarity('set', 'user_id', cid);
-    t('session_start');
+    clarity('set', 'user_id', cid);
+    clarity('set', 'visit_count', String(visits));
+    t('session_start', { cid: cid, visit: visits, returning: visits > 1 });
 
-    // Patch tab navigation
+    // ── TAB TRACKING (switch + dwell + bounce + order) ───────────
+    var currentTab = null, tabEnterTime = null, visitOrder = [];
     var _nav = window.navigate;
-    window.navigate = function (tabId) { t('tab_' + tabId); _nav(tabId); };
+    window.navigate = function (tabId) {
+        var now = Date.now();
+        if (currentTab && tabEnterTime) {
+            var dwell = now - tabEnterTime;
+            t('tab_dwell', { tab: currentTab, ms: dwell });
+            if (dwell < 5000) t('tab_bounce', { tab: currentTab, ms: dwell });
+        }
+        visitOrder.push(tabId);
+        t('tab_' + tabId, { order: visitOrder.join('→'), n: visitOrder.length });
+        currentTab = tabId; tabEnterTime = now;
+        _nav(tabId);
+    };
 
-    // Patch sub-tab navigation (Performance Matrix)
+    // ── SUB-TAB (Performance Matrix) ─────────────────────────────
     var _navPerf = window.navigatePerf;
     window.navigatePerf = function (tabId) { t('subtab_' + tabId); _navPerf(tabId); };
 
-    // Patch Intel cross-link
+    // ── INTEL CROSS-LINK ─────────────────────────────────────────
     var _navEvidence = window.navigateToEvidence;
     window.navigateToEvidence = function (target) { t('intel_crosslink', { target: target }); _navEvidence(target); };
 
-    // Patch sidebar toggle
+    // ── SIDEBAR ──────────────────────────────────────────────────
     var _sidebar = window.toggleSidebar;
     window.toggleSidebar = function () {
         var hidden = document.getElementById('sidebar').style.minWidth === '0px';
@@ -1391,14 +1416,12 @@
         _sidebar();
     };
 
-    // Video tracking
+    // ── VIDEO ────────────────────────────────────────────────────
     document.querySelectorAll('video').forEach(function (video) {
         var src = (video.querySelector('source') || {}).src || '';
         var clip = src.split('/').pop().replace('.mp4', '') || 'unknown';
-        var milestones = [25, 50, 75, 95];
-        var plays = 0;
-
-        video.addEventListener('play',  function () { plays++; t('video_play',  { clip: clip, replay: plays > 1 }); });
+        var milestones = [25, 50, 75, 95], plays = 0;
+        video.addEventListener('play',  function () { plays++; t('video_play', { clip: clip, replay: plays > 1 }); });
         video.addEventListener('pause', function () {
             var pct = video.duration ? Math.round(video.currentTime / video.duration * 100) : 0;
             t('video_pause', { clip: clip, pct: pct });
@@ -1414,16 +1437,22 @@
         });
     });
 
-    // Print signal (highest intent)
+    // ── CTA CLICK ────────────────────────────────────────────────
+    document.addEventListener('click', function (e) {
+        var el = e.target.closest && e.target.closest('#cta-book, a[href^="mailto"]');
+        if (el) t('cta_click', { href: (el.getAttribute('href') || '').slice(0, 80) });
+    });
+
+    // ── PRINT ────────────────────────────────────────────────────
     window.addEventListener('beforeprint', function () { t('print'); });
 
-    // Copy signal (what they verified)
+    // ── COPY ─────────────────────────────────────────────────────
     document.addEventListener('copy', function () {
         var sel = window.getSelection ? window.getSelection().toString().trim().slice(0, 100) : '';
         t('copy', { text: sel });
     });
 
-    // Tab focus loss > 30s (pulled in a colleague, or went to research)
+    // ── TAB FOCUS LOSS > 30s ─────────────────────────────────────
     var hiddenAt = null;
     document.addEventListener('visibilitychange', function () {
         if (document.hidden) { hiddenAt = Date.now(); }
@@ -1434,7 +1463,27 @@
         }
     });
 
-    // Rage click (3+ clicks within 50px / 1s = expected-clickable but isn't)
+    // ── IDLE > 60s (tab visible but no interaction) ──────────────
+    var idleTimer;
+    function resetIdle() {
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(function () { if (!document.hidden) t('idle_60s'); }, 60000);
+    }
+    ['mousemove', 'keydown', 'scroll', 'click'].forEach(function (ev) {
+        document.addEventListener(ev, resetIdle, { passive: true });
+    });
+    resetIdle();
+
+    // ── WINDOW RESIZE (layout doesn't fit) ───────────────────────
+    var resizeTimer;
+    window.addEventListener('resize', function () {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function () {
+            t('window_resize', { w: window.innerWidth, h: window.innerHeight });
+        }, 500);
+    });
+
+    // ── RAGE CLICK ───────────────────────────────────────────────
     var clicks = [];
     document.addEventListener('click', function (e) {
         var now = Date.now();
@@ -1443,6 +1492,86 @@
         var nearby = clicks.filter(function (c) { return Math.abs(c.x - e.clientX) < 50 && Math.abs(c.y - e.clientY) < 50; });
         if (nearby.length >= 3) t('rage_click', { x: Math.round(e.clientX), y: Math.round(e.clientY) });
     });
+
+    // ── DEAD CLICK (clicked but nothing happened) ────────────────
+    document.addEventListener('click', function (e) {
+        var el = e.target, interactive = false, check = el;
+        while (check && check !== document.body) {
+            if (check.onclick || check.getAttribute('onclick') ||
+                ['A','BUTTON','INPUT','SELECT','TEXTAREA','VIDEO','LABEL'].indexOf((check.tagName || '')) > -1) {
+                interactive = true; break;
+            }
+            check = check.parentElement;
+        }
+        if (!interactive) t('dead_click', { tag: el.tagName, x: Math.round(e.clientX), y: Math.round(e.clientY) });
+    }, true);
+
+    // ── TOOLTIP SYSTEM + HOVER TRACKING ──────────────────────────
+    var TERMS = {
+        'Kill Line': 'Over/under kills market. Line drops before a map = informed money expecting under-performance.',
+        'Fluctuations': 'A change in the betting line before or during a match. Sharp drops signal informed market positioning.',
+        'HLTV': 'HLTV.org — the leading CS2 statistics and news platform, used here as an OSINT source.',
+        'OSINT': 'Open Source Intelligence — publicly available information gathered for investigative purposes.',
+        'IEM': 'Intel Extreme Masters — a premier CS2 tournament series organised by ESL.',
+        'Rating': 'HLTV Rating 2.0. Score of 1.00 = average player. Player N career Ancient rating: 1.19.',
+        'KDR': 'Kill/Death Ratio. Career average for Player N: 1.18. Map 3 actual: 0.38 (–68%).',
+        'KPR': 'Kills Per Round — offensive output per round. Map 3 was 56% of Player N career baseline.',
+        'ADR': 'Average Damage per Round. Map 3 actual was only 39% of Player N career baseline.',
+        'DPR': 'Deaths Per Round. Higher = dying more. Map 3 was 109% of baseline — dying above normal rate.'
+    };
+
+    function wrapTerms(root) {
+        var keys = Object.keys(TERMS);
+        var escaped = keys.map(function (k) { return k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); });
+        var rTest = new RegExp('(' + escaped.join('|') + ')');
+        var rReplace = new RegExp('(' + escaped.join('|') + ')', 'g');
+
+        var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+            acceptNode: function (n) {
+                var tag = (n.parentNode || {}).tagName || '';
+                if (/^(SCRIPT|STYLE|NOSCRIPT)$/.test(tag)) return NodeFilter.FILTER_REJECT;
+                if ((n.parentNode.className || '').indexOf('term') > -1) return NodeFilter.FILTER_REJECT;
+                return rTest.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+            }
+        }, false);
+
+        var nodes = [];
+        var n;
+        while ((n = walker.nextNode())) nodes.push(n);
+
+        nodes.forEach(function (node) {
+            var html = node.nodeValue.replace(rReplace, function (match) {
+                var def = (TERMS[match] || '').replace(/"/g, '&quot;');
+                return '<span class="term" data-term="' + match + '" data-tooltip="' + def + '">' + match + '</span>';
+            });
+            if (html !== node.nodeValue) {
+                var wrap = document.createElement('span');
+                wrap.innerHTML = html;
+                node.parentNode.replaceChild(wrap, node);
+            }
+        });
+    }
+
+    // Tooltip hover events
+    document.addEventListener('mouseover', function (e) {
+        var el = e.target.closest && e.target.closest('.term');
+        if (el) { el._hs = Date.now(); t('tooltip_start', { term: el.dataset.term }); }
+    });
+    document.addEventListener('mouseout', function (e) {
+        var el = e.target.closest && e.target.closest('.term');
+        if (el && el._hs) {
+            var dur = Date.now() - el._hs;
+            t('tooltip_hover', { term: el.dataset.term, ms: dur, read: dur > 2000 });
+            el._hs = null;
+        }
+    });
+
+    // Run term wrapping after full DOM load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () { wrapTerms(document.body); });
+    } else {
+        setTimeout(function () { wrapTerms(document.body); }, 100);
+    }
 
     window.__cid = cid;
 })();
