@@ -1379,8 +1379,7 @@
     function sendSheet(event, extra) {
         var payload = JSON.stringify({ cid: cid, event: event, extra: extra || {}, visit: visits, url: location.pathname });
         try {
-            if (navigator.sendBeacon) { navigator.sendBeacon(SHEET_URL, payload); }
-            else { fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: payload }).catch(function(){}); }
+            fetch(SHEET_URL, { method: 'POST', body: payload }).catch(function(){});
         } catch(e) {}
     }
 
