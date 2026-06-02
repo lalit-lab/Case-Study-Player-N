@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Integrity Mentors — Dashboard</title>
+<style>
+*{font-family:'Segoe UI',sans-serif;margin:0;padding:0;box-sizing:border-box}
+body{background:#0f172a;color:#e2e8f0;min-height:100vh}
+.hdr{background:#1e3a5f;padding:16px 24px;border-bottom:3px solid #c9a84c;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.hdr h1{color:#c9a84c;font-size:17px;font-weight:900}
+.hdr .sub{font-size:11px;color:#64748b;margin-top:2px}
+.ctrl{padding:12px 24px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:#1e293b;border-bottom:1px solid #334155}
+select{background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:8px;padding:6px 10px;font-size:12px}
+.btn{background:#1e3a5f;color:#c9a84c;font-weight:800;cursor:pointer;border:1px solid #c9a84c;border-radius:8px;padding:6px 14px;font-size:12px}
+.btn:hover{background:#c9a84c;color:#1e3a5f}
+.btn.danger{background:#7f1d1d;color:#fca5a5;border-color:#ef4444}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;padding:14px 24px}
+.stat{background:#1e293b;border-radius:10px;padding:12px 14px;border:1px solid #334155}
+.stat .n{font-size:26px;font-weight:900;color:#c9a84c;line-height:1}
+.stat .l{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-top:3px}
+.wrap{padding:0 24px 40px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:1100px}
+thead th{background:#1e3a5f;color:#c9a84c;padding:8px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;position:sticky;top:52px}
+tbody tr{border-bottom:1px solid #1e293b}
+tbody tr:hover{background:#1e293b}
+td{padding:6px 10px;vertical-align:middle}
+.badge{display:inline-block;padding:2px 6px;border-radius:99px;font-size:10px;font-weight:700}
+.s{background:#dcfce7;color:#166534}.t{background:#dbeafe;color:#1e40af}
+.v{background:#fce7f3;color:#9d174d}.c{background:#fef9ee;color:#92400e}
+.f{background:#fef2f2;color:#991b1b}.tt{background:#fffbeb;color:#92400e}
+.o{background:#1e293b;color:#94a3b8}
+.row-cta{background:rgba(201,168,76,.12)!important}
+.row-fr{background:rgba(220,38,38,.08)!important}
+.mono{font-family:monospace;font-size:10px;background:#0f172a;padding:1px 5px;border-radius:4px;color:#93c5fd}
+.empty{text-align:center;padding:60px;color:#475569;font-size:14px}
+.section-hdr{padding:16px 24px 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748b;border-top:1px solid #1e293b;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div><h1>📊 Integrity Mentors — Tracking Dashboard</h1><div class="sub">Player N Dossier · Live Data</div></div>
+  <div style="display:flex;gap:6px;align-items:center">
+    <span id="ts" style="font-size:11px;color:#475569"></span>
+    <button class="btn" onclick="load()">↻ Refresh</button>
+    <button class="btn" onclick="dlCSV()">⬇ CSV</button>
+    <button class="btn danger" onclick="clearAll()">🗑 Clear</button>
+  </div>
+</div>
+
+<div class="ctrl">
+  <select id="fu" onchange="render()"><option value="">All Users</option></select>
+  <select id="fc" onchange="render()">
+    <option value="">All Events</option>
+    <option value="Session">Session</option>
+    <option value="Tab">Tab</option>
+    <option value="Video">Video</option>
+    <option value="Tooltip">Tooltip</option>
+    <option value="CTA">CTA</option>
+    <option value="Print">Print</option>
+    <option value="Copy">Copy</option>
+    <option value="Friction">Friction</option>
+    <option value="Attention">Attention</option>
+  </select>
+  <span id="cnt" style="font-size:11px;color:#64748b"></span>
+  <button class="btn" style="margin-left:auto" onclick="toggleAuto()" id="autoBtn">⏸ Auto-refresh ON</button>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<div class="section-hdr">Per-User Summary</div>
+<div id="userCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;padding:0 24px 16px"></div>
+
+<div class="section-hdr">All Events</div>
+<div class="wrap">
+<table>
+<thead><tr>
+  <th>Time</th><th>User</th><th>V#</th><th>Return?</th><th>Category</th><th>Event</th>
+  <th>Tab</th><th>Tab Path</th><th>Dwell s</th><th>Bounce</th><th>Sub-tab</th>
+  <th>Clip</th><th>Watch%</th><th>Replay</th><th>Ended</th>
+  <th>Term</th><th>HoverMs</th><th>Read?</th>
+  <th>CTA</th><th>Print</th><th>Copy</th><th>Away s</th><th>Idle</th>
+  <th>Rage</th><th>Dead</th><th>Screen</th>
+</tr></thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+
+<script>
+var ALL=[], timer, autoOn=true;
+
+function cat(ev){
+  if(!ev)return['Other','o'];
+  if(ev==='session_start')return['Session','s'];
+  if(ev.indexOf('tab_')===0)return['Tab','t'];
+  if(ev.indexOf('subtab_')===0)return['Sub-tab','t'];
+  if(ev.indexOf('video_')===0)return['Video','v'];
+  if(ev.indexOf('tooltip')>-1)return['Tooltip','tt'];
+  if(ev==='cta_click')return['CTA','c'];
+  if(ev==='print')return['Print','c'];
+  if(ev==='copy')return['Copy','c'];
+  if(ev==='rage_click'||ev==='dead_click')return['Friction','f'];
+  if(ev==='focus_return'||ev==='idle_60s')return['Attention','o'];
+  if(ev.indexOf('sidebar')>-1)return['Sidebar','o'];
+  return['Other','o'];
+}
+
+function se(s){return (''+(s||'')).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function render(){
+  var fu=document.getElementById('fu').value;
+  var fc=document.getElementById('fc').value;
+  var evs=ALL.filter(function(r){
+    if(fu&&r.cid!==fu)return false;
+    if(fc&&cat(r.event)[0].indexOf(fc)===-1)return false;
+    return true;
+  }).slice().reverse();
+
+  document.getElementById('cnt').textContent='Showing '+evs.length+' / '+ALL.length;
+
+  // Stats
+  var users=[...new Set(ALL.map(function(r){return r.cid}))];
+  var ctas=ALL.filter(function(r){return r.event==='cta_click'}).length;
+  var prints=ALL.filter(function(r){return r.event==='print'}).length;
+  var vends=ALL.filter(function(r){return r.event==='video_ended'}).length;
+  var sessions=ALL.filter(function(r){return r.event==='session_start'}).length;
+  document.getElementById('stats').innerHTML=
+    stat(ALL.length,'Total Events')+stat(users.length,'Users')+
+    stat(sessions,'Sessions')+statC(ctas,'CTA Clicks','#22c55e')+
+    statC(prints,'Prints','#f59e0b')+statC(vends,'Videos Done','#3b82f6');
+
+  // User dropdown
+  var sel=document.getElementById('fu'),cur=sel.value;
+  sel.innerHTML='<option value="">All Users ('+users.length+')</option>';
+  users.forEach(function(u){
+    var o=document.createElement('option');
+    o.value=u;o.textContent=u;if(u===cur)o.selected=true;sel.appendChild(o);
+  });
+
+  // Per-user cards
+  var cards='';
+  users.forEach(function(u){
+    var ue=ALL.filter(function(r){return r.cid===u});
+    var tabs=[...new Set(ue.filter(function(r){return r.event&&r.event.indexOf('tab_')===0}).map(function(r){return r.event.replace('tab_','')}))];
+    var ctaClick=ue.some(function(r){return r.event==='cta_click'});
+    var printEv=ue.some(function(r){return r.event==='print'});
+    var vcount=ue.filter(function(r){return r.event==='video_play'}).length;
+    var visits=ue.filter(function(r){return r.event==='session_start'}).length;
+    var lastSeen=ue.length?ue[ue.length-1].ts:'';
+    var interest=ctaClick?'HIGH':tabs.length>=3?'MEDIUM':'LOW';
+    var icolor=ctaClick?'#22c55e':tabs.length>=3?'#f59e0b':'#ef4444';
+    cards+='<div style="background:#1e293b;border-radius:12px;padding:16px;border:1px solid #334155">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
+      '<b style="font-size:15px">'+se(u)+'</b>'+
+      '<span style="background:'+icolor+'22;color:'+icolor+';padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700">'+interest+'</span>'+
+      '</div>'+
+      '<div style="font-size:11px;color:#64748b;display:grid;grid-template-columns:1fr 1fr;gap:4px">'+
+      '<span>Sessions: <b style="color:#e2e8f0">'+visits+'</b></span>'+
+      '<span>Tabs visited: <b style="color:#e2e8f0">'+tabs.length+'</b></span>'+
+      '<span>Videos played: <b style="color:#e2e8f0">'+vcount+'</b></span>'+
+      '<span>CTA click: <b style="color:'+(ctaClick?'#22c55e':'#ef4444')+'">'+( ctaClick?'YES':'NO')+'</b></span>'+
+      '<span>Print: <b style="color:'+(printEv?'#f59e0b':'#94a3b8')+'">'+( printEv?'YES':'no')+'</b></span>'+
+      '<span style="grid-column:span 2">Tabs: <b style="color:#93c5fd">'+tabs.join(' → ')+'</b></span>'+
+      '<span style="grid-column:span 2;color:#475569">Last seen: '+(lastSeen?lastSeen.replace('T',' ').slice(0,16):'')+'</span>'+
+      '</div></div>';
+  });
+  document.getElementById('userCards').innerHTML=cards||'<div style="color:#475569;padding:20px">No users yet</div>';
+
+  // Table
+  if(!evs.length){
+    document.getElementById('tbody').innerHTML='<tr><td colspan="26" class="empty">No events yet — open the dossier link: ?cid=yourname</td></tr>';
+    return;
+  }
+  var html='';
+  evs.forEach(function(r){
+    var x=r.extra||{};
+    var ct=cat(r.event);
+    var pm=(r.event||'').match(/video_(\d+)pct/);
+    var rc=r.event==='cta_click'||r.event==='print'?'row-cta':r.event==='rage_click'||r.event==='tab_bounce'?'row-fr':'';
+    var ts=(r.ts||'').replace('T',' ').slice(0,19);
+    html+='<tr class="'+rc+'">'+
+      '<td style="white-space:nowrap;color:#64748b">'+se(ts)+'</td>'+
+      '<td><b>'+se(r.cid||'anon')+'</b></td>'+
+      '<td style="text-align:center;color:#64748b">'+se(r.visit||'')+'</td>'+
+      '<td style="text-align:center">'+(r.visit>1?'✓':'')+'</td>'+
+      '<td><span class="badge '+ct[1]+'">'+ct[0]+'</span></td>'+
+      '<td><span class="mono">'+se(r.event||'')+'</span></td>'+
+      '<td>'+se(x.tab||'')+'</td>'+
+      '<td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;color:#64748b;font-size:10px">'+se(x.order||'')+'</td>'+
+      '<td style="text-align:center">'+(x.ms?(x.ms/1000).toFixed(1):'')+'</td>'+
+      '<td style="text-align:center">'+(r.event==='tab_bounce'?'⚠️':'')+'</td>'+
+      '<td>'+(r.event&&r.event.indexOf('subtab_')===0?se(r.event.replace('subtab_','')):'')+'</td>'+
+      '<td>'+se(x.clip||'')+'</td>'+
+      '<td style="text-align:center">'+(pm?pm[1]+'%':(x.pct?x.pct+'%':''))+'</td>'+
+      '<td style="text-align:center">'+(x.replay?'🔁':'')+'</td>'+
+      '<td style="text-align:center">'+(r.event==='video_ended'?'✅':'')+'</td>'+
+      '<td>'+se(x.term||'')+'</td>'+
+      '<td style="text-align:center">'+((r.event||'').indexOf('tooltip')>-1&&x.ms?x.ms:'')+'</td>'+
+      '<td style="text-align:center">'+(x.read?'Yes':'')+'</td>'+
+      '<td style="text-align:center;color:#22c55e;font-weight:700">'+(r.event==='cta_click'?'YES':'')+'</td>'+
+      '<td style="text-align:center;color:#f59e0b;font-weight:700">'+(r.event==='print'?'YES':'')+'</td>'+
+      '<td style="max-width:100px;overflow:hidden;text-overflow:ellipsis">'+se(x.text||'')+'</td>'+
+      '<td style="text-align:center">'+se(x.away_s||'')+'</td>'+
+      '<td style="text-align:center">'+(r.event==='idle_60s'?'⏱':'')+'</td>'+
+      '<td style="text-align:center">'+(r.event==='rage_click'?'⚠️':'')+'</td>'+
+      '<td style="text-align:center">'+(r.event==='dead_click'?'✗':'')+'</td>'+
+      '<td style="font-size:10px;color:#475569">'+(x.w&&x.h?x.w+'×'+x.h:'')+'</td>'+
+      '</tr>';
+  });
+  document.getElementById('tbody').innerHTML=html;
+}
+
+function stat(n,l){return '<div class="stat"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>';}
+function statC(n,l,c){return '<div class="stat"><div class="n" style="color:'+c+'">'+n+'</div><div class="l">'+l+'</div></div>';}
+
+function load(){
+  fetch('./events.asp').then(function(r){return r.json()}).then(function(d){
+    ALL=d; render();
+    document.getElementById('ts').textContent='Updated: '+new Date().toLocaleTimeString();
+  }).catch(function(e){
+    document.getElementById('ts').textContent='Error loading data';
+  });
+}
+
+function toggleAuto(){
+  autoOn=!autoOn;
+  document.getElementById('autoBtn').textContent=(autoOn?'⏸ Auto-refresh ON':'▶ Auto-refresh OFF');
+  if(autoOn)startTimer(); else clearInterval(timer);
+}
+function startTimer(){ timer=setInterval(load,20000); }
+
+function clearAll(){
+  if(!confirm('All events delete ho jayenge. Sure?'))return;
+  fetch('./events.asp',{method:'POST'}).then(function(){ALL=[];render();});
+}
+
+function dlCSV(){
+  var h='Timestamp,User,Visit,Returning,Event,Tab,TabOrder,DwellSec,Bounce,SubTab,VideoClip,WatchPct,Replay,VideoEnded,TooltipTerm,HoverMs,ReadCarefully,CTAClick,Print,CopyText,AwaySec,Idle,RageClick,DeadClick,ScreenW,ScreenH';
+  var rows=ALL.map(function(r){
+    var x=r.extra||{},pm=(r.event||'').match(/video_(\d+)pct/);
+    return [
+      (r.ts||'').replace('T',' ').slice(0,19),r.cid||'anon',r.visit||'',r.visit>1?'Yes':'No',r.event||'',
+      x.tab||'',x.order||'',x.ms?(x.ms/1000).toFixed(1):'',
+      r.event==='tab_bounce'?'YES':'',
+      r.event&&r.event.indexOf('subtab_')===0?r.event.replace('subtab_',''):'',
+      x.clip||'',pm?pm[1]+'%':(x.pct?x.pct+'%':''),
+      x.replay?'Yes':'',r.event==='video_ended'?'Yes':'',x.term||'',
+      (r.event||'').indexOf('tooltip')>-1&&x.ms?x.ms:'',x.read?'Yes':'',
+      r.event==='cta_click'?'YES':'',r.event==='print'?'YES':'',
+      (x.text||'').replace(/,/g,' '),x.away_s||'',
+      r.event==='idle_60s'?'YES':'',r.event==='rage_click'?'YES':'',r.event==='dead_click'?'YES':'',
+      x.w||'',x.h||''
+    ].map(function(v){return '"'+(v+'').replace(/"/g,'""')+'"'}).join(',');
+  });
+  var a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h].concat(rows).join('\n'));
+  a.download='player-n-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+load();
+startTimer();
+</script>
+</body>
+</html>
