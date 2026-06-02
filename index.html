@@ -1374,10 +1374,22 @@
     var visits = parseInt(localStorage.getItem('_visits') || '0') + 1;
     localStorage.setItem('_visits', String(visits));
 
+    var SHEET_URL = 'https://script.google.com/macros/s/AKfycbx0iaInLQWZNmByuPpbtrj0rTxDStpruRLGdLg0TvVzgUea6PelPSxW9nzvZfdNMldGfw/exec';
+
+    function sendSheet(event, extra) {
+        var payload = JSON.stringify({ cid: cid, event: event, extra: extra || {}, visit: visits, url: location.pathname });
+        try {
+            if (navigator.sendBeacon) { navigator.sendBeacon(SHEET_URL, payload); }
+            else { fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: payload }).catch(function(){}); }
+        } catch(e) {}
+    }
+
     function t(event, extra) {
-        if (!window.clarity) return;
-        clarity('event', event);
-        if (extra) clarity('set', event + '_d', JSON.stringify(extra).slice(0, 200));
+        if (window.clarity) {
+            clarity('event', event);
+            if (extra) clarity('set', event + '_d', JSON.stringify(extra).slice(0, 200));
+        }
+        sendSheet(event, extra);
     }
 
     clarity('set', 'user_id', cid);
