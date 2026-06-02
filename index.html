@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAP | Integrity Dossier</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        sentinel: '#f8fafc',
+                        brand: '#1e3a5f',
+                        gold: '#c9a84c',
+                        anomaly: '#dc2626',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .chart-container { position:relative; width:100%; max-width:none; margin:0 auto; height:360px; }
+        .nav-link.active { background-color:#1e3a5f; color:white; box-shadow:0 4px 14px -2px rgba(30,58,95,0.35); }
+        .glass-card { background:rgba(255,255,255,0.95); backdrop-filter:blur(10px); border:1px solid rgba(226,232,240,0.8); }
+        .profile-player-card > div:first-child { display:none; }
+        .no-scrollbar::-webkit-scrollbar { display:none; }
+        .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
+        .tournament-table th { background:#1e3a5f; color:#c9a84c; font-size:13px; text-transform:uppercase; letter-spacing:0.1em; padding:14px 32px; }
+        .tournament-table tr.flagged td { background:#fef2f2; color:#dc2626; font-weight:700; }
+        .im-logo { font-weight:800; color:#c9a84c; letter-spacing:-0.5px; }
+        @keyframes loading { 0%{transform:translateX(-100%)} 100%{transform:translateX(300%)} }
+        @keyframes fade-in { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        .animate-fade-in { animation:fade-in 0.5s ease-out forwards; }
+        * { font-family: 'Outfit', sans-serif !important; }
+        .fa-solid, .fa-regular, .fa-brands, .fa-light, .fa-thin { font-family: 'Font Awesome 6 Free' !important; }
+        .desc-clamp { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .perf-tab { background:transparent; color:#64748b; border-color:#e2e8f0; cursor:pointer; }
+        .perf-tab:hover { background:#f1f5f9; }
+        .perf-tab-active { background:#1e3a5f !important; color:#fff !important; border-color:#1e3a5f !important; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-900 font-sans h-screen flex flex-col md:flex-row overflow-hidden">
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside id="sidebar" class="w-full md:w-72 bg-white border-r border-slate-200 flex flex-col z-40 flex-shrink-0" style="transition:min-width 0.3s ease,width 0.3s ease,opacity 0.3s ease;">
+    <div class="h-1 flex-shrink-0" style="background:linear-gradient(90deg,#c9a84c 0%,#f0d080 50%,#c9a84c 100%);"></div>
+    <div class="p-8 border-b border-slate-100 bg-brand">
+        <div class="flex items-center justify-between text-white mb-1">
+            <div class="flex items-center space-x-2">
+                <span class="text-2xl font-black tracking-tighter">Multilayer Analysis Platform</span>
+                <!-- <span class="text-xs bg-white/10 border border-white/20 text-white/80 px-2 py-0.5 rounded font-mono font-bold">INTEL</span> -->
+            </div>
+            <button onclick="toggleSidebar()" title="Hide panel" style="background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.7);padding:6px 10px;border-radius:8px;cursor:pointer;font-size:14px;">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+        </div>
+        <div class="text-xs text-white/70 font-bold uppercase tracking-widest">Case ID: 095-N</div>
+    </div>
+
+    <nav class="flex-1 p-4 space-y-2 overflow-y-auto no-scrollbar">
+        <button onclick="navigate('profile')" id="btn-profile" class="nav-link active w-full flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all">
+            <i class="fa-solid fa-user-shield mr-3 opacity-70"></i> Player Profile
+        </button>
+        <button onclick="navigate('market')" id="btn-market" class="nav-link w-full flex items-center px-4 py-3 text-sm font-semibold text-slate-500 hover:bg-slate-50 rounded-xl transition-all">
+            <i class="fa-solid fa-money-bill-trend-up mr-3 opacity-70"></i> Betting Market
+        </button>
+        <button onclick="navigate('perf')" id="btn-perf" class="nav-link w-full flex items-center px-4 py-3 text-sm font-semibold text-slate-500 hover:bg-slate-50 rounded-xl transition-all">
+            <i class="fa-solid fa-gauge-high mr-3 opacity-70"></i> Performance Matrix
+        </button>
+        <button onclick="navigate('intel')" id="btn-intel" class="nav-link w-full flex items-center px-4 py-3 text-sm font-semibold text-slate-500 hover:bg-slate-50 rounded-xl transition-all">
+            <i class="fa-solid fa-satellite-dish mr-3 opacity-70"></i> Intel
+        </button>
+        <button onclick="navigate('vault')" id="btn-vault" class="nav-link w-full flex items-center px-4 py-3 text-sm font-semibold text-slate-500 hover:bg-slate-50 rounded-xl transition-all">
+            <i class="fa-solid fa-clapperboard mr-3 opacity-70"></i> Action Analysis
+        </button>
+    </nav>
+
+    <div class="p-6 border-t border-slate-100 bg-slate-50">
+        <div class="text-sm text-slate-500 font-mono uppercase tracking-widest mb-1">Powered by</div>
+        <div class="im-logo text-lg uppercase">Integrity Mentors</div>
+    </div>
+</aside>
+
+<main class="flex-1 overflow-y-auto no-scrollbar relative">
+
+<div id="sidebar-topbar" style="display:none;position:sticky;top:0;left:0;z-index:100;height:52px;background:#f1f5f9;border-bottom:1px solid rgba(203,213,225,0.9);padding:0 16px;align-items:center;flex-shrink:0;">
+    <button onclick="toggleSidebar()" title="Show panel" style="background:#1e3a5f;color:#c9a84c;border:none;padding:8px 14px;border-radius:10px;cursor:pointer;font-size:15px;box-shadow:0 4px 16px rgba(30,58,95,0.35);">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+</div>
+
+<!-- ═══════════════════════════════ PLAYER PROFILE ═══════════════════════════════ -->
+<section id="view-profile" class="view block p-8 md:p-14 animate-fade-in">
+    <div class="flex flex-col gap-10">
+
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="space-y-3">
+                <h1 class="text-6xl md:text-7xl font-extrabold text-brand tracking-tight leading-none">Player Profile</h1>
+                <p class="text-slate-400 text-2xl font-semibold tracking-wide">IEM Chengdu 2025</p>
+            </div>
+            <div class="profile-player-card glass-card p-8 rounded-3xl shadow-sm border-l-4 border-gold flex items-center space-x-6" style="min-width:360px;">
+                <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-5xl flex-shrink-0">👤</div>
+                <div>
+                    <div class="text-2xl font-bold text-brand">Player N</div>
+                    <div class="text-sm text-slate-400 font-mono uppercase mt-1">Pos 1/5 • Team Rank ##</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tournament Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6" style="flex:1;">
+            <div class="glass-card rounded-3xl border border-blue-100 flex flex-col overflow-hidden shadow-sm">
+                <div class="h-2 flex-shrink-0" style="background:linear-gradient(90deg,#1e3a5f,#0f2340);"></div>
+                <div class="p-10 flex-1 flex flex-col justify-between">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="text-brand text-4xl"><i class="fa-solid fa-trophy"></i></div>
+                        <span style="background:#eff6ff;color:#1e3a5f;font-size:13px;font-weight:900;padding:5px 14px;border-radius:99px;">GROUP A UPPER</span>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-brand mb-2">Competition</h3>
+                        <p class="text-base text-slate-400">IEM Chengdu 2025 · Match X - Best of 3</p>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card rounded-3xl border border-amber-100 flex flex-col overflow-hidden shadow-sm">
+                <div class="h-2 flex-shrink-0" style="background:linear-gradient(90deg,#c9a84c,#9a7a2c);"></div>
+                <div class="p-10 flex-1 flex flex-col justify-between">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="text-gold text-4xl"><i class="fa-solid fa-flag"></i></div>
+                        <span style="background:#fef9ee;color:#c9a84c;border:1px solid rgba(201,168,76,0.4);font-size:13px;font-weight:900;padding:5px 14px;border-radius:99px;">MAP 3</span>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-brand mb-2">Flagged Match</h3>
+                        <p class="text-base text-slate-400">Group A Upper Bracket Quarter-Final</p>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card rounded-3xl border border-red-100 flex flex-col overflow-hidden shadow-sm">
+                <div class="h-2 flex-shrink-0" style="background:linear-gradient(90deg,#dc2626,#991b1b);"></div>
+                <div class="p-10 flex-1 flex flex-col justify-between">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="text-anomaly text-4xl"><i class="fa-solid fa-circle-xmark"></i></div>
+                        <span style="background:#fef2f2;color:#dc2626;font-size:13px;font-weight:900;padding:5px 14px;border-radius:99px;">2-1</span>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-brand mb-2">Match Outcome</h3>
+                        <p class="text-base text-slate-400">Series Lost (2-1)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6" style="flex:1;">
+            <div class="glass-card rounded-3xl border border-blue-100 flex flex-col overflow-hidden shadow-sm">
+                <div class="h-2 flex-shrink-0" style="background:linear-gradient(90deg,#1e3a5f,#0f2340);"></div>
+                <div class="p-10 flex-1 flex flex-col justify-between">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="text-brand text-4xl"><i class="fa-solid fa-scale-unbalanced"></i></div>
+                        <span style="background:#eff6ff;color:#1e3a5f;font-size:13px;font-weight:900;padding:5px 14px;border-radius:99px;">−2.0 pts</span>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-brand mb-2">Odds movement</h3>
+                        <p class="text-base text-slate-400">15.5 → 13.5 drop at 10 minutes before Map 3 start</p>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card rounded-3xl border border-amber-100 flex flex-col overflow-hidden shadow-sm">
+                <div class="h-2 flex-shrink-0" style="background:linear-gradient(90deg,#c9a84c,#9a7a2c);"></div>
+                <div class="p-10 flex-1 flex flex-col justify-between">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="text-gold text-4xl"><i class="fa-solid fa-rotate"></i></div>
+                        <span style="background:#fef9ee;color:#c9a84c;border:1px solid rgba(201,168,76,0.4);font-size:13px;font-weight:900;padding:5px 14px;border-radius:99px;">Map2 -- 1.11 <br/>Map3 -- 1.19</span>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-brand mb-2">Performance matrix</h3>
+                        <p class="text-base text-slate-400">Dominant on weakest map (map2-inferno). Poor performance on strongest map (map3-ancient).</p>
+                    </div>
+                </div>
+            </div>
+            <div onclick="navigateToEvidence('hltv')" class="glass-card rounded-3xl border border-red-100 flex flex-col overflow-hidden shadow-sm cursor-pointer hover:bg-slate-50 transition-colors">
+                <div class="h-2 flex-shrink-0" style="background:linear-gradient(90deg,#dc2626,#991b1b);"></div>
+                <div class="p-10 flex-1 flex flex-col justify-between">
+                    <div class="flex items-start justify-between mb-6">
+                        <div class="text-anomaly text-4xl"><i class="fa-solid fa-arrow-trend-down"></i></div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-brand mb-2">Intel</h3>
+                        <p class="text-base text-slate-400">Match start - comment on HLTV site.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ═══════════════════════════════ BETTING MARKET ═══════════════════════════════ -->
+<section id="view-market" class="view hidden p-6 md:p-12 space-y-12 animate-fade-in">
+    <div class="w-full">
+        <div class="mb-10">
+            <h2 class="text-4xl font-extrabold text-brand mb-1">Market Odds</h2>
+            <p class="text-slate-700 text-base leading-relaxed max-w-3xl">The kill line for Map 3 dropped 2.0 points after Map 2 completion — from 15.5 to 13.5 at 14:21:08.</p>
+        </div>
+
+        <div class="mb-12">
+            <div class="p-8 rounded-[2.5rem] mb-6" style="background:#f1f5f9;">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-sm font-bold text-slate-700 uppercase tracking-widest">Player N's Kill Line Drift</h3>
+                    <div class="text-sm font-mono text-anomaly font-bold border border-anomaly/20 bg-red-50 px-3 py-1 rounded-full">MAP 3 — 2.0 PT DROP</div>
+                </div>
+                <div class="chart-container" style="height:400px;"><canvas id="marketChart"></canvas></div>
+            </div>
+            <div class="hidden flex flex-col gap-6">
+                <div class="glass-card rounded-3xl overflow-hidden shadow-sm">
+                    <div style="background:linear-gradient(135deg,#dc2626 0%,#991b1b 100%);" class="px-8 py-5 flex items-center justify-between">
+                        <div class="text-xs font-bold text-white/70 uppercase tracking-widest">Map2</div>
+                        <i class="fa-solid fa-arrow-trend-down text-white/50 text-base"></i>
+                    </div>
+                    <div class="p-8">
+                        <div class="text-5xl font-black text-anomaly mb-3 tracking-tighter">1.0 PTS</div>
+                        <p class="text-sm text-slate-500 leading-relaxed font-mono italic">"A sharp line drop between maps, after a strong Map 1, is a known signal of informed positioning."</p>
+                    </div>
+                </div>
+                <div class="glass-card rounded-3xl overflow-hidden shadow-sm">
+                    <div style="background:linear-gradient(135deg,#1e3a5f 0%,#0f2340 100%);" class="px-8 py-5 flex items-center justify-between">
+                        <div class="text-xs font-bold text-white/70 uppercase tracking-widest">Trigger Window</div>
+                        <i class="fa-solid fa-clock text-white/50 text-base"></i>
+                    </div>
+                    <div class="p-8">
+                        <div class="text-3xl font-black text-brand mb-1 tracking-tighter">15 Min Before Map 2</div>
+                        <div class="text-xs text-slate-400 font-mono uppercase tracking-tight font-bold mb-4">Post Map 1 · Pre Map 2</div>
+                        <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px;" class="px-4 py-2 text-center">
+                            <span class="text-anomaly text-xs font-black uppercase tracking-widest"> </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+            <div class="glass-card rounded-3xl overflow-hidden shadow-sm">
+                <div style="background:linear-gradient(135deg,#1e3a5f 0%,#0f2340 100%);" class="px-8 py-5 flex items-center justify-between">
+                    <div class="text-xs font-bold text-white/70 uppercase tracking-widest">Map1</div>
+                    <i class="fa-solid fa-minus text-white/50 text-base"></i>
+                </div>
+                <div class="p-8">
+                    <div class="grid grid-cols-1 gap-3">
+                        <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:16px;" class="p-4">
+                            <div class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Map Name</div>
+                            <div class="text-sm font-black text-brand">Dust2</div>
+                        </div>
+                        <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:16px;" class="p-4">
+                            <div class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Odds</div>
+                            <div class="text-sm font-black text-brand">13.5</div>
+                        </div>
+                        <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:16px;" class="p-4">
+                            <div class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Fluctuation</div>
+                            <div class="text-sm font-black text-brand">No</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card rounded-3xl overflow-hidden shadow-sm">
+                <div style="background:linear-gradient(135deg,#dc2626 0%,#991b1b 100%);" class="px-8 py-5 flex items-center justify-between">
+                    <div class="text-xs font-bold text-white/70 uppercase tracking-widest">Map2</div>
+                    <i class="fa-solid fa-arrow-trend-down text-white/50 text-base"></i>
+                </div>
+                <div class="p-8">
+                    <div class="grid grid-cols-1 gap-3">
+                        <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:16px;" class="p-4">
+                            <div class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Map Name</div>
+                            <div class="text-sm font-black text-anomaly">Inferno</div>
+                        </div>
+                        <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:16px;" class="p-4">
+                            <div class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Odds</div>
+                            <div class="text-sm font-black text-anomaly">14.5 - 13.5</div>
+                        </div>
+                        <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:16px;" class="p-4">
+                            <div class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Drop</div>
+                            <div class="text-sm font-black text-anomaly">1.0 PTS</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card rounded-3xl overflow-hidden shadow-sm">
+                <div style="background:linear-gradient(135deg,#1e3a5f 0%,#0f2340 100%);" class="px-8 py-5 flex items-center justify-between">
+                    <div class="text-xs font-bold text-white/70 uppercase tracking-widest">Trigger Window</div>
+                    <i class="fa-solid fa-clock text-white/50 text-base"></i>
+                </div>
+                <div class="p-8">
+                    <div class="text-3xl font-black text-brand mb-1 tracking-tighter">T2-15 min</div>
+                    <div class="text-[15px] text-slate-400 font-mono uppercase tracking-tight font-bold mb-6">MAP 1 finished at 0131 hrs - 1 pt drop at 0135 hrs - MAP 2 started at 0149 hrs. <br /> Player N's good performance in MAP 1 should not initiate 1 point drop for MAP 2 kills.</div>
+                </div>
+            </div>
+        </div>
+        -->
+
+        <!--
+        <div class="glass-card rounded-[2.5rem] shadow-sm p-8 md:p-10 mb-12 border-l-4 border-gold">
+            <div class="space-y-4">
+                <div class="text-2xl md:text-3xl font-black text-brand tracking-tight">
+                    If kill line of a player increase -> Over Performance
+                </div>
+                <div class="text-2xl md:text-3xl font-black text-anomaly tracking-tight">
+                    If kill line of a player decrease -> Under performance
+                </div>
+            </div>
+        </div>
+        -->
+
+
+        <!-- Row 1: Map 1 + Map 2 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+
+            <!-- Map 1 - Overpass -->
+            <div class="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-8 py-6 flex flex-col items-center justify-center text-center" style="background:linear-gradient(135deg,#1e3a5f 0%,#0f2340 100%);">
+                    <h4 class="text-white font-black text-3xl leading-none">Map 1</h4>
+                    <div class="text-sm font-bold uppercase tracking-widest text-white/60 mt-1">Overpass</div>
+                </div>
+                <div>
+                    <table class="tournament-table w-full text-left">
+                        <thead>
+                            <tr>
+                                <th class="px-8">Player</th>
+                                <th class="px-8 text-center">Kill Line</th>
+                                <th class="px-8 text-center">Fluctuations</th>
+                                <th class="px-8 text-center">K-D</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm font-medium">
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-8 py-4 font-bold text-brand">N</td>
+                                <td class="px-8 py-4 text-center font-mono whitespace-nowrap">14.5</td>
+                                <td class="px-8 py-4 text-center text-slate-500 font-mono whitespace-nowrap">—</td>
+                                <td class="px-8 py-4 text-center font-black text-brand whitespace-nowrap">( 17 - 16 )</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-8 py-4 font-bold text-brand">A</td>
+                                <td class="px-8 py-4 text-center font-mono whitespace-nowrap">10.5</td>
+                                <td class="px-8 py-4 text-center text-slate-500 font-mono whitespace-nowrap">—</td>
+                                <td class="px-8 py-4 text-center font-black text-brand whitespace-nowrap">( 25 - 16 )</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-8 py-4 font-bold text-brand">B</td>
+                                <td class="px-8 py-4 text-center font-mono whitespace-nowrap">14.5</td>
+                                <td class="px-8 py-4 text-center text-slate-500 font-mono whitespace-nowrap">—</td>
+                                <td class="px-8 py-4 text-center font-black text-brand whitespace-nowrap">( 17 - 12 )</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-8 py-4 font-bold text-brand">C</td>
+                                <td class="px-8 py-4 text-center font-mono whitespace-nowrap">13.5</td>
+                                <td class="px-8 py-4 text-center text-slate-500 font-mono whitespace-nowrap">—</td>
+                                <td class="px-8 py-4 text-center font-black text-brand whitespace-nowrap">( 11 - 11 )</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-8 py-4 font-bold text-brand">D</td>
+                                <td class="px-8 py-4 text-center font-mono whitespace-nowrap">11.5</td>
+                                <td class="px-8 py-4 text-center text-slate-500 font-mono whitespace-nowrap">—</td>
+                                <td class="px-8 py-4 text-center font-black text-brand whitespace-nowrap">( 8 - 15 )</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Map 2 - Inferno -->
+            <div class="bg-white rounded-[2.5rem] border border-red-100 shadow-sm overflow-hidden">
+                <div class="px-8 py-6 flex flex-col items-center justify-center text-center" style="background:linear-gradient(135deg,#dc2626 0%,#991b1b 100%);">
+                    <h4 class="text-white font-black text-3xl leading-none">Map 2</h4>
+                    <div class="text-sm font-bold uppercase tracking-widest text-white/60 mt-1">Inferno</div>
+                </div>
+                <div>
+                    <table class="tournament-table w-full text-left">
+                        <thead>
+                            <tr>
+                                <th class="px-8">Player</th>
+                                <th class="px-8 text-center">Kill Line</th>
+                                <th class="px-8 text-center">Fluctuations</th>
+                                <th class="px-8 text-center">K-D</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm font-medium">
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-8 py-4 font-bold text-brand">N</td>
+                                <td class="px-8 py-4 text-center font-mono whitespace-nowrap">14.5</td>
+                                <td class="px-8 py-4 text-center text-slate-500 font-mono whitespace-nowrap">—</td>
+                                <td class="px-8 py-4 text-center font-black text-brand whitespace-nowrap">( 9 - 14 )</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-8 py-4 font-bold text-brand">A</td>
+                                <td class="px-8 py-4 text-center font-mono whitespace-nowrap">10.5</td>
+                                <td class="px-8 py-4 text-center text-slate-500 font-mono whitespace-nowrap">—</td>
+                                <td class="px-8 py-4 text-center font-black text-brand whitespace-nowrap">( 9 - 13 )</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-8 py-4 font-bold text-brand">B</td>
+                                <td class="px-8 py-4 text-center font-mono whitespace-nowrap">13.5</td>
+                                <td class="px-8 py-4 text-center text-slate-500 font-mono whitespace-nowrap">—</td>
+                                <td class="px-8 py-4 text-center font-black text-brand whitespace-nowrap">( 15 - 14 )</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-8 py-4 font-bold text-brand">C</td>
+                                <td class="px-8 py-4 text-center font-mono whitespace-nowrap">13.5 - 12.5</td>
+                                <td class="px-8 py-4 text-center font-mono text-slate-500">Before map2 start</td>
+                                <td class="px-8 py-4 text-center font-black text-brand whitespace-nowrap">( 9 - 16 )</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-8 py-4 font-bold text-brand">D</td>
+                                <td class="px-8 py-4 text-center font-mono whitespace-nowrap">11.5</td>
+                                <td class="px-8 py-4 text-center text-slate-500 font-mono whitespace-nowrap">—</td>
+                                <td class="px-8 py-4 text-center font-black text-brand whitespace-nowrap">( 3 - 18 )</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Row 2: Map 3 + ✦ Notes -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+
+            <!-- Map 3 - Ancient -->
+            <div class="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-8 py-6 flex flex-col items-center justify-center text-center" style="background:linear-gradient(135deg,#1e3a5f 0%,#0f2340 100%);">
+                    <h4 class="text-white font-black text-3xl leading-none">Map 3</h4>
+                    <div class="text-sm font-bold uppercase tracking-widest text-white/60 mt-1">Ancient</div>
+                </div>
+                <div>
+                    <table class="tournament-table w-full text-left">
+                        <thead>
+                            <tr>
+                                <th class="px-8">Player</th>
+                                <th class="px-8 text-center">Kill Line</th>
+                                <th class="px-8 text-center">Fluctuations</th>
+                                <th class="px-8 text-center">K-D</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm font-medium">
+                            <tr class="bg-red-50 hover:bg-red-100 transition-colors border-b border-red-100">
+                                <td class="px-8 py-4 font-bold text-anomaly">N</td>
+                                <td class="px-8 py-4 text-center font-mono text-anomaly font-bold whitespace-nowrap">15.5 - 13.5 - 14.5</td>
+                                <td class="px-8 py-4 text-center font-mono text-anomaly font-bold">10 Min Before Map 3 Start</td>
+                                <td class="px-8 py-4 text-center font-black text-anomaly whitespace-nowrap">( 5 - 13 )</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-8 py-4 font-bold text-brand">A</td>
+                                <td class="px-8 py-4 text-center font-mono whitespace-nowrap">11.5</td>
+                                <td class="px-8 py-4 text-center text-slate-500 font-mono whitespace-nowrap">—</td>
+                                <td class="px-8 py-4 text-center font-black text-brand whitespace-nowrap">( 9 - 16 )</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-8 py-4 font-bold text-brand">B</td>
+                                <td class="px-8 py-4 text-center font-mono whitespace-nowrap">14.5</td>
+                                <td class="px-8 py-4 text-center text-slate-500 font-mono whitespace-nowrap">—</td>
+                                <td class="px-8 py-4 text-center font-black text-brand whitespace-nowrap">( 8 - 16 )</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-8 py-4 font-bold text-brand">C</td>
+                                <td class="px-8 py-4 text-center font-mono whitespace-nowrap">13.5 - 12.5</td>
+                                <td class="px-8 py-4 text-center text-slate-500 font-mono whitespace-nowrap">—</td>
+                                <td class="px-8 py-4 text-center font-black text-brand whitespace-nowrap">( 10 - 14 )</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-8 py-4 font-bold text-brand">D</td>
+                                <td class="px-8 py-4 text-center font-mono whitespace-nowrap">11.5</td>
+                                <td class="px-8 py-4 text-center text-slate-500 font-mono whitespace-nowrap">—</td>
+                                <td class="px-8 py-4 text-center font-black text-brand whitespace-nowrap">( 13 - 15 )</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ✦ Notes -->
+            <div class="flex items-center justify-center">
+                <div class="rounded-3xl p-10 w-full space-y-6" style="background:#f1f5f9;">
+                    <p class="text-lg font-semibold text-slate-600">
+                        <span class="font-bold text-slate-700">✦</span> If kill line of player increases &rarr; <span class="text-brand font-bold">Over Performance</span>
+                    </p>
+                    <p class="text-lg font-semibold text-slate-600">
+                        <span class="font-bold text-slate-700">✦</span> If kill line of player decreases &rarr; <span class="text-anomaly font-bold">Under Performance</span>
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden mt-8">
+            <div class="p-8 bg-brand flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h4 class="text-gold font-bold text-lg leading-none mb-2">Player N's Performance & Odds</h4>
+                    <p class="text-white/70 text-sm font-mono uppercase tracking-[0.2em]">Tournament Record for Player N - IEM Chengdu 2025</p>
+                </div>
+                <div class="inline-flex items-center space-x-2 bg-red-500/10 border border-red-500/30 px-4 py-2 rounded-xl">
+                    <!-- <span class="text-anomaly animate-pulse text-lg"></span> -->
+                    <!-- <span class="text-xs font-bold text-white uppercase tracking-widest"> </span> -->
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="tournament-table w-full text-left">
+                    <thead>
+                        <tr>
+                            <th class="px-8">Match (Map No.)</th>
+                            <th class="px-8 text-center">Fluctuations</th>
+                            <th class="px-8">Time</th>
+                            <th class="px-8">Map Name (#Rank)</th>
+                            <th class="px-8 text-right">Kill</th>
+                            <th class="px-8">Vs Team #Position</th>
+                        </tr>
+                    </thead>
+                    <tbody id="marketTableBody" class="text-base font-medium"></tbody>
+                </table>
+            </div>
+            <div class="p-6 bg-slate-50 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                <!-- <div class="text-xs text-slate-400 font-mono uppercase tracking-widest">Source: Betting Exchange Archives Â· IEM Chengdu 2025</div> -->
+                <!-- <div class="bg-red-50 border border-red-100 text-anomaly text-xs font-black px-4 py-2 rounded-lg"> -->
+                    <!-- âš  Match X (2) â€” Pre-Map 2 drop: 14.5 â†’ 13.5 -->
+                <!-- </div> -->
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════ PERFORMANCE MATRIX ═══════════════════════════════ -->
+<section id="view-perf" class="view hidden p-6 md:p-12 animate-fade-in">
+    <div class="w-full">
+        <div class="mb-8">
+            <h2 class="text-4xl font-extrabold text-brand mb-6">Performance Matrix</h2>
+            <!-- Sub-tabs -->
+            <div class="flex gap-2 w-full">
+                <button onclick="navigatePerf('inversion')" id="perf-btn-inversion" class="perf-tab perf-tab-active flex-1 py-2 text-sm font-black uppercase tracking-widest rounded-full border transition-all">INVERSION</button>
+                <button onclick="navigatePerf('ratings')" id="perf-btn-ratings" class="perf-tab flex-1 py-2 text-sm font-black uppercase tracking-widest rounded-full border transition-all">MAP RATINGS</button>
+                <button onclick="navigatePerf('index')" id="perf-btn-index" class="perf-tab flex-1 py-2 text-sm font-black uppercase tracking-widest rounded-full border transition-all">INDEX</button>
+                <button onclick="navigatePerf('accuracy')" id="perf-btn-accuracy" class="perf-tab flex-1 py-2 text-sm font-black uppercase tracking-widest rounded-full border transition-all">ACCURACY</button>
+            </div>
+        </div>
+
+        <!-- INVERSION Panel -->
+        <div id="perf-panel-inversion" class="perf-panel">
+            <div class="glass-card rounded-[2.5rem] overflow-hidden shadow-sm mb-10">
+                <div style="background:linear-gradient(135deg,#1e3a5f 0%,#0f2340 100%);" class="px-8 py-5 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs font-bold uppercase tracking-widest mb-1" style="color:rgba(255,255,255,0.45);">Match Context · IEM Chengdu 2025</div>
+                        <div class="text-white font-black text-base uppercase tracking-wider">Performance Inversion</div>
+                    </div>
+                </div>
+                <div class="p-12 flex flex-col gap-14">
+
+                    <!-- Map 1 -->
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-emerald-700 font-bold uppercase tracking-widest text-sm">MAP 1 (OVERPASS) — PLAYER N</h3>
+                                <h1 class="text-emerald-700 font-bold uppercase tracking-widest text-sm">Team A 10 <br/> Team B 13 </h1>                            
+                            <span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-black italic">Rating 1.18</span>
+                        </div>
+                        <img src="assets/images/HLTV-MAP1.jpeg" alt="Map 1 Overpass performance screenshot" class="w-full h-auto rounded-2xl shadow-sm">
+                    </div>
+
+                    <!-- Map 2 -->
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-emerald-700 font-bold uppercase tracking-widest text-sm">MAP 2 (INFERNO) — PLAYER N</h3>
+                                <h1 class="text-emerald-700 font-bold uppercase tracking-widest text-sm">Team A 13 <br/> Team B 6 </h1>                                                        
+                            <span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-black italic">Rating 1.11</span>
+                        </div>
+                        <img src="assets/images/HLTV-MAP2.jpeg" alt="Map 2 Inferno performance screenshot" class="w-full h-auto rounded-2xl shadow-sm">
+                    </div>
+
+                    <!-- Map 3 -->
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-anomaly font-bold uppercase tracking-widest text-sm">MAP 3 (ANCIENT) — PLAYER N</h3>
+                                <h1 class="text-anomaly font-bold uppercase tracking-widest text-sm">Team A 13 <br/> Team B 5 </h1>                                                        
+                            <span class="bg-red-100 text-anomaly px-3 py-1 rounded-full text-sm font-black italic">Rating 1.19</span>
+                        </div>
+                        <img src="assets/images/HLTV-MAP3.jpeg" alt="Map 3 Ancient performance screenshot" class="w-full h-auto rounded-2xl shadow-sm">
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- INDEX Panel -->
+        <div id="perf-panel-index" class="perf-panel hidden">
+            <div class="glass-card p-12 rounded-[3rem] shadow-sm mb-10">
+                <div class="mb-8">
+                    <h3 class="text-sm font-bold text-slate-600 uppercase tracking-[0.2em] mb-1">Performance Index</h3>
+                    <p class="text-sm text-slate-600 font-mono">% of career avg baseline — gold line = 100% (normal)</p>
+                </div>
+                <div class="chart-container" style="height:480px;"><canvas id="perfChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- ACCURACY Panel -->
+        <div id="perf-panel-accuracy" class="perf-panel hidden">
+            <div class="glass-card rounded-[2.5rem] shadow-sm border border-red-100 overflow-hidden mb-10">
+                <div style="background:linear-gradient(135deg,#dc2626 0%,#991b1b 100%);" class="px-8 py-5 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs font-bold text-white/60 uppercase tracking-widest mb-0.5">Tactical Accuracy</div>
+                        <div class="text-white font-black text-base uppercase tracking-wider">Shot-on-Target Analysis</div>
+                    </div>
+                </div>
+                <div class="p-12 space-y-8">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div style="background:#fef2f2;border:2px solid #fecaca;" class="rounded-2xl p-6 text-center">
+                            <div class="text-sm font-black text-slate-600 uppercase tracking-widest mb-3">Anomaly Map 3</div>
+                            <div style="font-size:2.8rem;font-weight:900;color:#dc2626;line-height:1;">11.05%</div>
+                            <div class="text-sm font-mono text-anomaly mt-2 font-bold">20 hits / 181 shots</div>
+                        </div>
+                        <div style="background:#f8fafc;border:2px solid #e2e8f0;" class="rounded-2xl p-6 text-center">
+                            <div class="text-sm font-black text-slate-600 uppercase tracking-widest mb-3">Past Accuracy (Career Avg)</div>
+                            <div style="font-size:2.8rem;font-weight:900;color:#1e3a5f;line-height:1;">18%</div>
+                            <div class="text-sm font-mono text-brand mt-2 font-bold">Historical baseline</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- MAP RATINGS Panel -->
+        <div id="perf-panel-ratings" class="perf-panel hidden">
+            <div class="glass-card rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden mb-10">
+                <div style="background:linear-gradient(135deg,#1e3a5f 0%,#0f2340 100%);" class="px-8 py-5 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs font-bold text-white/60 uppercase tracking-widest mb-0.5">Historical Profile</div>
+                        <div class="text-white font-black text-base uppercase tracking-wider">Career Map Ratings Before the Game</div>
+                    </div>
+                </div>
+                <div class="p-12">
+                    <div class="overflow-x-auto">
+                        <table class="tournament-table w-full text-left">
+                            <thead>
+                                <tr>
+                                    <th class="px-8">Map Name</th>
+                                    <th class="px-8 text-center">Career Rating</th>
+                                    <th class="px-8 text-center">Rank</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm font-medium">
+                                <tr class="border-b border-slate-100 bg-red-50 hover:bg-red-100 transition-colors">
+                                    <td class="px-8 py-4 font-bold text-anomaly">Ancient</td>
+                                    <td class="px-8 py-4 text-center font-mono text-anomaly font-bold">1.19</td>
+                                    <td class="px-8 py-4 text-center font-black text-anomaly">1</td>
+                                </tr>
+                                <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                    <td class="px-8 py-4 font-bold text-brand">Overpass</td>
+                                    <td class="px-8 py-4 text-center font-mono">1.18</td>
+                                    <td class="px-8 py-4 text-center font-black">2</td>
+                                </tr>
+                                <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                    <td class="px-8 py-4 font-bold text-brand">Mirage</td>
+                                    <td class="px-8 py-4 text-center font-mono">1.14</td>
+                                    <td class="px-8 py-4 text-center font-black">3</td>
+                                </tr>
+                                <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                    <td class="px-8 py-4 font-bold text-brand">Inferno</td>
+                                    <td class="px-8 py-4 text-center font-mono">1.11</td>
+                                    <td class="px-8 py-4 text-center font-black">4</td>
+                                </tr>
+                                <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                    <td class="px-8 py-4 font-bold text-brand">Nuke</td>
+                                    <td class="px-8 py-4 text-center font-mono">1.05</td>
+                                    <td class="px-8 py-4 text-center font-black">5</td>
+                                </tr>
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-8 py-4 font-bold text-brand">Dust2</td>
+                                    <td class="px-8 py-4 text-center font-mono">1.02</td>
+                                    <td class="px-8 py-4 text-center font-black">6</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Worst Ranked Performances -->
+            <div class="glass-card rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden mt-6">
+                <div style="background:linear-gradient(135deg,#dc2626 0%,#991b1b 100%);" class="px-8 py-5 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs font-bold text-white/60 uppercase tracking-widest mb-0.5">2025 Statistics</div>
+                        <div class="text-white font-black text-base uppercase tracking-wider">Worst Ranked Performances</div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="tournament-table w-full text-left">
+                        <thead>
+                            <tr>
+                                <th class="px-6">Rank</th>
+                                <th class="px-6 text-center">Kills</th>
+                                <th class="px-6 text-center">K - D</th>
+                                <th class="px-6">Map</th>
+                                <th class="px-6">Date</th>
+                                <th class="px-6">Opponent</th>
+                                <th class="px-6 text-center">Opp. Ranking</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm font-medium">
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-6 py-4 font-black text-brand">1st</td>
+                                <td class="px-6 py-4 text-center font-mono">5</td>
+                                <td class="px-6 py-4 text-center font-mono">5 - 14</td>
+                                <td class="px-6 py-4 font-bold text-brand">Overpass</td>
+                                <td class="px-6 py-4 font-mono text-slate-500">10/08/25</td>
+                                <td class="px-6 py-4 font-mono text-slate-500">Aurora</td>
+                                <td class="px-6 py-4 text-center font-mono text-slate-500">#7</td>
+                            </tr>
+                            <tr class="border-b border-red-100 bg-red-50 hover:bg-red-100 transition-colors">
+                                <td class="px-6 py-4 font-black text-anomaly">1st</td>
+                                <td class="px-6 py-4 text-center font-mono text-anomaly font-bold">5</td>
+                                <td class="px-6 py-4 text-center font-mono text-anomaly font-bold">5 - 13</td>
+                                <td class="px-6 py-4 font-bold text-anomaly">Ancient</td>
+                                <td class="px-6 py-4 font-mono text-anomaly">03/11/25</td>
+                                <td class="px-6 py-4 font-mono text-anomaly">The MongolZ</td>
+                                <td class="px-6 py-4 text-center font-mono text-anomaly font-bold">#8</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-6 py-4 font-black text-brand">3rd</td>
+                                <td class="px-6 py-4 text-center font-mono">6</td>
+                                <td class="px-6 py-4 text-center font-mono">6 - 15</td>
+                                <td class="px-6 py-4 font-bold text-brand">Dust2</td>
+                                <td class="px-6 py-4 font-mono text-slate-500">11/08/25</td>
+                                <td class="px-6 py-4 font-mono text-slate-500">Passion UA</td>
+                                <td class="px-6 py-4 text-center font-mono text-slate-500">#33</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-6 py-4 font-black text-brand">4th</td>
+                                <td class="px-6 py-4 text-center font-mono">7</td>
+                                <td class="px-6 py-4 text-center font-mono">7 - 17</td>
+                                <td class="px-6 py-4 font-bold text-brand">Nuke</td>
+                                <td class="px-6 py-4 font-mono text-slate-500">27/07/25</td>
+                                <td class="px-6 py-4 font-mono text-slate-500">Spirit</td>
+                                <td class="px-6 py-4 text-center font-mono text-slate-500">#4</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-6 py-4 font-black text-brand">4th</td>
+                                <td class="px-6 py-4 text-center font-mono">7</td>
+                                <td class="px-6 py-4 text-center font-mono">7 - 16</td>
+                                <td class="px-6 py-4 font-bold text-brand">Dust2</td>
+                                <td class="px-6 py-4 font-mono text-slate-500">16/07/25</td>
+                                <td class="px-6 py-4 font-mono text-slate-500">BIG</td>
+                                <td class="px-6 py-4 text-center font-mono text-slate-500">#25</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-6 py-4 font-black text-brand">6th</td>
+                                <td class="px-6 py-4 text-center font-mono">8</td>
+                                <td class="px-6 py-4 text-center font-mono">8 - 18</td>
+                                <td class="px-6 py-4 font-bold text-brand">Mirage</td>
+                                <td class="px-6 py-4 font-mono text-slate-500">22/08/25</td>
+                                <td class="px-6 py-4 font-mono text-slate-500">Aurora</td>
+                                <td class="px-6 py-4 text-center font-mono text-slate-500">#5</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-6 py-4 font-black text-brand">6th</td>
+                                <td class="px-6 py-4 text-center font-mono">8</td>
+                                <td class="px-6 py-4 text-center font-mono">8 - 14</td>
+                                <td class="px-6 py-4 font-bold text-brand">Ancient</td>
+                                <td class="px-6 py-4 font-mono text-slate-500">05/11/25</td>
+                                <td class="px-6 py-4 font-mono text-slate-500">Spirit</td>
+                                <td class="px-6 py-4 text-center font-mono text-slate-500">#6</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-6 py-4 font-black text-brand">6th</td>
+                                <td class="px-6 py-4 text-center font-mono">8</td>
+                                <td class="px-6 py-4 text-center font-mono">8 - 13</td>
+                                <td class="px-6 py-4 font-bold text-brand">Dust2</td>
+                                <td class="px-6 py-4 font-mono text-slate-500">16/10/25</td>
+                                <td class="px-6 py-4 font-mono text-slate-500">fnatic</td>
+                                <td class="px-6 py-4 text-center font-mono text-slate-500">#27</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-6 py-4 font-black text-brand">9th</td>
+                                <td class="px-6 py-4 text-center font-mono">9</td>
+                                <td class="px-6 py-4 text-center font-mono">9 - 17</td>
+                                <td class="px-6 py-4 font-bold text-brand">Train</td>
+                                <td class="px-6 py-4 font-mono text-slate-500">28/07/25</td>
+                                <td class="px-6 py-4 font-mono text-slate-500">Ninjas in Pyjamas</td>
+                                <td class="px-6 py-4 text-center font-mono text-slate-500">#21</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="px-6 py-4 font-black text-brand">9th</td>
+                                <td class="px-6 py-4 text-center font-mono">9</td>
+                                <td class="px-6 py-4 text-center font-mono">9 - 14</td>
+                                <td class="px-6 py-4 font-bold text-brand">Inferno</td>
+                                <td class="px-6 py-4 font-mono text-slate-500">03/11/25</td>
+                                <td class="px-6 py-4 font-mono text-slate-500">The MongolZ</td>
+                                <td class="px-6 py-4 text-center font-mono text-slate-500">#8</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Kill Stats per Map -->
+            <div class="glass-card rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden mt-6">
+                <div style="background:linear-gradient(135deg,#1e3a5f 0%,#0f2340 100%);" class="px-8 py-5 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs font-bold text-white/60 uppercase tracking-widest mb-0.5">2025 Statistics</div>
+                        <div class="text-white font-black text-base uppercase tracking-wider">Avg. Kills per Map</div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="tournament-table w-full text-left">
+                        <thead>
+                            <tr>
+                                <th class="px-8">Map</th>
+                                <th class="px-8 text-center">Total Kills</th>
+                                <th class="px-8 text-center">Maps Played</th>
+                                <th class="px-8 text-center">Avg Kills / Map</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm font-medium">
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-8 py-4 font-bold text-brand">Anubis</td>
+                                <td class="px-8 py-4 text-center font-mono">19</td>
+                                <td class="px-8 py-4 text-center font-mono">1</td>
+                                <td class="px-8 py-4 text-center font-black text-brand">19.0</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-8 py-4 font-bold text-brand">Mirage</td>
+                                <td class="px-8 py-4 text-center font-mono">229</td>
+                                <td class="px-8 py-4 text-center font-mono">13</td>
+                                <td class="px-8 py-4 text-center font-black text-brand">17.6</td>
+                            </tr>
+                            <tr class="border-b border-red-100 bg-red-50 hover:bg-red-100 transition-colors">
+                                <td class="px-8 py-4 font-bold text-anomaly">Ancient</td>
+                                <td class="px-8 py-4 text-center font-mono text-anomaly font-bold">219</td>
+                                <td class="px-8 py-4 text-center font-mono text-anomaly font-bold">13</td>
+                                <td class="px-8 py-4 text-center font-black text-anomaly">16.8</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-8 py-4 font-bold text-brand">Inferno</td>
+                                <td class="px-8 py-4 text-center font-mono">90</td>
+                                <td class="px-8 py-4 text-center font-mono">6</td>
+                                <td class="px-8 py-4 text-center font-black text-brand">15.0</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-8 py-4 font-bold text-brand">Nuke</td>
+                                <td class="px-8 py-4 text-center font-mono">195</td>
+                                <td class="px-8 py-4 text-center font-mono">13</td>
+                                <td class="px-8 py-4 text-center font-black text-brand">15.0</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-8 py-4 font-bold text-brand">Dust2</td>
+                                <td class="px-8 py-4 text-center font-mono">210</td>
+                                <td class="px-8 py-4 text-center font-mono">15</td>
+                                <td class="px-8 py-4 text-center font-black text-brand">14.0</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-8 py-4 font-bold text-brand">Overpass</td>
+                                <td class="px-8 py-4 text-center font-mono">112</td>
+                                <td class="px-8 py-4 text-center font-mono">8</td>
+                                <td class="px-8 py-4 text-center font-black text-brand">14.0</td>
+                            </tr>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                <td class="px-8 py-4 font-bold text-brand">Train</td>
+                                <td class="px-8 py-4 text-center font-mono">42</td>
+                                <td class="px-8 py-4 text-center font-mono">3</td>
+                                <td class="px-8 py-4 text-center font-black text-brand">14.0</td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="px-8 py-4 font-bold text-slate-400">Vertigo</td>
+                                <td class="px-8 py-4 text-center font-mono text-slate-400">—</td>
+                                <td class="px-8 py-4 text-center font-mono text-slate-400">0</td>
+                                <td class="px-8 py-4 text-center font-black text-slate-400">N/A</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ═══════════════════════════════ INTEL ═══════════════════════════════ -->
+<section id="view-intel" class="view hidden p-6 md:p-12 space-y-10 animate-fade-in">
+    <div class="max-w-5xl mx-auto">
+
+        <div class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+                <!-- <div class="inline-flex items-center px-3 py-1 bg-brand/5 border border-brand/10 rounded-full text-xs font-black text-brand tracking-widest uppercase mb-3">Classified Intelligence Feed</div> -->
+                <h2 class="text-4xl font-extrabold text-brand mb-1">Intel Feed</h2>
+                <p class="text-slate-700 text-base">Open-source forum observations — Match X · IEM Chengdu 2025</p>
+            </div>
+            <!-- <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:16px;" class="px-5 py-3 flex items-center gap-3 flex-shrink-0">
+                <span class="animate-pulse text-lg" style="color:#dc2626;">●</span>
+                <div>
+                        <div class="text-xs font-bold text-slate-400 uppercase">Source Status</div>
+                        <div class="font-black text-sm uppercase" style="color:#dc2626;">ACTIVE · VERIFIED</div>
+                </div>
+            </div> -->
+        </div>
+
+        <!-- Publicly Archived Discussion Thread -->
+        <div class="mt-10">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="h-px flex-1 bg-slate-200"></div>
+                <span class="text-sm font-bold text-slate-500 uppercase tracking-widest font-mono">publicly archived discussion thread</span>
+                <div class="h-px flex-1 bg-slate-200"></div>
+            </div>
+            <!-- HLTV Screenshot -->
+            <div id="intel-hltv" class="glass-card rounded-[2.5rem] overflow-hidden shadow-sm">
+                <!-- Header bar -->
+                <div style="background:linear-gradient(135deg,#0f1923 0%,#1e3a5c 100%);" class="px-8 py-5 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div style="width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;">
+                            <img src="assets/images/HLTV.png" alt="HLTV" style="width:100%;height:100%;object-fit:cover;">
+                        </div>
+                        <div>
+                            <div class="text-white font-black text-sm">HLTV — Match Thread Comments</div>
+                            <div class="text-xs" style="color:rgba(255,255,255,0.5);">Team A vs Team B · Major 2025</div>
+                        </div>
+                    </div>
+                    <!-- <span style="background:rgba(232,23,28,0.25);color:#fca5a5;border:1px solid rgba(232,23,28,0.4);font-size:9px;font-weight:900;padding:4px 14px;border-radius:99px;letter-spacing:0.08em;">OSINT</span> -->
+                </div>
+                <!-- Screenshots -->
+                <div style="background:#f8fafc;padding:24px;display:flex;flex-direction:column;gap:16px;">
+                    <img src="assets/images/HLTV1.jpeg" alt="HLTV Forum Comments — Part 1" style="width:100%;border-radius:16px;border:2px solid #e2e8f0;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+                    <img src="assets/images/HLTV2.jpeg" alt="HLTV Forum Comments — Part 2" style="width:100%;border-radius:16px;border:2px solid #e2e8f0;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+                </div>
+                <!-- Footer -->
+                <div style="background:#0f1923;border-top:1px solid #1e3a5c;padding:10px 32px;">
+                    <!-- <div style="color:#fca5a5;font-size:9px;font-family:'JetBrains Mono',monospace;text-align:center;letter-spacing:0.12em;">
+                        ⚠ OSINT ARCHIVE — CASE FILE 092-X · HLTV MATCH THREAD · DECEMBER 2025
+                    </div> -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Social Media Surveillance Tool -->
+        <div class="mt-10">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="h-px flex-1 bg-slate-200"></div>
+                <span class="text-sm font-bold text-slate-500 uppercase tracking-widest font-mono">social media surveillance</span>
+                <div class="h-px flex-1 bg-slate-200"></div>
+            </div>
+            <div id="intel-smst" class="glass-card rounded-[2.5rem] overflow-hidden shadow-sm">
+                <!-- Header bar -->
+                <div style="background:linear-gradient(135deg,#0f1923 0%,#1e3a5c 100%);" class="px-8 py-5 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div style="width:40px;height:40px;border-radius:12px;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,#6c47ff,#a78bfa);">
+                            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+                                <i class="fa-solid fa-check" style="color:#fff;font-size:18px;"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-white font-black text-sm">Social Media Surveillance Tool (SMST)</div>
+                            <div class="text-xs" style="color:rgba(255,255,255,0.5);">Monitor Telegram groups and detect suspicious activity</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Screenshot -->
+                <div style="background:#f8fafc;padding:24px;">
+                    <img src="assets/images/SMST.jpeg" alt="Social Media Surveillance Tool (SMST)" style="width:100%;border-radius:16px;border:2px solid #e2e8f0;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+                </div>
+                <!-- Footer -->
+                <div style="background:#0f1923;border-top:1px solid #1e3a5c;padding:10px 32px;"></div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ═══════════════════════════════ ACTION ANALYSIS ═══════════════════════════════ -->
+<section id="view-vault" class="view hidden p-6 md:p-12 space-y-12 animate-fade-in">
+    <div class="max-w-6xl mx-auto">
+        <div class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+                <h2 class="text-4xl font-extrabold text-brand mb-1">Action Analysis</h2>
+                <p class="text-sm font-mono text-slate-500 uppercase tracking-widest">IEM Chengdu 2025 · Match X · Video Evidence</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <!-- <span style="background:#1e3a5f;color:#c9a84c;font-size:13px;font-weight:900;padding:5px 14px;border-radius:99px;">SECURE ACCESS</span> -->
+            </div>
+        </div>
+
+        <!-- ── Video Evidence ── -->
+        <div class="mt-10">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="h-px flex-1 bg-slate-200"></div>
+                <span class="text-sm font-bold text-slate-500 uppercase tracking-widest font-mono">Action Analysis</span>
+                <div class="h-px flex-1 bg-slate-200"></div>
+            </div>
+            <p class="text-xs text-slate-400 font-mono mb-6">
+                  &nbsp; <code> </code>
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+
+                <!-- Video 1 -->
+                <div class="glass-card rounded-2xl overflow-hidden shadow-sm">
+                    <div style="background:#0a0e17;" class="aspect-video relative">
+                        <video class="w-full h-full absolute inset-0" controls style="object-fit:contain;background:#0a0e17;">
+                            <source src="assets/videos/ROUND 2.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <div class="p-4 border-t border-slate-100">
+                        <div id="desc-1" class="text-sm text-slate-700 desc-clamp leading-relaxed">Round 2: What is the need to rush as CT? Should have stayed at Site A and let T come to them? Also, they are playing against a better team #8 vs #20</div>
+                        <button onclick="toggleDesc('desc-1', this)" class="text-sm font-bold text-brand mt-2 hover:underline cursor-pointer">Read more</button>
+                    </div>
+                </div>
+
+
+                <!-- Video 2 -->
+                <div class="glass-card rounded-2xl overflow-hidden shadow-sm">
+                    <div style="background:#0a0e17;" class="aspect-video relative">
+                        <video class="w-full h-full absolute inset-0" controls style="object-fit:contain;background:#0a0e17;">
+                            <source src="assets/videos/ROUND 3.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <div class="p-4 border-t border-slate-100">
+                        <div id="desc-2" class="text-sm text-slate-700 desc-clamp leading-relaxed">Round 3: Could have saved gun or kill 1 by hiding - 3+ enemies alive</div>
+                        <!-- <button onclick="toggleDesc('desc-2', this)" class="text-sm font-bold text-brand mt-2 hover:underline cursor-pointer">Read more</button> -->
+                    </div>
+                </div>
+
+
+                <!-- Video 3 -->
+                <div class="glass-card rounded-2xl overflow-hidden shadow-sm">
+                    <div style="background:#0a0e17;" class="aspect-video relative">
+                        <video class="w-full h-full absolute inset-0" controls style="object-fit:contain;background:#0a0e17;">
+                            <source src="assets/videos/ROUND 7.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <div class="p-4 border-t border-slate-100">
+                        <div id="desc-3" class="text-sm text-slate-700 desc-clamp leading-relaxed">Round 7: Could have used flash when he knew there were opponents heading towards site B</div>
+                        <!-- <button onclick="toggleDesc('desc-3', this)" class="text-sm font-bold text-brand mt-2 hover:underline cursor-pointer">Read more</button> -->
+                    </div>
+                </div>
+
+
+                <!-- Video 4 -->
+                <div class="glass-card rounded-2xl overflow-hidden shadow-sm">
+                    <div style="background:#0a0e17;" class="aspect-video relative">
+                        <video class="w-full h-full absolute inset-0" controls style="object-fit:contain;background:#0a0e17;">
+                            <source src="assets/videos/ROUND 9.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <div class="p-4 border-t border-slate-100">
+                        <div id="desc-4" class="text-sm text-slate-700 desc-clamp leading-relaxed">Round 9: Walking backwards in open space</div>
+                        <!-- <button onclick="toggleDesc('desc-4', this)" class="text-sm font-bold text-brand mt-2 hover:underline cursor-pointer">Read more</button> -->
+                    </div>
+                </div>
+
+
+                <!-- Video 5 -->
+                <div class="glass-card rounded-2xl overflow-hidden shadow-sm">
+                    <div style="background:#0a0e17;" class="aspect-video relative">
+                        <video class="w-full h-full absolute inset-0" controls style="object-fit:contain;background:#0a0e17;">
+                            <source src="assets/videos/ROUND 10.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <div class="p-4 border-t border-slate-100">
+                        <div id="desc-5" class="text-sm text-slate-700 desc-clamp leading-relaxed">Round 10: Use flashbang when going through smoke. Low health would have died anyways</div>
+                        <!-- <button onclick="toggleDesc('desc-5', this)" class="text-sm font-bold text-brand mt-2 hover:underline cursor-pointer">Read more</button> -->
+                    </div>
+                </div>
+
+
+                <!-- Video 6 -->
+                <div class="glass-card rounded-2xl overflow-hidden shadow-sm">
+                    <div style="background:#0a0e17;" class="aspect-video relative">
+                        <video class="w-full h-full absolute inset-0" controls style="object-fit:contain;background:#0a0e17;">
+                            <source src="assets/videos/ROUND 14.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <div class="p-4 border-t border-slate-100">
+                        <div id="desc-6" class="text-sm text-slate-700 desc-clamp leading-relaxed">Round 14: Why is he stepping in incendiary grenade?</div>
+                        <!-- <button onclick="toggleDesc('desc-6', this)" class="text-sm font-bold text-brand mt-2 hover:underline cursor-pointer">Read more</button> -->
+                    </div>
+                </div>
+
+
+                <!-- Video 7 -->
+                <div class="glass-card rounded-2xl overflow-hidden shadow-sm">
+                    <div style="background:#0a0e17;" class="aspect-video relative">
+                        <video class="w-full h-full absolute inset-0" controls style="object-fit:contain;background:#0a0e17;">
+                            <source src="assets/videos/ROUND 15.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <div class="p-4 border-t border-slate-100">
+                        <div id="desc-7" class="text-sm text-slate-700 desc-clamp leading-relaxed">Round 15: Could have planted the bomb when he reached site B. Instead he chose to engage with enemy and dies in the process</div>
+                        <button onclick="toggleDesc('desc-7', this)" class="text-sm font-bold text-brand mt-2 hover:underline cursor-pointer">Read more</button>
+                    </div>
+                </div>
+
+
+                <!-- Video 8 -->
+                <div class="glass-card rounded-2xl overflow-hidden shadow-sm">
+                    <div style="background:#0a0e17;" class="aspect-video relative">
+                        <video class="w-full h-full absolute inset-0" controls style="object-fit:contain;background:#0a0e17;">
+                            <source src="assets/videos/ROUND 18.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <div class="p-4 border-t border-slate-100">
+                        <div id="desc-8" class="text-sm text-slate-700 desc-clamp leading-relaxed">Round 18: Approaching Site B while exposed in open area, not used flash also</div>
+                        <!-- <button onclick="toggleDesc('desc-8', this)" class="text-sm font-bold text-brand mt-2 hover:underline cursor-pointer">Read more</button> -->
+                    </div>
+                </div>
+
+
+
+            </div>
+        </div>
+
+    </div>
+</section>
+
+</main>
+
+<script>
+    const tournamentLogs = [
+        { match:'Match 26 (1)', map:'Inferno',  line:'12.5', kills:20, flagged:false },
+        { match:'Match 26 (2)', map:'Train',    line:'12.5', kills:20, flagged:false },
+        { match:'Match X (1)',  map:'Dust2',   line:'13.5', kills:12, flagged:false },
+        { match:'Match X (2)',  map:'Inferno', line:'14.5 → 13.5', kills:9, flagged:true },
+        { match:'Match X (3)',  map:'Ancient',  line:'13.5', kills:10, flagged:false },
+        { match:'Match 35 (1)', map:'Mirage',   line:'13.5', kills:18, flagged:false },
+        { match:'Match 35 (2)', map:'Dust 2',   line:'13.5', kills:12, flagged:false },
+        { match:'Match 38 (1)', map:'Mirage',   line:'12.5 → 13.5', kills:32, flagged:false },
+        { match:'Match 38 (2)', map:'Dust 2',   line:'12.5 → 13.5', kills:10, flagged:false },
+        { match:'Match 40 (1)', map:'Nuke',     line:'13.5', kills:12, flagged:false },
+        { match:'Match 40 (2)', map:'Dust 2',   line:'13.5', kills:13, flagged:false },
+        { match:'Match 40 (3)', map:'Inferno',  line:'13.5', kills:23, flagged:false },
+    ];
+
+    const marketRows = [
+        { match:'6 (1)',  fluctuation:'14.5',              time:'No Fluctuations',                            map:'Overpass (2)', kills:17, team:'A #4',    flagged:false },
+        { match:'6 (2)',  fluctuation:'14.5',              time:'No Fluctuations',                            map:'Inferno (4)',  kills:9,  team:'A #4',    flagged:false },
+        { match:'6 (3)',  fluctuation:'15.5 - 13.5 - 14.5', time:'After map2 complete · Before map3 start',  map:'Ancient (1)', kills:5,  team:'A #4',    flagged:true  },
+        { match:'13 (1)', fluctuation:'14.5',              time:'No Fluctuations',                            map:'Nuke (5)',     kills:10, team:'C #8',  flagged:false },
+        { match:'13 (2)', fluctuation:'14.5',              time:'Before map2 start',                          map:'Ancient (1)', kills:12, team:'C #8',  flagged:false },
+        { match:'13 (3)', fluctuation:'15.5',              time:'No Fluctuations',                            map:'Inferno (4)', kills:21, team:'C #8',  flagged:false },
+        { match:'20 (1)', fluctuation:'15.5 - 14.5',      time:'Before match start',                         map:'Overpass (2)',kills:17, team:'D #6',         flagged:false },
+        { match:'20 (2)', fluctuation:'13.5 - 14.5 - 13.5', time:'Before match start',                       map:'Dust2 (6)',   kills:18, team:'D #6',         flagged:false },
+    ];
+
+    let activeCharts = { market:null, perf:null };
+
+    function navigate(tabId) {
+        document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+        document.querySelectorAll('.nav-link').forEach(l => {
+            l.classList.remove('active');
+            l.classList.add('text-slate-500');
+        });
+        const view = document.getElementById('view-' + tabId);
+        view.classList.remove('hidden');
+        document.getElementById('btn-' + tabId).classList.add('active');
+        document.getElementById('btn-' + tabId).classList.remove('text-slate-500');
+        if (tabId === 'market') renderMarketAssets();
+        if (tabId === 'perf')   navigatePerf('inversion');
+        if (tabId === 'intel')  blurIntelImages();
+    }
+
+    function applyCanvasBlur(img, blurPx) {
+        if (img.dataset.blurred) return;
+        img.dataset.blurred = '1';
+        const run = () => {
+            const pad = blurPx * 2;
+            const canvas = document.createElement('canvas');
+            canvas.width  = img.naturalWidth  || img.offsetWidth  || 800;
+            canvas.height = img.naturalHeight || img.offsetHeight || 600;
+            const ctx = canvas.getContext('2d');
+            ctx.filter = 'blur(' + blurPx + 'px)';
+            ctx.drawImage(img, -pad, -pad, canvas.width + pad * 2, canvas.height + pad * 2);
+            canvas.style.cssText = img.getAttribute('style') || '';
+            canvas.className = img.className;
+            canvas.style.width  = '100%';
+            canvas.style.height = 'auto';
+            canvas.style.display = 'block';
+            img.parentNode.replaceChild(canvas, img);
+        };
+        if (img.complete && img.naturalWidth) run();
+        else img.addEventListener('load', run);
+    }
+
+    function blurInversionImages() {}
+
+    function blurIntelImages() {}
+
+    function navigatePerf(tabId) {
+        document.querySelectorAll('.perf-panel').forEach(p => p.classList.add('hidden'));
+        document.querySelectorAll('.perf-tab').forEach(b => b.classList.remove('perf-tab-active'));
+        document.getElementById('perf-panel-' + tabId).classList.remove('hidden');
+        document.getElementById('perf-btn-' + tabId).classList.add('perf-tab-active');
+        if (tabId === 'index')     renderPerfMatrix();
+        if (tabId === 'inversion') blurInversionImages();
+    }
+
+    function renderMarketAssets() {
+        const tbody = document.getElementById('marketTableBody');
+        tbody.innerHTML = '';
+        marketRows.forEach(row => {
+            const tr = document.createElement('tr');
+            if (row.flagged) tr.className = 'flagged';
+            tr.className += ' border-b border-slate-100 hover:bg-slate-50 transition-colors';
+            tr.innerHTML = `
+                <td class="px-8 py-4 font-bold text-brand">${row.match}</td>
+                <td class="px-8 py-4 text-center font-mono font-bold">${row.fluctuation}</td>
+                <td class="px-8 py-4 text-slate-500 font-mono">${row.time}</td>
+                <td class="px-8 py-4 text-slate-500 font-mono italic">${row.map}</td>
+                <td class="px-8 py-4 text-right font-black text-lg">${row.kills}</td>
+                <td class="px-8 py-4 text-slate-500 font-mono">${row.team}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        if (activeCharts.market) activeCharts.market.destroy();
+        const ctx = document.getElementById('marketChart').getContext('2d');
+        activeCharts.market = new Chart(ctx, {
+            type:'line',
+            data:{
+                // labels:['After Map 2 End (14:17:08)','Before Drop (14:17:08)','-2 Drop Point (14:21:08)','+1 9 Min Before Map3 <br/> Start (14:23:08)','5 Min Before Map <br/> 3 Start (14:25:08)'],
+                 labels:[
+      'After Map 2 End (14:17:08)',
+      'Before Drop (14:17:08)',
+      '-2 Drop Point (14:21:08)',
+      ['+1 9 Min Before Map3','Start (14:23:08)'],
+      ['5 Min Before Map','3 Start (14:25:08)']
+  ],
+                datasets:[{
+                    label:'Kill Line',
+                    data:[15.5,15.5,13.5,14.5,14.5],
+                    borderColor:'#dc2626',
+                    backgroundColor:'transparent',
+                    fill:false, tension:0, borderWidth:4,
+                    pointBackgroundColor: ctx => ctx.dataIndex===2 ? '#c9a84c' : '#dc2626',
+                    pointRadius: ctx => ctx.dataIndex===2 ? 10 : 6,
+                    pointBorderColor: ctx => ctx.dataIndex===2 ? '#fff' : '#dc2626',
+                    pointBorderWidth: ctx => ctx.dataIndex===2 ? 3 : 1,
+                }]
+            },
+            options:{
+                responsive:true, maintainAspectRatio:false,
+                plugins:{ legend:{display:false}, tooltip:{backgroundColor:'#1e3a5f', callbacks:{label: c=>' Kill Line: '+c.parsed.y}} },
+                scales:{
+                    y:{min:12,max:17,grid:{color:'#cbd5e1'},ticks:{color:'#334155',font:{weight:'600'}}},
+                    x:{grid:{display:false},ticks:{color:'#334155',font:{weight:'600'}}}
+                }
+            }
+        });
+    }
+
+    function renderPerfMatrix() {
+        if (activeCharts.perf) activeCharts.perf.destroy();
+        const ctxP = document.getElementById('perfChart').getContext('2d');
+        const actualBaseline = [1.18, 0.78, 83.8, 0.66];
+        const actualCurrent  = [0.61, 0.44, 32.7, 0.72];
+        const baselineLine = {
+            id:'baselineLine',
+            afterDatasetsDraw(chart) {
+                const {ctx:c, chartArea, scales:{y}} = chart;
+                if (!chartArea) return;
+                const y100 = y.getPixelForValue(100);
+                c.save();
+                c.strokeStyle='#c9a84c'; c.lineWidth=2.5; c.setLineDash([10,5]);
+                c.beginPath(); c.moveTo(chartArea.left,y100); c.lineTo(chartArea.right,y100); c.stroke();
+                c.setLineDash([]);
+                c.fillStyle='#c9a84c'; c.font='bold 10px sans-serif'; c.textAlign='right';
+                c.fillText('Baseline 100%', chartArea.right-4, y100-6);
+                c.restore();
+            }
+        };
+        activeCharts.perf = new Chart(ctxP, {
+            type:'bar',
+            data:{
+                labels:['KDR (K/D)','KPR (K/R)','ADR (Dmg)','DPR (Deaths)'],
+                datasets:[
+                    {label:'Career Avg', data:[100,100,100,100], backgroundColor:'#1e3a5f', borderRadius:10},
+                    {label:'Anomaly Map 3', data:[52,56,39,109], backgroundColor:'#dc2626', borderRadius:10}
+                ]
+            },
+            options:{
+                responsive:true, maintainAspectRatio:false,
+                plugins:{
+                    legend:{position:'bottom', labels:{font:{family:'Outfit',size:12,weight:'bold'}}},
+                    tooltip:{
+                        backgroundColor:'#1e3a5f',
+                        callbacks:{
+                            label: ctx => {
+                                const actual = ctx.datasetIndex === 0 ? actualBaseline[ctx.dataIndex] : actualCurrent[ctx.dataIndex];
+                                return ' ' + ctx.dataset.label + ': ' + ctx.parsed.y + '% (actual: ' + actual + ')';
+                            }
+                        }
+                    }
+                },
+                scales:{
+                    y:{min:0,max:120,grid:{color:'#f1f5f9'},ticks:{color:'#94a3b8',callback:v=>v+'%'}},
+                    x:{grid:{display:false},ticks:{color:'#94a3b8',font:{weight:'bold'}}}
+                }
+            },
+            plugins:[baselineLine]
+        });
+    }
+
+    function toggleDesc(id, btn) {
+        const el = document.getElementById(id);
+        el.classList.toggle('desc-clamp');
+        btn.textContent = el.classList.contains('desc-clamp') ? 'Read more' : 'Read less';
+    }
+
+    function navigateToEvidence(target) {
+        navigate('intel');
+        setTimeout(() => {
+            const el = document.getElementById('intel-' + target);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+    }
+
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const topbar = document.getElementById('sidebar-topbar');
+        const isHidden = sidebar.style.minWidth === '0px';
+        if (isHidden) {
+            sidebar.style.minWidth=''; sidebar.style.width='';
+            sidebar.style.overflow=''; sidebar.style.opacity='1';
+            topbar.style.display='none';
+        } else {
+            sidebar.style.minWidth='0px'; sidebar.style.width='0px';
+            sidebar.style.overflow='hidden'; sidebar.style.opacity='0';
+            topbar.style.display='flex';
+        }
+        setTimeout(() => {
+            Object.values(activeCharts).forEach(c => { if (c) c.resize(); });
+        }, 320);
+    }
+
+    window.onload = () => {
+        navigate('profile');
+        blurInversionImages();
+    };
+</script>
+</body>
+</html>
