@@ -3,7 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Integrity Mentors — Dashboard</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
 *{font-family:'Segoe UI',sans-serif;margin:0;padding:0;box-sizing:border-box}
 body{background:#0f172a;color:#e2e8f0;min-height:100vh}
@@ -43,7 +47,7 @@ td{padding:6px 10px;vertical-align:middle}
   <div style="display:flex;gap:6px;align-items:center">
     <span id="ts" style="font-size:11px;color:#475569"></span>
     <button class="btn" onclick="load()">↻ Refresh</button>
-    <button class="btn" onclick="dlCSV()">⬇ CSV</button>
+    <button class="btn" onclick="dlExcel()">⬇ Excel (L1+L2)</button>
     <button class="btn danger" onclick="clearAll()">🗑 Clear</button>
   </div>
 </div>
@@ -118,7 +122,6 @@ function render(){
 
   document.getElementById('cnt').textContent='Showing '+evs.length+' / '+ALL.length;
 
-  // Stats
   var users=[...new Set(ALL.map(function(r){return r.cid}))];
   var ctas=ALL.filter(function(r){return r.event==='cta_click'}).length;
   var prints=ALL.filter(function(r){return r.event==='print'}).length;
@@ -129,7 +132,6 @@ function render(){
     stat(sessions,'Sessions')+statC(ctas,'CTA Clicks','#22c55e')+
     statC(prints,'Prints','#f59e0b')+statC(vends,'Videos Done','#3b82f6');
 
-  // User dropdown
   var sel=document.getElementById('fu'),cur=sel.value;
   sel.innerHTML='<option value="">All Users ('+users.length+')</option>';
   users.forEach(function(u){
@@ -137,37 +139,106 @@ function render(){
     o.value=u;o.textContent=u;if(u===cur)o.selected=true;sel.appendChild(o);
   });
 
-  // Per-user cards
   var cards='';
   users.forEach(function(u){
     var ue=ALL.filter(function(r){return r.cid===u});
     var validTabs=['profile','market','perf','intel','vault'];
-    var tabs=[...new Set(ue.filter(function(r){return r.event&&validTabs.indexOf(r.event.replace('tab_',''))>-1}).map(function(r){return r.event.replace('tab_','')}))];
+    var tabLabels={profile:'Player Profile',market:'Betting Market',perf:'Performance Matrix',intel:'Intel',vault:'Action Analysis'};
+
+    var tabTimes={};
+    ue.filter(function(r){return r.event==='tab_dwell'}).forEach(function(r){
+      var tab=(r.extra||{}).tab||'';
+      tabTimes[tab]=(tabTimes[tab]||0)+((r.extra||{}).ms||0);
+    });
+    var tabOrder=[];
+    ue.forEach(function(r){
+      if(r.event&&validTabs.indexOf(r.event.replace('tab_',''))>-1){
+        var tab=r.event.replace('tab_','');
+        if(tabOrder[tabOrder.length-1]!==tab)tabOrder.push(tab);
+      }
+    });
     var ctaClick=ue.some(function(r){return r.event==='cta_click'});
     var printEv=ue.some(function(r){return r.event==='print'});
-    var vcount=ue.filter(function(r){return r.event==='video_play'}).length;
-    var visits=ue.filter(function(r){return r.event==='session_start'}).length;
+    var sessions=ue.filter(function(r){return r.event==='session_start'}).length;
     var lastSeen=ue.length?ue[ue.length-1].ts:'';
-    var interest=ctaClick?'HIGH':tabs.length>=3?'MEDIUM':'LOW';
-    var icolor=ctaClick?'#22c55e':tabs.length>=3?'#f59e0b':'#ef4444';
-    cards+='<div style="background:#1e293b;border-radius:12px;padding:16px;border:1px solid #334155">'+
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
-      '<b style="font-size:15px">'+se(u)+'</b>'+
-      '<span style="background:'+icolor+'22;color:'+icolor+';padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700">'+interest+'</span>'+
-      '</div>'+
-      '<div style="font-size:11px;color:#64748b;display:grid;grid-template-columns:1fr 1fr;gap:4px">'+
-      '<span>Sessions: <b style="color:#e2e8f0">'+visits+'</b></span>'+
-      '<span>Tabs visited: <b style="color:#e2e8f0">'+tabs.length+'</b></span>'+
-      '<span>Videos played: <b style="color:#e2e8f0">'+vcount+'</b></span>'+
-      '<span>CTA click: <b style="color:'+(ctaClick?'#22c55e':'#ef4444')+'">'+( ctaClick?'YES':'NO')+'</b></span>'+
-      '<span>Print: <b style="color:'+(printEv?'#f59e0b':'#94a3b8')+'">'+( printEv?'YES':'no')+'</b></span>'+
-      '<span style="grid-column:span 2">Tabs: <b style="color:#93c5fd">'+tabs.join(' → ')+'</b></span>'+
-      '<span style="grid-column:span 2;color:#475569">Last seen: '+(lastSeen?lastSeen.replace('T',' ').slice(0,16):'')+'</span>'+
-      '</div></div>';
-  });
-  document.getElementById('userCards').innerHTML=cards||'<div style="color:#475569;padding:20px">No users yet</div>';
+    var reachedVault=tabOrder.indexOf('vault')>-1;
 
-  // Table
+    var interest,icolor;
+    if((ctaClick&&printEv)||(ctaClick&&sessions>1)){interest='VERY HIGH';icolor='#22c55e';}
+    else if(ctaClick||printEv){interest='HIGH';icolor='#22c55e';}
+    else if(reachedVault&&sessions>1){interest='MEDIUM-HIGH';icolor='#f59e0b';}
+    else if(reachedVault||tabOrder.length>=3){interest='MEDIUM';icolor='#f59e0b';}
+    else{interest='LOW';icolor='#ef4444';}
+
+    var topTab='',topMs=0;
+    Object.keys(tabTimes).forEach(function(k){if(tabTimes[k]>topMs){topMs=tabTimes[k];topTab=k;}});
+
+    var pattern='';
+    if(tabOrder.length<=1)pattern='Only opened first section';
+    else{
+      var seq=true;
+      for(var i=1;i<tabOrder.length;i++){if(validTabs.indexOf(tabOrder[i])<validTabs.indexOf(tabOrder[i-1])){seq=false;break;}}
+      if(seq)pattern='Sequential analyst (1→2→3)';
+      else if(tabOrder[0]==='vault')pattern='Evidence-first skeptic';
+      else pattern='Selective non-linear reader';
+    }
+
+    var funnelHtml=validTabs.map(function(tab){
+      var visited=tabOrder.indexOf(tab)>-1;
+      var ms=tabTimes[tab]||0;
+      var label=tabLabels[tab];
+      var bg=visited?'#1e3a5f':'#0f172a';
+      var color=visited?'#c9a84c':'#334155';
+      return '<div style="flex:1;text-align:center;padding:4px 2px;border-radius:6px;background:'+bg+';border:1px solid '+color+';font-size:9px;color:'+color+';font-weight:700">'+
+        label.split(' ')[0]+(visited&&ms?' ('+( ms/1000).toFixed(0)+'s)':'')+'</div>';
+    }).join('<div style="color:#334155;align-self:center;font-size:10px;margin:0 2px">→</div>');
+
+    var tooltips={};
+    ue.filter(function(r){return r.event==='tooltip_hover'}).forEach(function(r){
+      var term=(r.extra||{}).term||'';
+      if(!tooltips[term])tooltips[term]={count:0,maxMs:0};
+      tooltips[term].count++;
+      tooltips[term].maxMs=Math.max(tooltips[term].maxMs,(r.extra||{}).ms||0);
+    });
+    var topTerms=Object.keys(tooltips).sort(function(a,b){return tooltips[b].count-tooltips[a].count}).slice(0,3);
+    var bounces=ue.filter(function(r){return r.event==='tab_bounce'}).map(function(r){return tabLabels[(r.extra||{}).tab]||''});
+    var rageCount=ue.filter(function(r){return r.event==='rage_click'}).length;
+    var idleCount=ue.filter(function(r){return r.event==='idle_60s'}).length;
+
+    cards+='<div style="background:#1e293b;border-radius:14px;padding:18px;border:1px solid #334155">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'+
+      '<b style="font-size:16px;color:#e2e8f0">'+se(u)+'</b>'+
+      '<div style="display:flex;gap:6px;align-items:center">'+
+      '<span style="background:'+icolor+'22;color:'+icolor+';padding:3px 10px;border-radius:99px;font-size:11px;font-weight:800">'+interest+'</span>'+
+      '<button onclick="generateReport(\''+se(u)+'\')" style="background:#c9a84c;color:#1e3a5f;border:none;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:800;cursor:pointer">📋 Report</button>'+
+      '</div></div>'+
+
+      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-bottom:6px">Funnel Path</div>'+
+      '<div style="display:flex;gap:3px;margin-bottom:14px">'+funnelHtml+'</div>'+
+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;color:#64748b;margin-bottom:12px">'+
+      '<span>Sessions: <b style="color:#e2e8f0">'+sessions+(sessions>1?' 🔄 Re-reading!':'')+' </b></span>'+
+      '<span>Tabs visited: <b style="color:#e2e8f0">'+tabOrder.length+'/5</b></span>'+
+      '<span>Most time: <b style="color:#93c5fd">'+(topTab?tabLabels[topTab]||topTab:'—')+'</b></span>'+
+      '<span>Pattern: <b style="color:#a5b4fc">'+pattern+'</b></span>'+
+      '<span>CTA click: <b style="color:'+(ctaClick?'#22c55e':'#ef4444')+'">'+(ctaClick?'YES ✅':'NO')+'</b></span>'+
+      '<span>Print: <b style="color:'+(printEv?'#f59e0b':'#94a3b8')+'">'+(printEv?'YES 🖨':'no')+'</b></span>'+
+      '</div>'+
+
+      (topTerms.length?
+        '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-bottom:4px">Top Confusion Terms</div>'+
+        '<div style="font-size:11px;color:#fbbf24;margin-bottom:10px">'+
+        topTerms.map(function(t){return '💡 "'+t+'" ('+tooltips[t].count+'x, '+Math.round(tooltips[t].maxMs/1000)+'s max)'}).join(' · ')+
+        '</div>':'')+
+
+      (bounces.length?'<div style="font-size:11px;color:#f87171">⚠️ Bounced from: '+bounces.join(', ')+'</div>':'')+
+      (rageCount?'<div style="font-size:11px;color:#f87171">⚠️ Rage clicks: '+rageCount+'</div>':'')+
+
+      '<div style="font-size:10px;color:#475569;margin-top:8px">Last seen: '+(lastSeen?lastSeen.replace('T',' ').slice(0,16):'—')+'</div>'+
+      '</div>';
+  });
+  document.getElementById('userCards').innerHTML=cards||'<div style="color:#475569;padding:20px">No users yet — send the dossier link with ?cid=name</div>';
+
   if(!evs.length){
     document.getElementById('tbody').innerHTML='<tr><td colspan="26" class="empty">No events yet — open the dossier link: ?cid=yourname</td></tr>';
     return;
@@ -235,32 +306,788 @@ function clearAll(){
   fetch('./events.asp',{method:'POST'}).then(function(){ALL=[];render();});
 }
 
-function dlCSV(){
-  var h='Timestamp,User,Visit,Returning,Event,Tab,TabOrder,DwellSec,Bounce,SubTab,VideoClip,WatchPct,Replay,VideoEnded,TooltipTerm,HoverMs,ReadCarefully,CTAClick,Print,CopyText,AwaySec,Idle,RageClick,DeadClick,ScreenW,ScreenH';
-  var rows=ALL.map(function(r){
+function dlExcel(){
+  if(!ALL.length){alert('No data to export');return;}
+  if(typeof XLSX==='undefined'){alert('SheetJS not loaded — check internet connection');return;}
+
+  var validTabs=['profile','market','perf','intel','vault'];
+  var tabFull={profile:'Player Profile',market:'Betting Market',perf:'Performance Matrix',intel:'Intel',vault:'Action Analysis'};
+
+  // ── SHEET 1: Layer 1 — Raw Activity Log (one row per event) ──────────
+  var L1H=[
+    'Timestamp','User','Visit #','Returning?','Event','Tab','Tab Path',
+    'Dwell (s)','Bounce?','Sub-tab','Video Clip','Watch %','Replay?','Video Ended?',
+    'Tooltip Term','Hover Ms','Read Carefully?','CTA Click?','Print?','Copy Text',
+    'Away (s)','Idle?','Rage Click?','Dead Click?','Screen W','Screen H'
+  ];
+  var L1D=ALL.map(function(r){
     var x=r.extra||{},pm=(r.event||'').match(/video_(\d+)pct/);
     return [
-      (r.ts||'').replace('T',' ').slice(0,19),r.cid||'anon',r.visit||'',r.visit>1?'Yes':'No',r.event||'',
-      x.tab||'',x.order||'',x.ms?(x.ms/1000).toFixed(1):'',
+      (r.ts||'').replace('T',' ').slice(0,19),
+      r.cid||'anon', r.visit||'', r.visit>1?'Yes':'No', r.event||'',
+      x.tab||'', x.order||'', x.ms?parseFloat((x.ms/1000).toFixed(1)):'',
       r.event==='tab_bounce'?'YES':'',
       r.event&&r.event.indexOf('subtab_')===0?r.event.replace('subtab_',''):'',
-      x.clip||'',pm?pm[1]+'%':(x.pct?x.pct+'%':''),
-      x.replay?'Yes':'',r.event==='video_ended'?'Yes':'',x.term||'',
-      (r.event||'').indexOf('tooltip')>-1&&x.ms?x.ms:'',x.read?'Yes':'',
-      r.event==='cta_click'?'YES':'',r.event==='print'?'YES':'',
-      (x.text||'').replace(/,/g,' '),x.away_s||'',
-      r.event==='idle_60s'?'YES':'',r.event==='rage_click'?'YES':'',r.event==='dead_click'?'YES':'',
-      x.w||'',x.h||''
-    ].map(function(v){return '"'+(v+'').replace(/"/g,'""')+'"'}).join(',');
+      x.clip||'', pm?pm[1]+'%':(x.pct?x.pct+'%':''),
+      x.replay?'Yes':'', r.event==='video_ended'?'Yes':'',
+      x.term||'',
+      (r.event||'').indexOf('tooltip')>-1&&x.ms?x.ms:'',
+      x.read?'Yes':'',
+      r.event==='cta_click'?'YES':'',
+      r.event==='print'?'YES':'',
+      x.text||'', x.away_s||'',
+      r.event==='idle_60s'?'YES':'',
+      r.event==='rage_click'?'YES':'',
+      r.event==='dead_click'?'YES':'',
+      x.w||'', x.h||''
+    ];
   });
-  var a=document.createElement('a');
-  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h].concat(rows).join('\n'));
-  a.download='player-n-'+new Date().toISOString().slice(0,10)+'.csv';
-  a.click();
+
+  // ── SHEET 2: Layer 2 — Per-User Behavioral Intelligence (one row per user) ──
+  var L2H=[
+    // Identity
+    'User','Interest Level','Sessions','First Seen','Last Seen',
+    // Layer 1 — Tab engagement
+    'Tabs Visited (#)','Tabs Visited (list)','Reader Pattern','Reached Action Analysis?',
+    // Layer 1 — Conversion
+    'CTA Clicked?','Time-to-CTA (s)','Print?','Intel Crosslink?',
+    // Layer 1 — Content engagement
+    'Videos Played (#)','Video Replays (clips)','Sub-tabs Visited',
+    // Layer 1 — Attention & copy
+    'Text Copied (samples)','Focus-out Events (>30s)','Focus-out Durations (s)',
+    // Layer 2 — Jargon confusion
+    'Confusion Term #1','Term 1 Hovers','Term 1 Max Duration (s)','Term 1 Read Carefully?',
+    'Confusion Term #2','Term 2 Hovers','Term 2 Max Duration (s)','Term 2 Read Carefully?',
+    'Confusion Term #3','Term 3 Hovers','Term 3 Max Duration (s)','Term 3 Read Carefully?',
+    // Layer 2 — UX friction
+    'Rage Clicks','Dead Clicks',
+    // Layer 2 — Engagement signals
+    'Scroll Re-reads','Bounced Tabs (<5s)','Returned Tabs',
+    // Layer 2 — Technical
+    'Sidebar Collapses','Idle Events (60s+)','Screen Size',
+    // Layer 2 — Recommendation
+    'Top Recommendation','All Signals (summary)'
+  ];
+
+  var users=[...new Set(ALL.map(function(r){return r.cid;}))];
+  var L2D=users.map(function(uid){
+    var ue=ALL.filter(function(r){return r.cid===uid;});
+    var xe=function(r){return r.extra||{};};
+
+    // Sessions
+    var sessions=ue.filter(function(r){return r.event==='session_start';}).length;
+    var firstSeen=(ue[0].ts||'').replace('T',' ').slice(0,16);
+    var lastSeen=(ue[ue.length-1].ts||'').replace('T',' ').slice(0,16);
+
+    // Tab data
+    var tabDwells={};
+    ue.filter(function(r){return r.event==='tab_dwell';}).forEach(function(r){
+      var tab=xe(r).tab||''; tabDwells[tab]=(tabDwells[tab]||0)+(xe(r).ms||0);
+    });
+    var tabOrder=[];
+    ue.forEach(function(r){
+      if(r.event&&validTabs.indexOf(r.event.replace('tab_',''))>-1){
+        var t=r.event.replace('tab_','');
+        if(tabOrder[tabOrder.length-1]!==t)tabOrder.push(t);
+      }
+    });
+    var tabList=tabOrder.map(function(t){return tabFull[t]||t;}).join(' → ')||'—';
+    var reachedVault=tabOrder.indexOf('vault')>-1;
+
+    // Reader pattern
+    var pattern='';
+    if(tabOrder.length<=1)pattern='Only opened first section';
+    else{
+      var seq=true;
+      for(var i=1;i<tabOrder.length;i++){if(validTabs.indexOf(tabOrder[i])<validTabs.indexOf(tabOrder[i-1])){seq=false;break;}}
+      if(seq)pattern='Sequential analyst (1→2→3)';
+      else if(tabOrder[0]==='vault')pattern='Evidence-first skeptic';
+      else pattern='Non-linear / selective reader';
+    }
+
+    // Conversion events
+    var ctaClicked=ue.some(function(r){return r.event==='cta_click';});
+    var printEv=ue.some(function(r){return r.event==='print';});
+    var intelCrosslink=ue.some(function(r){return r.event==='intel_crosslink';});
+    var sessionStartEv=ue.find(function(r){return r.event==='session_start';});
+    var ctaEv=ue.find(function(r){return r.event==='cta_click';});
+    var timeToCta=sessionStartEv&&ctaEv?Math.round((new Date(ctaEv.ts)-new Date(sessionStartEv.ts))/1000):'';
+
+    // Content engagement
+    var videoData={};
+    ue.forEach(function(r){
+      var clip=xe(r).clip; if(!clip)return;
+      if(!videoData[clip])videoData[clip]={plays:0,replay:false};
+      if(r.event==='video_play'){videoData[clip].plays++;if(xe(r).replay)videoData[clip].replay=true;}
+    });
+    var videosPlayed=Object.keys(videoData).filter(function(c){return videoData[c].plays>0;}).length;
+    var videoReplayClips=Object.keys(videoData).filter(function(c){return videoData[c].replay;}).join(', ')||'—';
+    var subTabsUniq=[...new Set(ue.filter(function(r){return r.event&&r.event.indexOf('subtab_')===0;}).map(function(r){return r.event.replace('subtab_','');}))];
+    var subTabStr=subTabsUniq.length?subTabsUniq.join(', '):'—';
+    var subTabReaderType='';
+    if(subTabsUniq.length){
+      var wantStats=subTabsUniq.indexOf('index')>-1||subTabsUniq.indexOf('accuracy')>-1;
+      var wantNarr=subTabsUniq.indexOf('inversion')>-1||subTabsUniq.indexOf('ratings')>-1;
+      subTabReaderType=wantStats&&wantNarr?' (mixed)':wantStats?' (stats reader)':wantNarr?' (narrative reader)':'';
+    }
+
+    // Attention & copy
+    var copies=ue.filter(function(r){return r.event==='copy';}).map(function(r){return xe(r).text||'';}).filter(Boolean);
+    var copyStr=copies.length?copies.slice(0,3).map(function(c){return '"'+(c||'').slice(0,40)+'"';}).join(' | '):'—';
+    var focusLoss=ue.filter(function(r){return r.event==='focus_return';});
+    var focusDurs=focusLoss.map(function(r){return xe(r).away_s||0;}).join(', ')||'—';
+
+    // Layer 2 — Tooltip confusion
+    var tooltips={};
+    ue.filter(function(r){return r.event==='tooltip_hover';}).forEach(function(r){
+      var term=xe(r).term||''; if(!term)return;
+      if(!tooltips[term])tooltips[term]={count:0,maxMs:0,reads:0};
+      tooltips[term].count++;
+      tooltips[term].maxMs=Math.max(tooltips[term].maxMs,xe(r).ms||0);
+      if(xe(r).read)tooltips[term].reads++;
+    });
+    var topTerms=Object.keys(tooltips).sort(function(a,b){return tooltips[b].count-tooltips[a].count;});
+    var gt=function(n,f){
+      if(!topTerms[n])return '';
+      var d=tooltips[topTerms[n]];
+      if(f==='name')return topTerms[n];
+      if(f==='count')return d.count;
+      if(f==='dur')return Math.round(d.maxMs/1000);
+      if(f==='read')return d.reads>0?'Yes':'No';
+      return '';
+    };
+
+    // Layer 2 — UX friction
+    var rageCount=ue.filter(function(r){return r.event==='rage_click';}).length;
+    var deadCount=ue.filter(function(r){return r.event==='dead_click';}).length;
+
+    // Layer 2 — Engagement
+    var scrollRereads=ue.filter(function(r){return r.event==='scroll_reread';}).length;
+    var bounceData={};
+    ue.filter(function(r){return r.event==='tab_bounce';}).forEach(function(r){bounceData[xe(r).tab||'']=xe(r).ms||0;});
+    var bounceStr=Object.keys(bounceData).filter(Boolean).map(function(t){return (tabFull[t]||t)+' ('+(bounceData[t]/1000).toFixed(1)+'s)';}).join(', ')||'—';
+    var returnStr=[...new Set(ue.filter(function(r){return r.event==='tab_return';}).map(function(r){return tabFull[xe(r).tab||'']||xe(r).tab||'';}))].filter(Boolean).join(', ')||'—';
+
+    // Layer 2 — Technical
+    var sidebarCollapses=ue.filter(function(r){return r.event==='sidebar_close';}).length;
+    var idleCount=ue.filter(function(r){return r.event==='idle_60s';}).length;
+    var resizes=ue.filter(function(r){return r.event==='window_resize';});
+    var lastScreen=resizes.length?(xe(resizes[resizes.length-1]).w||'?')+'×'+(xe(resizes[resizes.length-1]).h||'?'):'—';
+
+    // Interest
+    var interest;
+    if((ctaClicked&&printEv)||(ctaClicked&&sessions>1))interest='VERY HIGH';
+    else if(ctaClicked||printEv)interest='HIGH';
+    else if(reachedVault&&sessions>1)interest='MEDIUM-HIGH';
+    else if(reachedVault||tabOrder.length>=3)interest='MEDIUM';
+    else interest='LOW';
+
+    // Top recommendation (single line)
+    var topRec='';
+    if(ctaClicked&&printEv)topRec='CRITICAL: Pre-sold & escalating — call within 24h, ask "who else saw this?"';
+    else if(ctaClicked)topRec='HIGH: CTA clicked — send calendar link within the hour';
+    else if(printEv)topRec='HIGH: Printed without booking — offer group briefing, ask who they shared with';
+    else if(sessions>1)topRec='HIGH: Returned '+sessions+'x — prepare for multi-stakeholder call';
+    else if(intelCrosslink)topRec='HIGH: Followed evidence thread — lead with HLTV comments in call';
+    else if(videoReplayClips!=='—')topRec='HIGH: Replayed '+videoReplayClips+' — open call with these rounds';
+    else if(topTerms.length)topRec='MEDIUM: Jargon confusion on "'+topTerms.slice(0,3).join('", "')+'\" — rewrite or explain in call';
+    else if(rageCount)topRec='MEDIUM: '+rageCount+' rage clicks — fix interactive affordance';
+    else if(bounceStr!=='—')topRec='LOW: Bounced from '+bounceStr+' — rewrite opening sentence of those tabs';
+    else topRec='LOW: No strong signal yet — follow up to prompt re-read';
+
+    // All signals summary
+    var signals=[];
+    if(sessions>1)signals.push('Returned '+sessions+'x');
+    if(ctaClicked)signals.push('CTA clicked'+(timeToCta?' in '+timeToCta+'s':''));
+    if(printEv)signals.push('Printed');
+    if(intelCrosslink)signals.push('Followed Intel link');
+    if(videoReplayClips!=='—')signals.push('Replayed: '+videoReplayClips);
+    if(topTerms.length)signals.push('Confused on: '+topTerms.slice(0,3).join(', '));
+    if(rageCount)signals.push(rageCount+' rage clicks');
+    if(deadCount)signals.push(deadCount+' dead clicks');
+    if(scrollRereads)signals.push(scrollRereads+' scroll re-reads');
+    if(bounceStr!=='—')signals.push('Bounced: '+bounceStr);
+    if(returnStr!=='—')signals.push('Returned to: '+returnStr);
+    if(focusLoss.length)signals.push('Away '+focusLoss.length+'x: '+focusDurs+'s');
+    if(idleCount)signals.push(idleCount+' idle events');
+    if(copies.length)signals.push('Copied '+copies.length+' text(s)');
+    var allSignals=signals.join(' | ')||'No notable signals';
+
+    return [
+      uid, interest, sessions, firstSeen, lastSeen,
+      tabOrder.length, tabList, pattern, reachedVault?'YES':'NO',
+      ctaClicked?'YES':'NO', timeToCta||'—', printEv?'YES':'NO', intelCrosslink?'YES':'NO',
+      videosPlayed||'—', videoReplayClips, subTabStr+subTabReaderType,
+      copyStr, focusLoss.length||'—', focusDurs,
+      gt(0,'name'), gt(0,'count'), gt(0,'dur'), gt(0,'read'),
+      gt(1,'name'), gt(1,'count'), gt(1,'dur'), gt(1,'read'),
+      gt(2,'name'), gt(2,'count'), gt(2,'dur'), gt(2,'read'),
+      rageCount||'—', deadCount||'—',
+      scrollRereads||'—', bounceStr, returnStr,
+      sidebarCollapses||'—', idleCount||'—', lastScreen,
+      topRec, allSignals
+    ];
+  });
+
+  // ── BUILD WORKBOOK ──────────────────────────────────────────────────────
+  var wb=XLSX.utils.book_new();
+
+  var ws1=XLSX.utils.aoa_to_sheet([L1H].concat(L1D));
+  ws1['!cols']=L1H.map(function(h,i){return {wch:i<4?14:i===4?22:i<8?12:16};});
+  // Freeze header row
+  ws1['!freeze']={xSplit:0,ySplit:1};
+
+  var ws2=XLSX.utils.aoa_to_sheet([L2H].concat(L2D));
+  ws2['!cols']=L2H.map(function(){return {wch:22};});
+  ws2['!freeze']={xSplit:0,ySplit:1};
+
+  XLSX.utils.book_append_sheet(wb,'Layer 1 — Activity Log',ws1);
+  XLSX.utils.book_append_sheet(wb,'Layer 2 — Intelligence',ws2);
+
+  XLSX.writeFile(wb,'player-n-'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
 load();
 startTimer();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REPORT GENERATOR — two-sheet PDF-ready report
+// ─────────────────────────────────────────────────────────────────────────────
+function generateReport(uid){
+  var ue=ALL.filter(function(r){return r.cid===uid;});
+  if(!ue.length){alert('No data for '+uid);return;}
+
+  var xe=function(r){return r.extra||{};};
+  var fmt=function(ts){return (ts||'').replace('T',' ').slice(0,16);};
+  var sfmt=function(ms){
+    if(!ms||ms<0)return '—';
+    return ms>=60000?(ms/60000).toFixed(1)+'m':(ms/1000).toFixed(0)+'s';
+  };
+  var esc=function(s){
+    return (''+( s||'')).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  };
+  var none=function(v){return (v===null||v===undefined||v==='')?'—':v;};
+
+  // ── LAYER 1 DATA ────────────────────────────────────────────────────────
+  var validTabs=['profile','market','perf','intel','vault'];
+  var tabLabels={profile:'01 · Player Profile',market:'02 · Betting Market',perf:'03 · Performance Matrix',intel:'04 · Intel',vault:'05 · Action Analysis'};
+  var tabShort={profile:'Player Profile',market:'Betting Market',perf:'Performance Matrix',intel:'Intel',vault:'Action Analysis'};
+
+  var sessions=ue.filter(function(r){return r.event==='session_start';}).length;
+  var firstSeen=fmt(ue[0].ts), lastSeen=fmt(ue[ue.length-1].ts);
+
+  var tabDwells={};
+  ue.filter(function(r){return r.event==='tab_dwell';}).forEach(function(r){
+    var tab=xe(r).tab||''; tabDwells[tab]=(tabDwells[tab]||0)+(xe(r).ms||0);
+  });
+
+  var tabOrder=[];
+  ue.forEach(function(r){
+    if(r.event&&validTabs.indexOf(r.event.replace('tab_',''))>-1){
+      var tab=r.event.replace('tab_','');
+      if(tabOrder[tabOrder.length-1]!==tab)tabOrder.push(tab);
+    }
+  });
+
+  var bounceDetails={};
+  ue.filter(function(r){return r.event==='tab_bounce';}).forEach(function(r){
+    var tab=xe(r).tab||''; bounceDetails[tab]=xe(r).ms||0;
+  });
+
+  var returnMap={};
+  ue.filter(function(r){return r.event==='tab_return';}).forEach(function(r){
+    returnMap[xe(r).tab||'']=(xe(r).times||2);
+  });
+
+  var videoData={};
+  ue.forEach(function(r){
+    var clip=xe(r).clip; if(!clip)return;
+    if(!videoData[clip])videoData[clip]={plays:0,replay:false,maxPct:0,ended:false};
+    if(r.event==='video_play'){videoData[clip].plays++;if(xe(r).replay)videoData[clip].replay=true;}
+    if(r.event==='video_ended')videoData[clip].ended=true;
+    var m=(r.event||'').match(/video_(\d+)pct/);
+    if(m)videoData[clip].maxPct=Math.max(videoData[clip].maxPct,parseInt(m[1]));
+  });
+
+  var ctaClicked=ue.some(function(r){return r.event==='cta_click';});
+  var printEv=ue.some(function(r){return r.event==='print';});
+  var copies=ue.filter(function(r){return r.event==='copy';}).map(function(r){return xe(r).text||'';}).filter(Boolean);
+  var focusLoss=ue.filter(function(r){return r.event==='focus_return';});
+  var intelCrosslink=ue.some(function(r){return r.event==='intel_crosslink';});
+  var subTabs=ue.filter(function(r){return r.event&&r.event.indexOf('subtab_')===0;}).map(function(r){return r.event.replace('subtab_','');});
+
+  var sessionStartEv=ue.find(function(r){return r.event==='session_start';});
+  var ctaEv=ue.find(function(r){return r.event==='cta_click';});
+  var timeToCta=null;
+  if(sessionStartEv&&ctaEv){
+    timeToCta=Math.round((new Date(ctaEv.ts)-new Date(sessionStartEv.ts))/1000);
+  }
+
+  // ── LAYER 2 DATA ────────────────────────────────────────────────────────
+  var tooltips={};
+  ue.filter(function(r){return r.event==='tooltip_hover';}).forEach(function(r){
+    var term=xe(r).term||''; if(!term)return;
+    if(!tooltips[term])tooltips[term]={count:0,maxMs:0,reads:0};
+    tooltips[term].count++;
+    tooltips[term].maxMs=Math.max(tooltips[term].maxMs,xe(r).ms||0);
+    if(xe(r).read)tooltips[term].reads++;
+  });
+  var topTerms=Object.keys(tooltips).sort(function(a,b){return tooltips[b].count-tooltips[a].count;});
+
+  var rageClicks=ue.filter(function(r){return r.event==='rage_click';});
+  var deadClicks=ue.filter(function(r){return r.event==='dead_click';});
+  var scrollRereads=ue.filter(function(r){return r.event==='scroll_reread';});
+  var sidebarCloses=ue.filter(function(r){return r.event==='sidebar_close';}).length;
+  var sidebarOpens=ue.filter(function(r){return r.event==='sidebar_open';}).length;
+  var idleCount=ue.filter(function(r){return r.event==='idle_60s';}).length;
+  var resizes=ue.filter(function(r){return r.event==='window_resize';});
+  var lastScreen=resizes.length?(xe(resizes[resizes.length-1]).w||'?')+'×'+(xe(resizes[resizes.length-1]).h||'?'):null;
+
+  // ── INTEREST ────────────────────────────────────────────────────────────
+  var reachedVault=tabOrder.indexOf('vault')>-1;
+  var interest,icolor,ibg;
+  if((ctaClicked&&printEv)||(ctaClicked&&sessions>1)){interest='VERY HIGH';icolor='#16a34a';ibg='#dcfce7';}
+  else if(ctaClicked||printEv){interest='HIGH';icolor='#16a34a';ibg='#dcfce7';}
+  else if(reachedVault&&sessions>1){interest='MEDIUM-HIGH';icolor='#d97706';ibg='#fef3c7';}
+  else if(reachedVault||tabOrder.length>=3){interest='MEDIUM';icolor='#d97706';ibg='#fef3c7';}
+  else{interest='LOW';icolor='#dc2626';ibg='#fef2f2';}
+
+  // ── RECOMMENDATIONS ─────────────────────────────────────────────────────
+  var recs=[];
+  function rec(p,icon,level,title,body,action){recs.push({p:p,icon:icon,level:level,title:title,body:body,action:action});}
+
+  if(ctaClicked&&printEv)
+    rec(0,'🔥','CRITICAL','Pre-sold & escalating internally',
+      uid+' clicked "Book a Consultation" AND printed the report. Maximum intent signal stack.',
+      'Call within 24 hours. Open with: "Who else have you shared this with?"');
+  else if(ctaClicked)
+    rec(0,'✅','HIGH','CTA clicked — direct follow-up window',
+      'Explicit intent: they clicked the booking link.',
+      'Send a calendar link within the hour. One sentence, one link.');
+  if(printEv&&!ctaClicked)
+    rec(1,'🖨','HIGH','Printed without booking — internal escalation',
+      'Going to a supervisor, committee, or legal team. They need upward permission.',
+      'Follow up: "Who else needs to review this?" Offer a group briefing.');
+  if(sessions>1)
+    rec(1,'🔄','HIGH','Returned '+sessions+' times — circulating internally',
+      'Multiple sessions = sharing with colleagues, building consensus.',
+      'Prepare for a multi-stakeholder call. Ask who is involved in the decision.');
+  if(intelCrosslink)
+    rec(2,'🔗','HIGH','Followed the evidence thread (Profile → Intel)',
+      'Clicked the Intel cross-link — they pursued supporting evidence, not just the summary.',
+      'Walk through the HLTV comments explicitly in the call.');
+  var replayClips=Object.keys(videoData).filter(function(c){return videoData[c].replay;});
+  if(replayClips.length)
+    rec(2,'🔁','HIGH','Video replays: '+replayClips.join(', '),
+      'A replay is a stronger conviction signal than a first play.',
+      'Open the call with these clips. Ask: "What stood out to you in '+replayClips[0]+'?"');
+  if(focusLoss.length){
+    var maxAway=Math.max.apply(null,focusLoss.map(function(r){return xe(r).away_s||0;}));
+    rec(2,'👥','MEDIUM','Left tab for '+maxAway+'s — pulled in a colleague',
+      'Tab hidden for > 30s — likely consulting someone or cross-referencing.',
+      'Ask: "Did you discuss this with anyone on your team?"');
+  }
+  if(copies.length)
+    rec(2,'📋','MEDIUM','Copied text to verify or share',
+      'Copied: '+copies.slice(0,3).map(function(t){return '"'+esc(t.slice(0,50))+'"';}).join(', ')+'.',
+      'Pre-empt the verification: address what they copied in your follow-up.');
+  if(topTerms.length){
+    var confList=topTerms.slice(0,3).map(function(t){
+      return '"'+t+'" ('+tooltips[t].count+'× hovered, '+Math.round(tooltips[t].maxMs/1000)+'s max)';
+    }).join('; ');
+    rec(3,'💡','MEDIUM','Jargon confusion: '+confList,
+      'These are the words your audience does not fully own.',
+      'Rewrite in plain language or open the call with a 30-second explainer.');
+  }
+  if(scrollRereads.length){
+    var rrTabs=[];
+    scrollRereads.forEach(function(r){var t=xe(r).tab||'';if(rrTabs.indexOf(t)<0)rrTabs.push(t);});
+    rec(3,'↕️','MEDIUM','Re-read sections: '+rrTabs.map(function(t){return tabShort[t]||t;}).join(', '),
+      'Rapid scroll reversals in < 10s = re-reading. Engagement or confusion.',
+      'Cross-check with tooltip data in same section to distinguish the two.');
+  }
+  if(rageClicks.length)
+    rec(3,'⚡','MEDIUM',rageClicks.length+' rage click(s)',
+      '3+ clicks in the same area in 1s — they expected interactivity that wasn\'t there.',
+      'Add cursor:pointer or a real link at those coordinates.');
+  var bouncedList=Object.keys(bounceDetails).filter(Boolean);
+  if(bouncedList.length)
+    rec(4,'⚠️','LOW','Quick exit (< 5s) from: '+bouncedList.map(function(t){return tabShort[t]||t;}).join(', '),
+      'Tab title or opening content did not match expectation.',
+      'Rewrite the first visible sentence of these sections.');
+  var returnedList=Object.keys(returnMap).filter(Boolean);
+  if(returnedList.length)
+    rec(4,'↩️','LOW','Hesitation then return: '+returnedList.map(function(t){return tabShort[t]||t;}).join(', '),
+      'Skipped then came back — net positive signal.',
+      'Do not change these sections. The content earned its second look.');
+  if(deadClicks.length)
+    rec(4,'🖱️','LOW',deadClicks.length+' dead clicks',
+      'Clicked elements with no handler — hunting for a link.',
+      'Add tooltips or links where they expect to go deeper.');
+  if(idleCount)
+    rec(4,'⏱','LOW',idleCount+' idle event(s) — 60s+ with tab visible',
+      'No interaction for a minute. Deeply reading or distracted.',
+      'If combined with no tooltip hovers: section may be too dense. Break it up.');
+  if(sidebarCloses)
+    rec(5,'◀️','INFO','Collapsed sidebar ('+sidebarCloses+'×)',
+      'Hid the nav panel — wanted more reading space or on narrow screen.',
+      'Expected on laptop/tablet. Check layout below 768px if combined with resize.');
+  if(lastScreen&&parseInt(lastScreen)<768)
+    rec(5,'📱','INFO','Mobile screen ('+lastScreen+')',
+      'Viewing on a small screen. Tables and charts may have been hard to read.',
+      'Send a PDF summary or verify mobile layout is intact.');
+
+  recs.sort(function(a,b){return a.p-b.p;});
+
+  // ── HTML HELPERS ─────────────────────────────────────────────────────────
+  var lc={CRITICAL:'#dc2626',HIGH:'#16a34a',MEDIUM:'#d97706',LOW:'#64748b',INFO:'#3b82f6'};
+  var lb={CRITICAL:'#fef2f2',HIGH:'#f0fdf4',MEDIUM:'#fffbeb',LOW:'#f8fafc',INFO:'#eff6ff'};
+
+  // Shared table styles
+  var TH='background:#1e3a5f;color:#c9a84c;padding:9px 14px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;';
+  var TD='padding:9px 14px;vertical-align:top;font-size:13px;';
+  var TDBR='border-bottom:1px solid #f1f5f9;';
+
+  // Section header row inside a table
+  function sh(label,color){
+    color=color||'#1e3a5f';
+    return '<tr><td colspan="4" style="background:'+color+';color:#fff;padding:8px 14px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em">'+label+'</td></tr>';
+  }
+  // Standard data row: metric | value | source | tells
+  function dr(metric,value,source,tells,flagged){
+    var bg=flagged?'#fffbeb':'#fff';
+    var vc=flagged?'#d97706':'#0f172a';
+    return '<tr style="'+TDBR+'background:'+bg+'">'+
+      '<td style="'+TD+'font-weight:700;color:#334155;width:22%">'+metric+'</td>'+
+      '<td style="'+TD+'font-family:monospace;color:'+vc+';width:28%">'+value+'</td>'+
+      '<td style="'+TD+'color:#64748b;font-size:11px;width:20%">'+source+'</td>'+
+      '<td style="'+TD+'color:#475569;font-size:12px;width:30%">'+tells+'</td>'+
+      '</tr>';
+  }
+  // Data row for Layer 2: signal | value | impl | classification | tells
+  function dr2(signal,value,impl,cls,tells,flagged){
+    var bg=flagged?'#fef2f2':'#fff';
+    return '<tr style="'+TDBR+'background:'+bg+'">'+
+      '<td style="'+TD+'font-weight:700;color:#334155;width:20%">'+signal+'</td>'+
+      '<td style="'+TD+'font-family:monospace;color:'+(flagged?'#dc2626':'#0f172a')+';width:22%">'+value+'</td>'+
+      '<td style="'+TD+'color:#64748b;font-size:11px;font-family:monospace;width:20%">'+impl+'</td>'+
+      '<td style="'+TD+'color:#d97706;font-size:12px;width:18%">'+cls+'</td>'+
+      '<td style="'+TD+'color:#475569;font-size:12px;width:20%">'+tells+'</td>'+
+      '</tr>';
+  }
+
+  // ── BUILD LAYER 1 TABLE ROWS ─────────────────────────────────────────────
+  var tabSeqLabels=tabOrder.map(function(t){return tabShort[t]||t;});
+  var patternStr='';
+  if(tabOrder.length<=1)patternStr='Only opened first section';
+  else{
+    var seq2=true;
+    for(var i=1;i<tabOrder.length;i++){if(validTabs.indexOf(tabOrder[i])<validTabs.indexOf(tabOrder[i-1])){seq2=false;break;}}
+    if(seq2)patternStr='Sequential analyst — reads in order 1→2→3';
+    else if(tabOrder[0]==='vault')patternStr='Evidence-first skeptic — went straight to video';
+    else patternStr='Selective non-linear reader';
+  }
+
+  // Tab dwell block (all 5 tabs as sub-lines in value cell)
+  var tabDwellVal=validTabs.map(function(t){
+    var ms=tabDwells[t]||0;
+    var visited=tabOrder.indexOf(t)>-1;
+    var pos=tabOrder.indexOf(t)+1;
+    var flag=ms>0&&ms<5000?' ⚠ bounced':'';
+    return '<span style="color:'+(visited?'#1e3a5f':'#94a3b8')+'">'+
+      tabLabels[t]+': '+(visited?'<b>'+sfmt(ms)+'</b>'+flag:'—')+'</span>';
+  }).join('<br>');
+
+  var clips=Object.keys(videoData);
+  var videoPlaysVal=clips.length?clips.map(function(c){
+    var d=videoData[c];
+    var pct=d.ended?'100%':(d.maxPct?d.maxPct+'%+':'< 25%');
+    return '<b>'+esc(c)+'</b>: '+d.plays+' play'+(d.plays!==1?'s':'')+' · '+pct+' watched';
+  }).join('<br>'):'No videos played';
+
+  var videoReplayVal=clips.length?clips.map(function(c){
+    var d=videoData[c];
+    return '<b>'+esc(c)+'</b>: '+(d.replay?'<span style="color:#d97706;font-weight:700">🔁 REPLAYED</span>':'—');
+  }).join('<br>'):'No videos played';
+
+  var subTabsUniq=[...new Set(subTabs)];
+  var subTabStr=subTabsUniq.length?subTabsUniq.join(' → '):'—';
+  var subTabReaderType=subTabsUniq.length?
+    ((subTabsUniq.indexOf('index')>-1||subTabsUniq.indexOf('accuracy')>-1)&&(subTabsUniq.indexOf('inversion')>-1||subTabsUniq.indexOf('ratings')>-1)?'Mixed (stats + narrative)':
+    (subTabsUniq.indexOf('index')>-1||subTabsUniq.indexOf('accuracy')>-1)?'Stats-first reader':
+    'Narrative reader'):'—';
+
+  var copyVal=copies.length?copies.slice(0,4).map(function(t,i){return (i+1)+'. "'+esc(t.slice(0,60))+'"';}).join('<br>'):'—';
+  var focusVal=focusLoss.length?focusLoss.map(function(r){return xe(r).away_s+'s away';}).join('<br>'):'—';
+  var timeToCTAval=timeToCta!==null?
+    (timeToCta<120?timeToCta+'s (pre-sold — very fast)':
+     timeToCta<300?sfmt(timeToCta*1000)+' (persuaded in first read)':
+     sfmt(timeToCta*1000)+' (persuaded by content — long read)'):'—';
+
+  // ── LAYER 1 TABLE ──────────────────────────────────────────────────────
+  var l1Table='<table style="width:100%;border-collapse:collapse;font-size:13px">'+
+    '<thead><tr>'+
+    '<th style="'+TH+'width:22%">Metric</th>'+
+    '<th style="'+TH+'width:28%">Value</th>'+
+    '<th style="'+TH+'width:20%">Where it lives</th>'+
+    '<th style="'+TH+'width:30%">What it tells you</th>'+
+    '</tr></thead><tbody>'+
+
+    sh('Session Overview')+
+    dr('Sessions (returning visits)',
+      sessions>1?'<b style="color:#d97706">'+sessions+' sessions</b> 🔄':'1 session',
+      'Cookie / localStorage',
+      sessions>1?'Re-reading = showing to someone else. Prepare for a group call.':'Single visit — no return signal yet.')+
+    dr('First seen / Last seen',firstSeen+' → '+lastSeen,'Server timestamps','Time window of engagement.')+
+
+    sh('Tab Engagement')+
+    dr('Time on each tab (01–05)',tabDwellVal,'Page-level dwell tracker','Interest weighting across your argument. Longest dwell = deepest conviction.')+
+    dr('Tab visit order',
+      tabSeqLabels.length?tabSeqLabels.join(' → '):'—',
+      'Sidebar nav clicks',
+      patternStr)+
+    dr('Reached Tab 05 (Action Analysis)',
+      reachedVault?'<b style="color:#16a34a">YES — visited</b>':'<span style="color:#dc2626">NO — did not reach</span>',
+      'Funnel pass-through',
+      reachedVault?'Completed the full funnel. Saw the video evidence.':'Dropped before video evidence. Consider restructuring the funnel.')+
+
+    sh('Conversion Events')+
+    dr('CTA click — "Book the call"',
+      ctaClicked?'<b style="color:#16a34a">YES ✅</b>':'<span style="color:#dc2626">NO</span>',
+      'mailto link click',
+      'The only metric that matters for revenue.')+
+    dr('Time-to-CTA',timeToCTAval,'Session timing','Short = pre-sold. Long = persuaded by content.')+
+    dr('Print event',
+      printEv?'<b style="color:#d97706">YES 🖨</b>':'—',
+      'window.print',
+      'Highest-intent signal. Escalating internally to a decision-maker.')+
+    dr('Copy + selection text',copyVal,'copy event','What they wanted to verify or paste in Slack. Shows active fact-checking.')+
+    dr('Tab focus-out > 30s',focusVal,'visibilitychange','Went to research something or pull in a colleague.')+
+
+    sh('Content Engagement')+
+    dr('Video plays & watch % per clip',videoPlaysVal,'Action Analysis tab','Which rounds resonated, which were skipped.')+
+    dr('Video replays',videoReplayVal,'Action Analysis tab','A replay is a stronger signal than a first play. High conviction on specific round.')+
+    dr('Sub-tab switches',
+      subTabStr+(subTabStr!=='—'?' ('+subTabReaderType+')':''),
+      'Performance Matrix',
+      'Inversion/Ratings = wants narrative. Index/Accuracy = wants raw stats.')+
+    dr('Intel cross-link click',
+      intelCrosslink?'<b style="color:#16a34a">YES — followed thread</b>':'—',
+      'Profile tab → Intel',
+      'The reader followed the evidence trail = engaged, high-intent.')+
+
+    '</tbody></table>';
+
+  // ── BUILD LAYER 2 TABLE ROWS ─────────────────────────────────────────────
+  var tooltipCountVal=topTerms.length?
+    topTerms.map(function(t,i){
+      return (i<3?'<b style="color:#d97706">':'')+'#'+(i+1)+' "'+esc(t)+'" — '+tooltips[t].count+' hover'+(tooltips[t].count!==1?'s':'')+(i<3?'</b>':'');
+    }).join('<br>'):'No terms hovered';
+  var topThreeStr=topTerms.slice(0,3).map(function(t){return '"'+t+'"';}).join(', ');
+
+  var tooltipDurRows=topTerms.length?topTerms.map(function(t){
+    var dur=tooltips[t].maxMs;
+    var cls=dur<600?'Glanced past':dur<2000?'Paused':'<b style="color:#dc2626">Read carefully</b>';
+    return '"'+esc(t)+'": '+Math.round(dur/1000)+'s max — '+cls;
+  }).join('<br>'):'—';
+
+  var rrTabsMap={};
+  scrollRereads.forEach(function(r){
+    var t=xe(r).tab||'unknown';
+    rrTabsMap[t]=(rrTabsMap[t]||0)+1;
+  });
+  var rrVal=Object.keys(rrTabsMap).length?
+    Object.keys(rrTabsMap).map(function(t){return (tabShort[t]||t)+': '+rrTabsMap[t]+'×';}).join('<br>'):'—';
+
+  var bounceRows=Object.keys(bounceDetails).filter(Boolean).map(function(t){
+    var ms=bounceDetails[t];
+    return (tabShort[t]||t)+': <b style="color:#dc2626">'+(ms/1000).toFixed(1)+'s</b>';
+  }).join('<br>')||'—';
+
+  var returnRows=Object.keys(returnMap).filter(Boolean).map(function(t){
+    return (tabShort[t]||t)+' (returned '+returnMap[t]+' time'+(returnMap[t]!==1?'s':'')+')'
+  }).join('<br>')||'—';
+
+  var sidebarVal=sidebarCloses?sidebarCloses+' collapse'+(sidebarCloses!==1?'s':'')+
+    (sidebarOpens?' · '+sidebarOpens+' re-open'+(sidebarOpens!==1?'s':''):''):'—';
+
+  // ── LAYER 2 TABLE ──────────────────────────────────────────────────────
+  var l2Table='<table style="width:100%;border-collapse:collapse;font-size:13px">'+
+    '<thead><tr>'+
+    '<th style="'+TH+'width:20%">Signal</th>'+
+    '<th style="'+TH+'width:22%">Value</th>'+
+    '<th style="'+TH+'width:20%">Implementation</th>'+
+    '<th style="'+TH+'width:18%">Classification</th>'+
+    '<th style="'+TH+'width:20%">What it tells you</th>'+
+    '</tr></thead><tbody>'+
+
+    sh('Copy / Jargon Signals','#78350f')+
+    dr2('Tooltip hover count per term',
+      tooltipCountVal,
+      'mouseenter on .term',
+      topTerms.length?'Top-3 = copy rewrite list':'No confusion',
+      topTerms.length?'Jargon that didn\'t land. Rewrite: '+topThreeStr+'.':'All terms were clear.',
+      topTerms.length>=3)+
+    dr2('Tooltip hover duration',
+      tooltipDurRows,
+      'mouseleave − mouseenter',
+      topTerms.some(function(t){return tooltips[t].maxMs>=2000;})?'Deep confusion found':'Mostly glanced',
+      '< 600ms = glanced past. > 2s = read carefully. > 2s on a term = rewrite it.',
+      topTerms.some(function(t){return tooltips[t].maxMs>=2000;}))+
+
+    sh('UX Friction Signals','#7c2d12')+
+    dr2('Rage clicks (3+ in 50px in 1s)',
+      rageClicks.length?rageClicks.length+' cluster'+(rageClicks.length!==1?'s':''):'—',
+      'Click cluster detection',
+      rageClicks.length?'Expected interactivity':'No friction',
+      'Owner expected this to be clickable. Add a link or modal.',
+      rageClicks.length>0)+
+    dr2('Dead clicks (no handler)',
+      deadClicks.length?deadClicks.length+' click'+(deadClicks.length!==1?'s':''):'—',
+      'Click vs handler check',
+      deadClicks.length?'Hunting for a link':'No missing affordance',
+      'Missing affordance — they\'re looking for deeper navigation.',
+      deadClicks.length>2)+
+
+    sh('Engagement & Re-read Signals','#1e3a5f')+
+    dr2('Scroll re-reads (< 10s reversal)',
+      rrVal,
+      'Scroll velocity tracker',
+      scrollRereads.length?'Re-reading detected':'No re-reads',
+      'They re-read a section. Either persuaded (no tooltip hovers after) or confused (tooltips after).',
+      false)+
+    dr2('Sidebar collapse / re-expand',
+      sidebarVal,
+      'toggleSidebar() calls',
+      sidebarCloses?'Layout issue':'No issue',
+      'Default layout isn\'t right for their screen. More collapses = narrower screen.',
+      false)+
+    dr2('Tab bounce < 5s',
+      bounceRows,
+      'Tab dwell tracker',
+      Object.keys(bounceDetails).length?'Section failing':'No bounces',
+      'This tab didn\'t meet expectation. Rewrite the opening sentence.',
+      Object.keys(bounceDetails).length>0)+
+    dr2('Skipped tab returned later',
+      returnRows,
+      'Visit-order log',
+      Object.keys(returnMap).length?'Hesitation → reconsideration':'No hesitation',
+      'Initial resistance then second look = net positive. Don\'t change these sections.',
+      false)+
+
+    sh('Technical / Layout Signals','#374151')+
+    dr2('Window resize',
+      lastScreen?lastScreen+' ('+( parseInt(lastScreen)<768?'⚠ mobile':'desktop')+')'  :'—',
+      'resize event',
+      lastScreen&&parseInt(lastScreen)<768?'Mobile viewer':'Desktop viewer',
+      'Layout doesn\'t fit their screen. Mobile < 768px = send a PDF instead.',
+      lastScreen&&parseInt(lastScreen)<768)+
+    dr2('Long idle > 60s (tab visible)',
+      idleCount?idleCount+' event'+(idleCount!==1?'s':''):'—',
+      'mousemove last-seen',
+      idleCount?'Deep reading or distracted':'No idle',
+      'Either deeply reading dense text or distracted. Cross-check with focus state to distinguish.',
+      false)+
+
+    '</tbody></table>';
+
+  // ── RECOMMENDATION CARDS ─────────────────────────────────────────────────
+  var recsHtml=recs.map(function(r){
+    var c=lc[r.level]||'#64748b', bg=lb[r.level]||'#f8fafc';
+    return '<div style="background:'+bg+';border:1.5px solid '+c+'33;border-left:5px solid '+c+';border-radius:10px;padding:14px 18px;margin-bottom:10px;page-break-inside:avoid">'+
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'+
+      '<span style="font-size:18px">'+r.icon+'</span>'+
+      '<span style="background:'+c+'22;color:'+c+';font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;letter-spacing:.08em;flex-shrink:0">'+r.level+'</span>'+
+      '<b style="font-size:13px;color:#0f172a">'+r.title+'</b></div>'+
+      '<p style="font-size:12px;color:#334155;margin-bottom:8px;line-height:1.6">'+r.body+'</p>'+
+      '<div style="background:'+c+'15;border-radius:6px;padding:6px 12px;font-size:11px;color:'+c+';font-weight:700">'+
+      '→ '+r.action+'</div></div>';
+  }).join('');
+
+  var dateStr=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+
+  // ── FULL HTML ────────────────────────────────────────────────────────────
+  var CARD='background:#fff;border-radius:14px;padding:24px 28px;margin-bottom:24px;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,.05);page-break-inside:avoid;';
+
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8">'+
+    '<title>Behavioral Report — '+esc(uid)+'</title>'+
+    '<style>'+
+    '*{font-family:"Segoe UI",system-ui,sans-serif;box-sizing:border-box;margin:0;padding:0}'+
+    'body{background:#f1f5f9;color:#0f172a;font-size:14px;line-height:1.6}'+
+    '.pg{max-width:1020px;margin:0 auto;padding:36px 24px}'+
+    'h2{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:#1e3a5f;margin-bottom:14px;padding-bottom:7px;border-bottom:2px solid #c9a84c}'+
+    '.sheet-break{page-break-before:always;padding-top:0}'+
+    '.sheet-hdr{border-radius:14px;padding:20px 28px;margin-bottom:20px;color:#fff}'+
+    '@media print{body{background:#fff}.pg{padding:12px 16px}button{display:none!important}.sheet-break{padding-top:0}}'+
+    '</style></head><body>'+
+    '<div class="pg">'+
+
+    // ── Print button ──
+    '<div style="text-align:right;margin-bottom:20px">'+
+    '<button onclick="window.print()" style="background:#1e3a5f;color:#c9a84c;border:none;border-radius:10px;padding:10px 22px;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:.05em">'+
+    '🖨 Save as PDF</button></div>'+
+
+    // ── Cover header ──
+    '<div style="background:#1e3a5f;border-radius:18px;padding:28px 32px;margin-bottom:24px;color:#fff">'+
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:20px">'+
+    '<div>'+
+    '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.15em;color:#c9a84c;margin-bottom:8px">Integrity Mentors · Behavioral Intelligence Report</div>'+
+    '<div style="font-size:30px;font-weight:900;color:#fff;margin-bottom:3px">'+esc(uid)+'</div>'+
+    '<div style="color:rgba(255,255,255,.5);font-size:12px">Case 095-N · Player N Dossier · '+dateStr+'</div>'+
+    '</div>'+
+    '<div style="background:'+ibg+';color:'+icolor+';font-size:20px;font-weight:900;padding:12px 22px;border-radius:12px;text-align:center;flex-shrink:0">'+
+    interest+'<div style="font-size:9px;letter-spacing:.12em;margin-top:2px;font-weight:800">INTEREST</div></div>'+
+    '</div>'+
+    '<div style="display:flex;gap:28px;padding-top:16px;border-top:1px solid rgba(255,255,255,.12);flex-wrap:wrap">'+
+    '<div><div style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em">First seen</div><div style="font-weight:700;font-size:13px">'+firstSeen+'</div></div>'+
+    '<div><div style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em">Last seen</div><div style="font-weight:700;font-size:13px">'+lastSeen+'</div></div>'+
+    '<div><div style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em">Sessions</div><div style="font-weight:700;font-size:13px">'+sessions+(sessions>1?' 🔄':'')+'</div></div>'+
+    '<div><div style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em">CTA Clicked</div><div style="font-weight:700;font-size:13px;color:'+(ctaClicked?'#86efac':'rgba(255,255,255,.3)')+'">'+(ctaClicked?'YES ✅':'NO')+'</div></div>'+
+    '<div><div style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em">Printed</div><div style="font-weight:700;font-size:13px;color:'+(printEv?'#fde68a':'rgba(255,255,255,.3)')+'">'+(printEv?'YES 🖨':'NO')+'</div></div>'+
+    '<div><div style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em">Tabs Visited</div><div style="font-weight:700;font-size:13px">'+tabOrder.length+' / 5</div></div>'+
+    '</div></div>'+
+
+    // ══════════════════════════════════════════
+    // SHEET 1 — LAYER 1
+    // ══════════════════════════════════════════
+    '<div>'+
+    '<div class="sheet-hdr" style="background:linear-gradient(135deg,#1e3a5f,#0f2340)">'+
+    '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.15em;color:#c9a84c;margin-bottom:4px">Sheet 1 of 2</div>'+
+    '<div style="font-size:22px;font-weight:900">Layer 1 — What They Did</div>'+
+    '<div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:4px">Raw behavioral activity: every measurable action captured from the session</div>'+
+    '</div>'+
+    '<div style="'+CARD+'overflow-x:auto">'+l1Table+'</div>'+
+    '</div>'+
+
+    // ══════════════════════════════════════════
+    // SHEET 2 — LAYER 2 (page break)
+    // ══════════════════════════════════════════
+    '<div class="sheet-break">'+
+    '<div class="sheet-hdr" style="background:linear-gradient(135deg,#7c2d12,#991b1b)">'+
+    '<div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.15em;color:#fca5a5;margin-bottom:4px">Sheet 2 of 2</div>'+
+    '<div style="font-size:22px;font-weight:900">Layer 2 — What It Means</div>'+
+    '<div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:4px">Behavioral interpretation: signals, classifications, and recommended actions</div>'+
+    '</div>'+
+
+    '<div style="'+CARD+'overflow-x:auto">'+l2Table+'</div>'+
+
+    '<div style="'+CARD+'">'+
+    '<h2>Prioritized Recommendations</h2>'+
+    (recs.length?recsHtml:'<p style="color:#94a3b8;font-style:italic">No significant behavioral signals detected.</p>')+
+    '</div>'+
+    '</div>'+
+
+    // ── Footer ──
+    '<div style="text-align:center;padding:24px 0 8px;color:#94a3b8;font-size:11px;border-top:1px solid #e2e8f0;margin-top:8px">'+
+    'Integrity Mentors · Behavioral Intelligence Report · '+esc(uid)+' · '+dateStr+' · Confidential'+
+    '</div>'+
+
+    '</div></body></html>';
+
+  var w=window.open('','_blank','width=1080,height=920');
+  w.document.open(); w.document.write(html); w.document.close();
+  w.document.title='Report — '+uid;
+}
 </script>
 </body>
 </html>

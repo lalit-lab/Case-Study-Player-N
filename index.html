@@ -1395,8 +1395,9 @@
     clarity('set', 'visit_count', String(visits));
     t('session_start', { cid: cid, visit: visits, returning: visits > 1 });
 
-    // ── TAB TRACKING (switch + dwell + bounce + order) ───────────
-    var currentTab = null, tabEnterTime = null, visitOrder = [];
+    // ── TAB TRACKING (switch + dwell + bounce + order + return) ─────
+    var currentTab = null, tabEnterTime = null, visitOrder = [], tabsVisited = {};
+    var sessionStartTime = Date.now();
     var _nav = window.navigate;
     window.navigate = function (tabId) {
         var now = Date.now();
@@ -1405,11 +1406,34 @@
             t('tab_dwell', { tab: currentTab, ms: dwell });
             if (dwell < 5000) t('tab_bounce', { tab: currentTab, ms: dwell });
         }
+        // Skipped tab returned to later
+        if (tabsVisited[tabId]) {
+            t('tab_return', { tab: tabId, times: tabsVisited[tabId] + 1 });
+        }
+        tabsVisited[tabId] = (tabsVisited[tabId] || 0) + 1;
         visitOrder.push(tabId);
         t('tab_' + tabId, { order: visitOrder.join('→'), n: visitOrder.length });
         currentTab = tabId; tabEnterTime = now;
         _nav(tabId);
     };
+
+    // ── SCROLL REREAD (rapid direction change < 10s) ──────────────
+    var scrollDir = null, scrollChangeTime = 0;
+    var mainEl = document.querySelector('main');
+    if (mainEl) {
+        mainEl.addEventListener('scroll', function () {
+            var y = this.scrollTop;
+            var dir = y > (this._lastY || 0) ? 'down' : 'up';
+            if (dir !== scrollDir) {
+                var now = Date.now();
+                if (scrollDir && (now - scrollChangeTime) < 10000) {
+                    t('scroll_reread', { tab: currentTab, ms: now - scrollChangeTime });
+                }
+                scrollDir = dir; scrollChangeTime = now;
+            }
+            this._lastY = y;
+        }, { passive: true });
+    }
 
     // ── SUB-TAB (Performance Matrix) ─────────────────────────────
     var _navPerf = window.navigatePerf;
