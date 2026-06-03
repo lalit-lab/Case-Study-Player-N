@@ -1,38 +1,52 @@
-<%@ Language="JScript" %>
 <%
-Response.ContentType = "application/json";
-Response.AddHeader("Access-Control-Allow-Origin", "*");
-Response.AddHeader("Cache-Control", "no-cache");
+Response.ContentType = "application/json"
+Response.AddHeader "Access-Control-Allow-Origin", "*"
+Response.AddHeader "Cache-Control", "no-cache"
 
-if (Request.ServerVariables("REQUEST_METHOD") == "POST") {
-    var fso = Server.CreateObject("Scripting.FileSystemObject");
-    var fp = Server.MapPath("events.jsonl");
-    if (fso.FileExists(fp)) {
-        fso.DeleteFile(fp);
-        fso.CreateTextFile(fp, true);
-    }
-    Response.Write("[]");
-    Response.End();
-}
+If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
+    Dim fso2, fp2
+    fp2 = Server.MapPath("events.jsonl")
+    Set fso2 = Server.CreateObject("Scripting.FileSystemObject")
+    If fso2.FileExists(fp2) Then
+        fso2.DeleteFile fp2
+    End If
+    Dim fc
+    Set fc = fso2.CreateTextFile(fp2, True)
+    fc.Close
+    Set fso2 = Nothing
+    Response.Write "[]"
+    Response.End
+End If
 
-try {
-    var fso = Server.CreateObject("Scripting.FileSystemObject");
-    var filePath = Server.MapPath("events.jsonl");
-    if (!fso.FileExists(filePath)) {
-        Response.Write("[]");
-        Response.End();
-    }
-    var f = fso.OpenTextFile(filePath, 1, false);
-    var content = f.AtEndOfStream ? "" : f.ReadAll();
-    f.Close();
-    var lines = content.split("\n");
-    var valid = [];
-    for (var i = 0; i < lines.length; i++) {
-        var line = lines[i].replace(/\r/g, "").trim();
-        if (line && line.charAt(0) === "{") valid.push(line);
-    }
-    Response.Write("[" + valid.join(",") + "]");
-} catch(e) {
-    Response.Write("[]");
-}
+Dim fso, filePath, f, content, lines, valid, i, line
+filePath = Server.MapPath("events.jsonl")
+Set fso = Server.CreateObject("Scripting.FileSystemObject")
+
+If Not fso.FileExists(filePath) Then
+    Response.Write "[]"
+    Response.End
+End If
+
+Set f = fso.OpenTextFile(filePath, 1)
+If f.AtEndOfStream Then
+    f.Close
+    Set fso = Nothing
+    Response.Write "[]"
+    Response.End
+End If
+content = f.ReadAll
+f.Close
+Set fso = Nothing
+
+lines = Split(content, Chr(10))
+valid = ""
+For i = 0 To UBound(lines)
+    line = Trim(Replace(lines(i), Chr(13), ""))
+    If Left(line, 1) = "{" Then
+        If Len(valid) > 0 Then valid = valid & ","
+        valid = valid & line
+    End If
+Next
+
+Response.Write "[" & valid & "]"
 %>
