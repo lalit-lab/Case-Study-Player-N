@@ -141,7 +141,8 @@ function render(){
   var cards='';
   users.forEach(function(u){
     var ue=ALL.filter(function(r){return r.cid===u});
-    var tabs=[...new Set(ue.filter(function(r){return r.event&&r.event.indexOf('tab_')===0}).map(function(r){return r.event.replace('tab_','')}))];
+    var validTabs=['profile','market','perf','intel','vault'];
+    var tabs=[...new Set(ue.filter(function(r){return r.event&&validTabs.indexOf(r.event.replace('tab_',''))>-1}).map(function(r){return r.event.replace('tab_','')}))];
     var ctaClick=ue.some(function(r){return r.event==='cta_click'});
     var printEv=ue.some(function(r){return r.event==='print'});
     var vcount=ue.filter(function(r){return r.event==='video_play'}).length;
