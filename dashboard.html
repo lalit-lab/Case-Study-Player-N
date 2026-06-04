@@ -202,8 +202,27 @@ function render(){
     });
     var topTerms=Object.keys(tooltips).sort(function(a,b){return tooltips[b].count-tooltips[a].count}).slice(0,3);
     var bounces=ue.filter(function(r){return r.event==='tab_bounce'}).map(function(r){return tabLabels[(r.extra||{}).tab]||''});
-    var rageCount=ue.filter(function(r){return r.event==='rage_click'}).length;
+    var rageEvs=ue.filter(function(r){return r.event==='rage_click'});
+    var rageCount=rageEvs.length;
+    var deadEvs=ue.filter(function(r){return r.event==='dead_click'});
+    var deadCount=deadEvs.length;
     var idleCount=ue.filter(function(r){return r.event==='idle_60s'}).length;
+
+    // click location summaries for card display
+    var rageLocStr=rageEvs.slice(0,3).map(function(r){
+      var x=r.extra||{};
+      return '<span style="background:#1e3a5f;color:#fca5a5;border-radius:4px;padding:1px 5px;font-family:monospace;font-size:9px">'+
+        (x.tab?x.tab+' · ':'')+( x.zone||x.pct_x+'%,'+x.pct_y+'%')+
+        (x.text?' "'+x.text.slice(0,20)+'"':'')+
+        '</span>';
+    }).join(' ');
+    var deadLocStr=deadEvs.slice(0,3).map(function(r){
+      var x=r.extra||{};
+      return '<span style="background:#1e3a5f;color:#fca5a5;border-radius:4px;padding:1px 5px;font-family:monospace;font-size:9px">'+
+        (x.tab?x.tab+' · ':'')+( x.zone||x.pct_x+'%,'+x.pct_y+'%')+
+        (x.text?' "'+x.text.slice(0,20)+'"':'')+
+        '</span>';
+    }).join(' ');
 
     cards+='<div style="background:#1e293b;border-radius:14px;padding:18px;border:1px solid #334155">'+
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'+
@@ -231,8 +250,9 @@ function render(){
         topTerms.map(function(t){return '💡 "'+t+'" ('+tooltips[t].count+'x, '+Math.round(tooltips[t].maxMs/1000)+'s max)'}).join(' · ')+
         '</div>':'')+
 
-      (bounces.length?'<div style="font-size:11px;color:#f87171">⚠️ Bounced from: '+bounces.join(', ')+'</div>':'')+
-      (rageCount?'<div style="font-size:11px;color:#f87171">⚠️ Rage clicks: '+rageCount+'</div>':'')+
+      (bounces.length?'<div style="font-size:11px;color:#f87171;margin-bottom:4px">⚠️ Bounced from: '+bounces.join(', ')+'</div>':'')+
+      (rageCount?'<div style="font-size:11px;color:#f87171;margin-bottom:3px">⚡ Rage clicks ('+rageCount+'): '+rageLocStr+'</div>':'')+
+      (deadCount?'<div style="font-size:11px;color:#f87171;margin-bottom:3px">🖱️ Dead clicks ('+deadCount+'): '+deadLocStr+'</div>':'')+
 
       '<div style="font-size:10px;color:#475569;margin-top:8px">Last seen: '+(lastSeen?lastSeen.replace('T',' ').slice(0,16):'—')+'</div>'+
       '</div>';
@@ -360,7 +380,7 @@ function dlExcel(){
     'Confusion Term #2','Term 2 Hovers','Term 2 Max Duration (s)','Term 2 Read Carefully?',
     'Confusion Term #3','Term 3 Hovers','Term 3 Max Duration (s)','Term 3 Read Carefully?',
     // Layer 2 — UX friction
-    'Rage Clicks','Dead Clicks',
+    'Rage Clicks (#)','Rage Click Locations','Dead Clicks (#)','Dead Click Locations',
     // Layer 2 — Engagement signals
     'Scroll Re-reads','Bounced Tabs (<5s)','Returned Tabs',
     // Layer 2 — Technical
@@ -458,8 +478,18 @@ function dlExcel(){
     };
 
     // Layer 2 — UX friction
-    var rageCount=ue.filter(function(r){return r.event==='rage_click';}).length;
-    var deadCount=ue.filter(function(r){return r.event==='dead_click';}).length;
+    var rageEventsXl=ue.filter(function(r){return r.event==='rage_click';});
+    var deadEventsXl=ue.filter(function(r){return r.event==='dead_click';});
+    var rageCount=rageEventsXl.length;
+    var deadCount=deadEventsXl.length;
+    var rageLocXl=rageEventsXl.map(function(r,i){
+      var x=xe(r);
+      return '#'+(i+1)+': Tab='+(x.tab||'?')+' Zone='+(x.zone||'?')+' Pos='+(x.pct_x||'?')+'%x'+(x.pct_y||'?')+'%'+(x.text?' El="'+x.text.slice(0,30)+'"':'');
+    }).join(' | ')||'—';
+    var deadLocXl=deadEventsXl.slice(0,8).map(function(r,i){
+      var x=xe(r);
+      return '#'+(i+1)+': Tab='+(x.tab||'?')+' Zone='+(x.zone||'?')+' Pos='+(x.pct_x||'?')+'%x'+(x.pct_y||'?')+'%'+(x.text?' Text="'+x.text.slice(0,30)+'"':'');
+    }).join(' | ')||'—';
 
     // Layer 2 — Engagement
     var scrollRereads=ue.filter(function(r){return r.event==='scroll_reread';}).length;
@@ -522,7 +552,7 @@ function dlExcel(){
       gt(0,'name'), gt(0,'count'), gt(0,'dur'), gt(0,'read'),
       gt(1,'name'), gt(1,'count'), gt(1,'dur'), gt(1,'read'),
       gt(2,'name'), gt(2,'count'), gt(2,'dur'), gt(2,'read'),
-      rageCount||'—', deadCount||'—',
+      rageCount||'—', rageLocXl, deadCount||'—', deadLocXl,
       scrollRereads||'—', bounceStr, returnStr,
       sidebarCollapses||'—', idleCount||'—', lastScreen,
       topRec, allSignals
@@ -942,18 +972,44 @@ function generateReport(uid){
       '< 600ms = glanced past. > 2s = read carefully. > 2s on a term = rewrite it.',
       topTerms.some(function(t){return tooltips[t].maxMs>=2000;}))+
 
-    sh('UX Friction Signals','#7c2d12')+
+    sh('UX Friction Signals — Click Location Map','#7c2d12')+
     dr2('Rage clicks (3+ in 50px in 1s)',
-      rageClicks.length?rageClicks.length+' cluster'+(rageClicks.length!==1?'s':''):'—',
+      rageClicks.length?
+        rageClicks.length+' cluster'+(rageClicks.length!==1?'s':'')+'<br><br>'+
+        rageClicks.map(function(r,i){
+          var x=xe(r);
+          return '<b style="color:#dc2626">#'+(i+1)+'</b> '+
+            '<span style="background:#fef2f2;border:1px solid #fca5a5;border-radius:4px;padding:2px 6px;font-size:11px">'+
+            'Tab: <b>'+(x.tab||'—')+'</b> · '+
+            'Zone: <b>'+(x.zone||'—')+'</b> · '+
+            'Pos: '+(x.pct_x||'?')+'% x '+(x.pct_y||'?')+'%'+
+            (x.text?' · Element: <i>"'+esc(x.text.slice(0,40))+'"</i>':'')+
+            (x.el?' &lt;'+x.el+'&gt;':'')+
+            '</span>';
+        }).join('<br>')
+      :'—',
       'Click cluster detection',
-      rageClicks.length?'Expected interactivity':'No friction',
-      'Owner expected this to be clickable. Add a link or modal.',
+      rageClicks.length?'Expected interactivity here':'No friction',
+      'Reader expected this element to be clickable. Fix: add a link, modal, or hover effect at the flagged location.',
       rageClicks.length>0)+
     dr2('Dead clicks (no handler)',
-      deadClicks.length?deadClicks.length+' click'+(deadClicks.length!==1?'s':''):'—',
+      deadClicks.length?
+        deadClicks.length+' click'+(deadClicks.length!==1?'s':'')+'<br><br>'+
+        deadClicks.slice(0,8).map(function(r,i){
+          var x=xe(r);
+          return '<b style="color:#dc2626">#'+(i+1)+'</b> '+
+            '<span style="background:#fef2f2;border:1px solid #fca5a5;border-radius:4px;padding:2px 6px;font-size:11px">'+
+            'Tab: <b>'+(x.tab||'—')+'</b> · '+
+            'Zone: <b>'+(x.zone||'—')+'</b> · '+
+            'Pos: '+(x.pct_x||'?')+'% x '+(x.pct_y||'?')+'%'+
+            (x.text?' · Text: <i>"'+esc(x.text.slice(0,40))+'"</i>':'')+
+            (x.cls?' .'+x.cls:'')+
+            '</span>';
+        }).join('<br>')
+      :'—',
       'Click vs handler check',
-      deadClicks.length?'Hunting for a link':'No missing affordance',
-      'Missing affordance — they\'re looking for deeper navigation.',
+      deadClicks.length?'Hunting for a link here':'No missing affordance',
+      'Missing affordance — reader is hunting for deeper navigation at these exact spots.',
       deadClicks.length>2)+
 
     sh('Engagement & Re-read Signals','#1e3a5f')+

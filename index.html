@@ -1525,7 +1525,18 @@
         clicks.push({ x: e.clientX, y: e.clientY, t: now });
         clicks = clicks.filter(function (c) { return now - c.t < 1000; });
         var nearby = clicks.filter(function (c) { return Math.abs(c.x - e.clientX) < 50 && Math.abs(c.y - e.clientY) < 50; });
-        if (nearby.length >= 3) t('rage_click', { x: Math.round(e.clientX), y: Math.round(e.clientY) });
+        if (nearby.length >= 3) {
+            var px = Math.round(e.clientX / window.innerWidth * 100);
+            var py = Math.round(e.clientY / window.innerHeight * 100);
+            var zone = (py < 33 ? 'top' : py < 66 ? 'middle' : 'bottom') + '-' + (px < 33 ? 'left' : px < 66 ? 'center' : 'right');
+            t('rage_click', {
+                x: Math.round(e.clientX), y: Math.round(e.clientY),
+                pct_x: px, pct_y: py, zone: zone,
+                tab: currentTab,
+                el: (e.target.tagName || '').toLowerCase(),
+                text: (e.target.textContent || '').trim().slice(0, 60)
+            });
+        }
     });
 
     // ── DEAD CLICK (clicked but nothing happened) ────────────────
@@ -1538,7 +1549,18 @@
             }
             check = check.parentElement;
         }
-        if (!interactive) t('dead_click', { tag: el.tagName, x: Math.round(e.clientX), y: Math.round(e.clientY) });
+        if (!interactive) {
+            var px = Math.round(e.clientX / window.innerWidth * 100);
+            var py = Math.round(e.clientY / window.innerHeight * 100);
+            var zone = (py < 33 ? 'top' : py < 66 ? 'middle' : 'bottom') + '-' + (px < 33 ? 'left' : px < 66 ? 'center' : 'right');
+            t('dead_click', {
+                tag: el.tagName, x: Math.round(e.clientX), y: Math.round(e.clientY),
+                pct_x: px, pct_y: py, zone: zone,
+                tab: currentTab,
+                text: (el.textContent || '').trim().slice(0, 60),
+                cls: (el.className || '').toString().split(' ').filter(Boolean).slice(0, 2).join('.')
+            });
+        }
     }, true);
 
     // ── TOOLTIP SYSTEM + HOVER TRACKING ──────────────────────────
