@@ -1,6 +1,3 @@
 events.jsonl
 assets/videos/
 nilo_damage.py
-
-# Admin password for the dashboard — server-only, never push
-adminpass.txt

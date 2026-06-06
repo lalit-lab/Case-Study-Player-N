@@ -1,12 +1,4 @@
 <%
-' ── ADMIN GATE — only a dashboard-admin session may read/clear events ──
-If Session("dashadmin") <> True Then
-    Response.Status = "403 Forbidden"
-    Response.ContentType = "application/json"
-    Response.Write "{""error"":""forbidden""}"
-    Response.End
-End If
-
 Response.ContentType = "application/json"
 Response.AddHeader "Access-Control-Allow-Origin", "*"
 Response.AddHeader "Cache-Control", "no-cache"
