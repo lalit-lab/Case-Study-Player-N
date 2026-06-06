@@ -5,22 +5,29 @@
 '  Client passes IIS Basic Auth (caseviewer) but still cannot see the
 '  dashboard without this admin password.
 ' =====================================================================
-Dim adminPass, loginErr, fso_, f_, pth_
+Dim adminPass, loginErr, fsoA, fA, pthA
 adminPass = ""
 On Error Resume Next
-Set fso_ = Server.CreateObject("Scripting.FileSystemObject")
-pth_ = Server.MapPath("adminpass.txt")
-If fso_.FileExists(pth_) Then
-    Set f_ = fso_.OpenTextFile(pth_, 1)
-    If Not f_.AtEndOfStream Then adminPass = Trim(f_.ReadAll)
-    f_.Close
+Set fsoA = Server.CreateObject("Scripting.FileSystemObject")
+pthA = Server.MapPath("adminpass.txt")
+If fsoA.FileExists(pthA) Then
+    Set fA = fsoA.OpenTextFile(pthA, 1)
+    If Not fA.AtEndOfStream Then adminPass = fA.ReadAll
+    fA.Close
 End If
-Set fso_ = Nothing
+Set fsoA = Nothing
 On Error GoTo 0
+' Strip a UTF-8 BOM (if the file was saved from Notepad) + any whitespace/newlines
+If Len(adminPass) >= 3 Then
+    If Asc(Left(adminPass, 1)) = 239 Then adminPass = Mid(adminPass, 4)
+End If
+adminPass = Replace(adminPass, vbCr, "")
+adminPass = Replace(adminPass, vbLf, "")
+adminPass = Trim(adminPass)
 
 loginErr = ""
 If Request.ServerVariables("REQUEST_METHOD") = "POST" And Request.Form("adminpass") <> "" Then
-    If adminPass <> "" And Request.Form("adminpass") = adminPass Then
+    If adminPass <> "" And Trim(Request.Form("adminpass")) = adminPass Then
         Session("dashadmin") = True
     Else
         loginErr = "Wrong admin password."
