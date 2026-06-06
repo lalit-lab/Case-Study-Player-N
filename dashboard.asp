@@ -1,3 +1,76 @@
+<%
+' =====================================================================
+'  DASHBOARD ADMIN GATE — a SEPARATE password from the client login.
+'  The admin password lives in adminpass.txt (git-ignored, server-only).
+'  Client passes IIS Basic Auth (caseviewer) but still cannot see the
+'  dashboard without this admin password.
+' =====================================================================
+Dim adminPass, loginErr, fso_, f_, pth_
+adminPass = ""
+On Error Resume Next
+Set fso_ = Server.CreateObject("Scripting.FileSystemObject")
+pth_ = Server.MapPath("adminpass.txt")
+If fso_.FileExists(pth_) Then
+    Set f_ = fso_.OpenTextFile(pth_, 1)
+    If Not f_.AtEndOfStream Then adminPass = Trim(f_.ReadAll)
+    f_.Close
+End If
+Set fso_ = Nothing
+On Error GoTo 0
+
+loginErr = ""
+If Request.ServerVariables("REQUEST_METHOD") = "POST" And Request.Form("adminpass") <> "" Then
+    If adminPass <> "" And Request.Form("adminpass") = adminPass Then
+        Session("dashadmin") = True
+    Else
+        loginErr = "Wrong admin password."
+    End If
+End If
+
+If Session("dashadmin") <> True Then
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dashboard — Admin Access</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#07080b;color:#e5ebf2;font-family:Segoe UI,system-ui,sans-serif;font-weight:300}
+  body{display:flex;align-items:center;justify-content:center;padding:24px;
+       background:radial-gradient(1000px 500px at 50% 0%,rgba(95,255,193,.06),transparent 70%),#07080b}
+  .panel{width:100%;max-width:360px;border:1px solid #1a1f28;background:#0c0e13;padding:36px 30px}
+  .tag{font-family:'Courier New',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#5fffc1}
+  h1{font-weight:300;font-size:23px;margin:12px 0 6px}
+  p.sub{color:#8993a3;font-size:13px;line-height:1.6;margin-bottom:22px}
+  label{display:block;font-family:'Courier New',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#4d5564;margin-bottom:7px}
+  input{width:100%;background:#07080b;border:1px solid #1a1f28;color:#e5ebf2;font-family:'Courier New',monospace;font-size:14px;padding:12px 14px;outline:none}
+  input:focus{border-color:#2a8a6c}
+  button{margin-top:14px;width:100%;cursor:pointer;background:#5fffc1;color:#07080b;border:0;font-family:'Courier New',monospace;font-size:12px;letter-spacing:.2em;text-transform:uppercase;font-weight:600;padding:13px}
+  button:hover{background:#e5ebf2}
+  .err{border-left:2px solid #ff5c5c;background:rgba(255,92,92,.07);color:#ff5c5c;font-family:'Courier New',monospace;font-size:12px;padding:10px 12px;margin-bottom:14px}
+</style>
+</head>
+<body>
+  <div class="panel">
+    <div class="tag">Analytics · Admin only</div>
+    <h1>Dashboard access.</h1>
+    <p class="sub">This area is restricted to the administrator. Enter the admin password.</p>
+    <% If loginErr <> "" Then %><div class="err"><%= loginErr %></div><% End If %>
+    <% If adminPass = "" Then %><div class="err">adminpass.txt missing on server — admin not configured.</div><% End If %>
+    <form method="post" action="dashboard.asp" autocomplete="off">
+      <label for="adminpass">Admin password</label>
+      <input type="password" id="adminpass" name="adminpass" autofocus required>
+      <button type="submit">Unlock dashboard →</button>
+    </form>
+  </div>
+</body>
+</html>
+<%
+    Response.End
+End If
+%>
 <!DOCTYPE html>
 <html lang="en">
 <head>
