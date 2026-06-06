@@ -1,4 +1,12 @@
 <%
+' ── ADMIN GATE ── raw event data is admin-only
+If Session("admin") <> True Then
+    Response.Status = "403 Forbidden"
+    Response.ContentType = "application/json"
+    Response.Write "{""error"":""forbidden""}"
+    Response.End
+End If
+
 Response.ContentType = "application/json"
 Response.AddHeader "Access-Control-Allow-Origin", "*"
 Response.AddHeader "Cache-Control", "no-cache"

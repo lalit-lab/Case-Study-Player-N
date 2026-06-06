@@ -1,3 +1,10 @@
+<%
+' ── ACCESS GATE ── redirect to login if not authenticated
+If Session("authed") <> True Then
+    Response.Redirect "login.asp"
+    Response.End
+End If
+%>
 <!DOCTYPE html>
 <html lang="en">
 <head>
