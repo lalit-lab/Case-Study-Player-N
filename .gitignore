@@ -1,6 +1,3 @@
 events.jsonl
 assets/videos/
 nilo_damage.py
-
-# Contains plaintext credentials — keep local, never push
-login.asp
