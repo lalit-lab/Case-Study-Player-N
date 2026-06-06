@@ -4,3 +4,6 @@ nilo_damage.py
 
 # Contains plaintext credentials — keep local, never push
 login.asp
+
+# Runtime single-device lock tokens
+.lock_*.txt

@@ -1,7 +1,11 @@
+<!--#include file="lock.asp"-->
 <%
-' ── ADMIN GATE ── analytics dashboard is admin-only
+' ── ADMIN GATE ── admin-only + single-device lock
 If Session("admin") <> True Then
     Response.Redirect "login.asp"
+    Response.End
+ElseIf Not TokenValid() Then
+    Response.Redirect "login.asp?kicked=1"
     Response.End
 End If
 %>

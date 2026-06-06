@@ -1,7 +1,11 @@
+<!--#include file="lock.asp"-->
 <%
-' ── ACCESS GATE ── redirect to login if not authenticated
+' ── ACCESS GATE ── auth + single-device lock
 If Session("authed") <> True Then
     Response.Redirect "login.asp"
+    Response.End
+ElseIf Not TokenValid() Then
+    Response.Redirect "login.asp?kicked=1"
     Response.End
 End If
 %>
