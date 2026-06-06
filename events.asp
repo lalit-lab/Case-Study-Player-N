@@ -1,7 +1,6 @@
-<!--#include file="lock.asp"-->
 <%
-' ── ADMIN GATE ── raw event data is admin-only + single-device lock
-If Session("admin") <> True Or Not TokenValid() Then
+' ── ADMIN GATE ── raw event data is admin-only
+If Session("admin") <> True Then
     Response.Status = "403 Forbidden"
     Response.ContentType = "application/json"
     Response.Write "{""error"":""forbidden""}"
