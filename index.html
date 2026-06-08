@@ -56,7 +56,7 @@ tailwind.config = {
 </script>
 
 <style>
-  html, body { background:#07080b; color:#e5ebf2; }
+  html, body { background:#07080b; color:#e5ebf2; overflow-x:hidden; max-width:100%; }
   body { font-family:'Inter',sans-serif; font-weight:300; letter-spacing:-0.005em; }
   ::selection { background:#5fffc1; color:#07080b; }
 
@@ -366,21 +366,21 @@ tailwind.config = {
     </p>
 
     <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-px bg-hairline border hr-thin">
-      <div class="bg-surface p-6">
+      <div class="bg-surface p-4 md:p-6">
         <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-2">Competition</div>
-        <div class="font-mono text-2xl text-bone">IEM Chengdu 2025</div>
+        <div class="font-mono text-base sm:text-xl md:text-2xl text-bone break-words">IEM Chengdu 2025</div>
       </div>
-      <div class="bg-surface p-6">
+      <div class="bg-surface p-4 md:p-6">
         <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-2">Flagged Map</div>
-        <div class="font-mono text-2xl text-signal">Map 3 · Ancient</div>
+        <div class="font-mono text-base sm:text-xl md:text-2xl text-signal break-words">Map 3 · Ancient</div>
       </div>
-      <div class="bg-surface p-6">
+      <div class="bg-surface p-4 md:p-6">
         <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-2">Match Outcome</div>
-        <div class="font-mono text-2xl text-bone">Series Lost 2-1</div>
+        <div class="font-mono text-base sm:text-xl md:text-2xl text-bone break-words">Series Lost 2-1</div>
       </div>
-      <div class="bg-surface p-6">
+      <div class="bg-surface p-4 md:p-6">
         <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-2">Player Position</div>
-        <div class="font-mono text-2xl text-bone">Pos 1/5 · Rank ##</div>
+        <div class="font-mono text-base sm:text-xl md:text-2xl text-bone break-words">Pos 1/5 · Rank ##</div>
       </div>
     </div>
 
@@ -564,7 +564,8 @@ tailwind.config = {
         </div>
         <div class="col-span-12 md:col-span-8">
           <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-6">SIGHT SUMMARY · CASE 095-N · MAP 3</div>
-          <div class="space-y-px bg-hairline border hr-thin">
+          <div class="overflow-x-auto -mx-1 px-1">
+          <div class="space-y-px bg-hairline border hr-thin min-w-[520px]">
             <div class="grid grid-cols-12 gap-4 px-6 py-2 bg-raised text-[10px] font-mono uppercase tracking-[0.2em] text-mute">
               <div class="col-span-4">Sight</div>
               <div class="col-span-2 text-center">Z-score</div>
@@ -601,9 +602,10 @@ tailwind.config = {
               <div class="col-span-2 text-right font-mono text-[11px] uppercase tracking-widest text-signal">Clear</div>
             </div>
           </div>
+          </div>
           <div class="mt-6 p-5 border hr-thin bg-ink">
             <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-3">KD Underperformance · Map 3 vs Career</div>
-            <div class="grid grid-cols-4 gap-4 text-center">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
               <div><div class="font-mono text-[10px] text-mute uppercase mb-1">Kills/Round</div><div class="font-mono text-xl" style="color:#ff5c5c;">0.263</div><div class="font-mono text-[10px] text-mute">flagged</div></div>
               <div><div class="font-mono text-[10px] text-mute uppercase mb-1">Kills/Round</div><div class="font-mono text-xl text-signal">0.778</div><div class="font-mono text-[10px] text-mute">baseline</div></div>
               <div><div class="font-mono text-[10px] text-mute uppercase mb-1">Deaths/Round</div><div class="font-mono text-xl" style="color:#ff5c5c;">0.684</div><div class="font-mono text-[10px] text-mute">flagged</div></div>
@@ -1249,7 +1251,7 @@ tailwind.config = {
         </svg>
         <span class="font-mono text-[11px] text-mute tracking-[0.25em] uppercase">Integra · A product of Integrity Mentors</span>
       </div>
-      <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase flex gap-6">
+      <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase flex flex-wrap justify-center gap-x-6 gap-y-2 text-center">
         <span>Private link</span>
         <span>Use logged for product improvement</span>
       </div>
