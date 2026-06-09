@@ -87,8 +87,9 @@ tailwind.config = {
 
   /* Chapter number — large, faint, instrumental */
   .chapter-num {
-    font-family:'JetBrains Mono',monospace; font-weight:500;
-    color:#2a8a6c; letter-spacing:0.05em;
+    font-family:'JetBrains Mono',monospace; font-weight:600;
+    color:#5fffc1; letter-spacing:0.05em;
+    font-size:21px !important;
   }
   /* Bracketed mono labels */
   .label {
@@ -96,8 +97,8 @@ tailwind.config = {
     font-size:11px; letter-spacing:0.18em; text-transform:uppercase;
     color:#5fffc1;
   }
-  .label::before { content:'[ '; color:#2a8a6c; }
-  .label::after  { content:' ]'; color:#2a8a6c; }
+  .label::before { content:''; }
+  .label::after  { content:''; }
 
   /* Sticky nav */
   .nav-link { color:#8993a3; transition:color .2s ease; }
@@ -110,7 +111,7 @@ tailwind.config = {
   .sight-tab {
     cursor:pointer; padding:14px 22px; border:1px solid #1a1f28;
     background:transparent; color:#8993a3;
-    font-family:'JetBrains Mono',monospace; font-size:11px;
+    font-family:'JetBrains Mono',monospace; font-size:15px;
     letter-spacing:0.18em; text-transform:uppercase;
     transition:all .2s ease; white-space:nowrap;
   }
@@ -148,7 +149,7 @@ tailwind.config = {
   .perf-tab {
     cursor:pointer; padding:12px 20px; border:1px solid #1a1f28;
     background:transparent; color:#8993a3;
-    font-family:'JetBrains Mono',monospace; font-size:11px;
+    font-family:'JetBrains Mono',monospace; font-size:15px;
     letter-spacing:0.18em; text-transform:uppercase;
     transition:all .2s ease; white-space:nowrap;
   }
@@ -194,6 +195,50 @@ tailwind.config = {
     /* Tap targets a touch larger */
     .nav-link { padding:12px 0; }
   }
+
+  /* ═══════════════ GLOBAL FONT-FAMILY OVERRIDE ═══════════════
+     Whole page uses the JetBrains Mono "instrument" font
+     (same style as the → DRIFT caption lines).
+     Sizes are left at their original, designed values. */
+  body, body * { font-family:'JetBrains Mono','monospace' !important; }
+
+  /* Telegram mockup keeps its native UI sans-serif (so it looks like a
+     real screenshot, matching the HLTV screenshot) — not the global mono. */
+  #tg-source, #tg-source *,
+  #tg-thumb-inner, #tg-thumb-inner *,
+  .tg-render, .tg-render * {
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif !important;
+  }
+
+  /* CH 01 · Method — enlarge column 1 (number + label) and
+     column 3 (caption) so they read at the same, larger size. */
+  #chapter-02 .label    { font-size:14px !important; }
+  #chapter-02 .step-num { font-size:15px; }
+  #chapter-02 .md\:col-span-4.font-mono { font-size:14px; }
+
+  /* CH 03 · Performance Matrix — larger map/section labels,
+     table headers and the index caption. */
+  #chapter-03 [style*="font-size:11px"] { font-size:14px !important; }
+  #chapter-03 .dossier-table th         { font-size:13px !important; color:#ffffff !important; }
+  #chapter-03 .text-xs                  { font-size:14px !important; }
+
+  /* CH 04 · IntegraSight panels — enlarge the small labels & data
+     rows so they fill the available space and read clearly. */
+  #chapter-04 .sight-panel .label         { font-size:15px !important; }
+  #chapter-04 .sight-panel .text-\[10px\] { font-size:13px !important; }
+  #chapter-04 .sight-panel .text-\[11px\] { font-size:14px !important; }
+  #chapter-04 .sight-panel .text-xs       { font-size:15px !important; }
+  #chapter-04 .sight-panel .text-sm       { font-size:16px !important; }
+  #chapter-04 .sight-panel p              { font-size:16px !important; line-height:1.7 !important; }
+  #chapter-04 .sight-panel svg text       { font-size:13px !important; }
+
+  /* CH 05/06/07 — bring the remaining content labels & captions
+     up to the same readable floor as CH 03/04 (cards' inline chrome
+     left as-is so their layout stays intact). */
+  #chapter-05 .text-\[10px\], #chapter-06 .text-\[10px\], #chapter-07 .text-\[10px\] { font-size:13px !important; }
+  #chapter-05 .text-\[11px\], #chapter-06 .text-\[11px\], #chapter-07 .text-\[11px\] { font-size:14px !important; }
+  #chapter-05 .text-xs,       #chapter-06 .text-xs,       #chapter-07 .text-xs       { font-size:15px !important; }
+  #chapter-05 .text-sm,       #chapter-06 .text-sm,       #chapter-07 .text-sm       { font-size:16px !important; }
 </style>
 </head>
 
@@ -213,7 +258,7 @@ tailwind.config = {
       </svg>
       <span class="font-mono text-sm tracking-[0.25em] text-bone">INTEGRA</span>
     </a>
-    <nav class="hidden md:flex items-center gap-5 text-[11px] font-mono tracking-[0.15em] uppercase">
+    <nav class="hidden md:flex items-center gap-5 text-[14px] font-mono tracking-[0.15em] uppercase">
       <a href="#chapter-02" class="nav-link" data-anchor="chapter-02">Method</a>
       <a href="#hero" class="nav-link" data-anchor="hero">Signal</a>
       <a href="#chapter-03" class="nav-link" data-anchor="chapter-03">Performance</a>
@@ -223,7 +268,7 @@ tailwind.config = {
       <!-- <a href="#chapter-07" class="nav-link" data-anchor="chapter-07">Recommendation</a> -->
     </nav>
     <div class="flex items-center gap-3">
-      <a href="mailto:integrity@integritymentors.com?subject=Integra%20pilot" class="hidden sm:inline-block font-mono text-[11px] tracking-[0.2em] uppercase border border-signaldim text-signal px-4 py-2 hover:bg-signal hover:text-ink transition-colors">
+      <a href="mailto:dhruvyadav@integritymentors.in?subject=Integra%20pilot" class="hidden sm:inline-block font-mono text-[11px] tracking-[0.2em] uppercase border border-signaldim text-signal px-4 py-2 hover:bg-signal hover:text-ink transition-colors">
         Request a pilot
       </a>
       <button id="navToggle" onclick="toggleMobileMenu()" aria-label="Toggle menu" aria-expanded="false"
@@ -244,7 +289,7 @@ tailwind.config = {
       <a href="#chapter-04" onclick="closeMobileMenu()" class="nav-link border-b hr-thin">IntegraSight</a>
       <a href="#chapter-05" onclick="closeMobileMenu()" class="nav-link border-b hr-thin">Intel</a>
       <a href="#chapter-06" onclick="closeMobileMenu()" class="nav-link border-b hr-thin">Gameplay</a>
-      <a href="mailto:integrity@integritymentors.com?subject=Integra%20pilot" onclick="closeMobileMenu()" class="text-signal py-3">Request a pilot →</a>
+      <a href="mailto:dhruvyadav@integritymentors.in?subject=Integra%20pilot" onclick="closeMobileMenu()" class="text-signal py-3">Request a pilot →</a>
     </nav>
   </div>
 </header>
@@ -257,7 +302,7 @@ tailwind.config = {
 
     <div class="flex items-end justify-between mb-16 reveal">
       <div>
-        <div class="chapter-num text-sm mb-4">CH 01 · METHOD</div>
+        <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>CH 01 · METHOD</div>
         <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em] max-w-2xl">Five signals. One under-performing player. The same trail every time.</h2>
       </div>
       <div class="hidden md:block font-mono text-[10px] text-mute tracking-[0.2em] uppercase">↓ Scroll to read</div>
@@ -352,11 +397,11 @@ tailwind.config = {
   <div class="max-w-7xl mx-auto px-6 lg:px-10 pt-16 pb-20 md:pt-24 md:pb-32 relative">
 
     <div class="flex items-center justify-between gap-3 mb-10">
-      <div class="chapter-num text-sm">CH 02 · SIGNAL</div>
+      <div class="chapter-num text-sm"><span style="color:#5fffc1;">➤ </span>CH 02 · SIGNAL</div>
       <div class="font-mono text-[10px] md:text-[11px] text-mute pulse-dot tracking-[0.2em] uppercase text-right">Live · Detection layer online</div>
     </div>
 
-    <h1 class="font-light text-4xl sm:text-5xl md:text-7xl lg:text-8xl leading-[1.05] md:leading-[1.02] tracking-[-0.02em] max-w-5xl">
+    <h1 class="font-light text-4xl md:text-5xl leading-[1.1] tracking-[-0.02em] max-w-5xl">
       The scoreboard says nothing.<br>
       One player still <span class="text-signal">threw his line</span>.
     </h1>
@@ -372,7 +417,7 @@ tailwind.config = {
       </div>
       <div class="bg-surface p-4 md:p-6">
         <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-2">Flagged Map</div>
-        <div class="font-mono text-base sm:text-xl md:text-2xl text-signal break-words">Map 3 · Ancient</div>
+        <div class="font-mono text-base sm:text-xl md:text-2xl text-bone break-words">Map 3 · Ancient</div>
       </div>
       <div class="bg-surface p-4 md:p-6">
         <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-2">Match Outcome</div>
@@ -380,7 +425,7 @@ tailwind.config = {
       </div>
       <div class="bg-surface p-4 md:p-6">
         <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-2">Player Position</div>
-        <div class="font-mono text-base sm:text-xl md:text-2xl text-bone break-words">Pos 1/5 · Rank ##</div>
+        <div class="font-mono text-base sm:text-xl md:text-2xl text-bone break-words">Pos 1/5 · Team Rank 17</div>
       </div>
     </div>
 
@@ -391,7 +436,7 @@ tailwind.config = {
           <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-1">Case 095-N · Map 3 Kill Line</div>
           <div class="font-mono text-sm text-bone">Player N's Kill Line Drift</div>
         </div>
-        <div class="font-mono text-[11px] tracking-[0.2em] uppercase" style="color:#ff5c5c;">DRIFT · −2.0pt · T-10 min</div>
+        <div class="font-mono text-[11px] tracking-[0.2em] uppercase" style="color:#ff5c5c;">DRIFT  −2.0pt </div>
       </div>
       <div style="position:relative;height:360px;"><canvas id="integraMarketChart"></canvas></div>
     </div>
@@ -403,8 +448,8 @@ tailwind.config = {
   <div class="max-w-7xl mx-auto px-6 lg:px-10">
 
     <div class="reveal mb-12">
-      <div class="chapter-num text-sm mb-4">CH 03 · PERFORMANCE MATRIX</div>
-      <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em] max-w-3xl">Dominant on his <em>weakest</em> map.<br><span style="color:#ff5c5c;">Crashed on his strongest.</span></h2>
+      <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>CH 03 · PERFORMANCE MATRIX</div>
+      <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em] max-w-3xl">Dominant on his weakest map.<br><span style="color:#ff5c5c;">Crashed on his strongest.</span></h2>
     </div>
 
     <!-- Sub-tabs -->
@@ -421,7 +466,7 @@ tailwind.config = {
         <div>
           <div class="flex justify-between items-center mb-5">
             <div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#5fffc1;" class="mb-1">[ MAP 1 — OVERPASS ]</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#5fffc1;" class="mb-1">MAP 1 — OVERPASS</div>
               <span class="font-mono text-sm text-smoke">Player N · Rating 1.18</span>
             </div>
             <div class="text-right font-mono text-sm text-smoke">Team A 10 / Team B 13</div>
@@ -432,20 +477,20 @@ tailwind.config = {
         <div>
           <div class="flex justify-between items-center mb-5">
             <div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#5fffc1;" class="mb-1">[ MAP 2 — INFERNO ]</div>
-              <span class="font-mono text-sm text-smoke">Player N · Rating 1.11</span>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#5fffc1;" class="mb-1">MAP 2 — INFERNO</div>
+              <span class="font-mono text-base" style="color:#5fffc1;">Player N · Rating 1.11</span>
             </div>
-            <div class="text-right font-mono text-sm text-smoke">Team A 13 / Team B 6</div>
+            <div class="text-right font-mono text-base" style="color:#5fffc1;">Team A 13 <br/> Team B 06</div>
           </div>
-          <img src="assets/images/HLTV-MAP2.jpeg" alt="Map 2 Inferno" class="w-full h-auto" style="border:1px solid #1a1f28;">
+          <img src="assets/images/HLTV-MAP2.jpeg" alt="Map 2 Inferno" class="w-full h-auto" style="border:1px solid #5fffc1;">
         </div>
         <div>
           <div class="flex justify-between items-center mb-5">
             <div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#ff5c5c;" class="mb-1">[ MAP 3 — ANCIENT · FLAGGED ]</div>
-              <span class="font-mono text-sm" style="color:#ff5c5c;">Player N · Career 1.19 → Actual 0.61</span>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#ff5c5c;" class="mb-1">MAP 3 — ANCIENT · FLAGGED</div>
+              <span class="font-mono text-base" style="color:#ff5c5c;">Player N · Rating 1.19</span>
             </div>
-            <div class="text-right font-mono text-sm" style="color:#ff5c5c;">Team A 13 / Team B 5</div>
+            <div class="text-right font-mono text-base" style="color:#ff5c5c;">Team A 13 <br/> Team B 05</div>
           </div>
           <img src="assets/images/HLTV-MAP3.jpeg" alt="Map 3 Ancient" class="w-full h-auto" style="border:1px solid #ff5c5c;">
         </div>
@@ -454,7 +499,7 @@ tailwind.config = {
 
     <!-- INDEX -->
     <div id="perf-panel-index" class="perf-panel hidden border hr-thin border-t-0 bg-ink p-10 md:p-14">
-      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#5fffc1;" class="mb-3">[ PERFORMANCE INDEX ]</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#5fffc1;" class="mb-3">PERFORMANCE INDEX</div>
       <p class="font-mono text-xs text-mute mb-8">% of career avg baseline — gold line = 100% (normal)</p>
       <div style="position:relative;height:480px;"><canvas id="perfChart"></canvas></div>
     </div>
@@ -463,7 +508,7 @@ tailwind.config = {
     <!-- MAP RATINGS -->
     <div id="perf-panel-ratings" class="perf-panel hidden border hr-thin border-t-0 bg-ink p-10 md:p-14 space-y-10">
       <div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#5fffc1;" class="mb-4">[ CAREER MAP RATINGS — Before the Game ]</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#ffffff;" class="mb-4">CAREER MAP RATINGS — Before the Game</div>
         <div class="overflow-x-auto">
           <table class="dossier-table w-full">
             <thead><tr><th>Map Name</th><th class="text-center">Career Rating</th><th class="text-center">Rank</th></tr></thead>
@@ -479,24 +524,24 @@ tailwind.config = {
         </div>
       </div>
       <div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#5fffc1;" class="mb-4">[ WORST RANKED PERFORMANCES — 2025 ]</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#ffffff;" class="mb-4">WORST RANKED PERFORMANCES — 2025</div>
         <div class="overflow-x-auto">
           <table class="dossier-table w-full">
             <thead><tr><th>Rank</th><th class="text-center">Kills</th><th class="text-center">K-D</th><th>Map</th><th>Date</th><th>Opponent</th><th class="text-center">Opp. Ranking</th></tr></thead>
             <tbody class="text-sm">
               <tr><td class="font-mono" style="color:#e5ebf2;">1st</td><td class="text-center font-mono">5</td><td class="text-center font-mono">5 - 14</td><td style="color:#e5ebf2;" class="font-medium">Overpass</td><td class="font-mono text-smoke">10/08/25</td><td class="font-mono text-smoke">Aurora</td><td class="text-center font-mono text-smoke">#7</td></tr>
-              <tr class="flagged"><td class="font-mono font-bold">1st</td><td class="text-center font-mono font-bold">5</td><td class="text-center font-mono font-bold">5 - 13</td><td class="font-bold">Ancient</td><td class="font-mono font-bold">03/11/25</td><td class="font-mono font-bold">The MongolZ</td><td class="text-center font-mono font-bold">#8</td></tr>
+              <tr class="flagged"><td class="font-mono font-bold">1st</td><td class="text-center font-mono font-bold">5</td><td class="text-center font-mono font-bold">5 - 13</td><td class="font-bold">Ancient</td><td class="font-mono font-bold">03/11/25</td><td class="font-mono font-bold">The MongolZ</td><td class="text-center font-mono font-bold">#4</td></tr>
               <tr><td class="font-mono" style="color:#e5ebf2;">3rd</td><td class="text-center font-mono">6</td><td class="text-center font-mono">6 - 15</td><td style="color:#e5ebf2;" class="font-medium">Dust2</td><td class="font-mono text-smoke">11/08/25</td><td class="font-mono text-smoke">Passion UA</td><td class="text-center font-mono text-smoke">#33</td></tr>
-              <tr><td class="font-mono" style="color:#e5ebf2;">4th</td><td class="text-center font-mono">7</td><td class="text-center font-mono">7 - 17</td><td style="color:#e5ebf2;" class="font-medium">Nuke</td><td class="font-mono text-smoke">27/07/25</td><td class="font-mono text-smoke">Spirit</td><td class="text-center font-mono text-smoke">#4</td></tr>
+              <tr><td class="font-mono" style="color:#e5ebf2;">4th</td><td class="text-center font-mono">7</td><td class="text-center font-mono">7 - 17</td><td style="color:#e5ebf2;" class="font-medium">Nuke</td><td class="font-mono text-smoke">27/07/25</td><td class="font-mono text-smoke">Spirit</td><td class="text-center font-mono text-smoke">#6</td></tr>
               <tr><td class="font-mono" style="color:#e5ebf2;">4th</td><td class="text-center font-mono">7</td><td class="text-center font-mono">7 - 16</td><td style="color:#e5ebf2;" class="font-medium">Dust2</td><td class="font-mono text-smoke">16/07/25</td><td class="font-mono text-smoke">BIG</td><td class="text-center font-mono text-smoke">#25</td></tr>
               <tr><td class="font-mono" style="color:#e5ebf2;">6th</td><td class="text-center font-mono">8</td><td class="text-center font-mono">8 - 14</td><td style="color:#e5ebf2;" class="font-medium">Ancient</td><td class="font-mono text-smoke">05/11/25</td><td class="font-mono text-smoke">Spirit</td><td class="text-center font-mono text-smoke">#6</td></tr>
-              <tr><td class="font-mono" style="color:#e5ebf2;">9th</td><td class="text-center font-mono">9</td><td class="text-center font-mono">9 - 14</td><td style="color:#e5ebf2;" class="font-medium">Inferno</td><td class="font-mono text-smoke">03/11/25</td><td class="font-mono text-smoke">The MongolZ</td><td class="text-center font-mono text-smoke">#8</td></tr>
+              <tr><td class="font-mono" style="color:#e5ebf2;">9th</td><td class="text-center font-mono">9</td><td class="text-center font-mono">9 - 14</td><td style="color:#e5ebf2;" class="font-medium">Inferno</td><td class="font-mono text-smoke">03/11/25</td><td class="font-mono text-smoke">The MongolZ</td><td class="text-center font-mono text-smoke">#4</td></tr>
             </tbody>
           </table>
         </div>
       </div>
       <div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#5fffc1;" class="mb-4">[ AVG. KILLS PER MAP — 2025 ]</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#ffffff;" class="mb-4">AVG. KILLS PER MAP — 2025</div>
         <div class="overflow-x-auto">
           <table class="dossier-table w-full">
             <thead><tr><th>Map</th><th class="text-center">Total Kills</th><th class="text-center">Maps Played</th><th class="text-center">Avg Kills / Map</th></tr></thead>
@@ -524,18 +569,24 @@ tailwind.config = {
   <div class="max-w-7xl mx-auto px-6 lg:px-10">
 
     <div class="reveal mb-12">
-      <div class="chapter-num text-sm mb-4">CH 04 · INTEGRASIGHT</div>
+      <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>CH 04 · INTEGRASIGHT</div>
       <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em] max-w-3xl">Four sights. One detection layer.</h2>
       <p class="text-smoke mt-6 max-w-2xl">Each sight watches one signal class continuously. They share an alert bus — the moment two sights confirm, your security lead is paged.</p>
     </div>
 
     <!-- Tabs -->
-    <div class="flex flex-wrap gap-px bg-hairline mb-px reveal">
-      <button class="sight-tab active flex-1 min-w-[160px]" data-sight="integra">Integra</button>
-      <button class="sight-tab flex-1 min-w-[160px]" data-sight="drift">Crosshair Position</button>
-      <button class="sight-tab flex-1 min-w-[160px]" data-sight="reflex">IntegraSight · Reflex</button>
-      <button class="sight-tab flex-1 min-w-[160px]" data-sight="phantom">IntegraSight · Phantom</button>
-      <button class="sight-tab flex-1 min-w-[160px]" data-sight="watch">IntegraSight · Suppress</button>
+    <div class="reveal">
+      <!-- Top row: IntegraSight, centered over Reflex + Phantom -->
+      <div class="flex justify-center mb-px">
+        <button class="sight-tab active w-1/4 min-w-[160px]" data-sight="integra">IntegraSight</button>
+      </div>
+      <!-- Bottom row: the four sights -->
+      <div class="flex flex-wrap gap-px bg-hairline">
+        <button class="sight-tab flex-1 min-w-[140px]" data-sight="drift">Crosshair</button>
+        <button class="sight-tab flex-1 min-w-[140px]" data-sight="reflex">Reflex</button>
+        <button class="sight-tab flex-1 min-w-[140px]" data-sight="phantom">Phantom</button>
+        <button class="sight-tab flex-1 min-w-[140px]" data-sight="watch">Suppress</button>
+      </div>
     </div>
 
     <!-- ── INTEGRA (aggregate) ── -->
@@ -543,7 +594,7 @@ tailwind.config = {
       <div class="grid grid-cols-12 gap-10">
         <div class="col-span-12 md:col-span-4">
           <div class="label mb-4">AGGREGATE · CASE 095-N</div>
-          <h3 class="font-light text-3xl md:text-4xl mb-6 text-bone">Combined result.</h3>
+          <!-- <h3 class="font-light text-3xl md:text-4xl mb-6 text-bone">Combined result.</h3> -->
           <div class="space-y-5">
             <div>
               <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-1">Combined Z-score</div>
@@ -578,28 +629,28 @@ tailwind.config = {
               <div class="col-span-2 text-center font-mono" style="color:#ff5c5c;">−5.998</div>
               <div class="col-span-2 text-center font-mono text-smoke">30%</div>
               <div class="col-span-2 text-center font-mono" style="color:#ff5c5c;">−1.799</div>
-              <div class="col-span-2 text-right font-mono text-[11px] uppercase tracking-widest" style="color:#ff5c5c;">Tripped</div>
+              <div class="col-span-2 text-right font-mono text-[11px] uppercase tracking-widest" style="color:#ff5c5c;">Positive</div>
             </div>
             <div class="grid grid-cols-12 gap-4 px-6 py-4 text-sm items-center bg-surface">
               <div class="col-span-4 font-mono text-bone">IntegraSight · Reflex</div>
               <div class="col-span-2 text-center font-mono text-smoke">0.000</div>
               <div class="col-span-2 text-center font-mono text-smoke">20%</div>
               <div class="col-span-2 text-center font-mono text-smoke">0.000</div>
-              <div class="col-span-2 text-right font-mono text-[11px] uppercase tracking-widest text-signal">Clear</div>
+              <div class="col-span-2 text-right font-mono text-[11px] uppercase tracking-widest text-signal">Negative</div>
             </div>
             <div class="grid grid-cols-12 gap-4 px-6 py-4 text-sm items-center bg-surface">
               <div class="col-span-4 font-mono text-bone">IntegraSight · Phantom</div>
               <div class="col-span-2 text-center font-mono text-smoke">0.000</div>
               <div class="col-span-2 text-center font-mono text-smoke">30%</div>
               <div class="col-span-2 text-center font-mono text-smoke">0.000</div>
-              <div class="col-span-2 text-right font-mono text-[11px] uppercase tracking-widest text-signal">Clear</div>
+              <div class="col-span-2 text-right font-mono text-[11px] uppercase tracking-widest text-signal">Negative</div>
             </div>
             <div class="grid grid-cols-12 gap-4 px-6 py-4 text-sm items-center bg-surface">
               <div class="col-span-4 font-mono text-bone">IntegraSight · Suppress</div>
               <div class="col-span-2 text-center font-mono text-signal">−1.83</div>
               <div class="col-span-2 text-center font-mono text-smoke">20%</div>
               <div class="col-span-2 text-center font-mono text-smoke">0.000</div>
-              <div class="col-span-2 text-right font-mono text-[11px] uppercase tracking-widest text-signal">Clear</div>
+              <div class="col-span-2 text-right font-mono text-[11px] uppercase tracking-widest text-signal">Negative</div>
             </div>
           </div>
           </div>
@@ -620,8 +671,8 @@ tailwind.config = {
     <div id="sight-drift" class="sight-panel hidden border hr-thin border-t-0 bg-surface p-10 md:p-14">
       <div class="grid grid-cols-12 gap-10">
         <div class="col-span-12 md:col-span-5">
-          <div class="label mb-4">SIGHT · 01 · test1_crosshair</div>
-          <h3 class="font-light text-3xl md:text-4xl mb-4 text-bone">Drift.</h3>
+          <div class="label mb-4">SIGHT · 01 · Crosshair</div>
+          <!-- <h3 class="font-light text-3xl md:text-4xl mb-4 text-bone">Drift.</h3> -->
           <p class="text-smoke leading-relaxed mb-6">Crosshair angle displacement measured against the player's career baseline. A sustained shift in aim angle — without an opponent-force explanation — indicates pre-deliberate positioning.</p>
           <div class="space-y-3 mb-8">
             <div class="flex items-baseline gap-4">
@@ -686,8 +737,8 @@ tailwind.config = {
     <div id="sight-reflex" class="sight-panel hidden border hr-thin border-t-0 bg-surface p-10 md:p-14">
       <div class="grid grid-cols-12 gap-10">
         <div class="col-span-12 md:col-span-5">
-          <div class="label mb-4">SIGHT · 02 · test2_reaction</div>
-          <h3 class="font-light text-3xl md:text-4xl mb-4 text-bone">Reflex.</h3>
+          <div class="label mb-4">SIGHT · 02 · REFLEX</div>
+          <!-- <h3 class="font-light text-3xl md:text-4xl mb-4 text-bone">Reflex.</h3> -->
           <p class="text-smoke leading-relaxed mb-6">First-contact reaction time measured in milliseconds against the player's own 90-day rolling baseline. A slow player is not a suspicious player — only their own deviation matters.</p>
           <div class="space-y-3 mb-8">
             <div class="flex items-baseline gap-4">
@@ -744,8 +795,8 @@ tailwind.config = {
       <div class="space-y-10">
         <div class="grid grid-cols-12 gap-10">
           <div class="col-span-12 md:col-span-5">
-            <div class="label mb-4">SIGHT · 03 · test3_passthrough</div>
-            <h3 class="font-light text-3xl md:text-4xl mb-4 text-bone">Phantom.</h3>
+            <div class="label mb-4">SIGHT · 03 · PHANTOM</div>
+            <!-- <h3 class="font-light text-3xl md:text-4xl mb-4 text-bone">Phantom.</h3> -->
             <p class="text-smoke leading-relaxed mb-6">Frame-level decision parsing. Pass-through behaviour measured against the player's own career patterns at equal economy states.</p>
             <div class="space-y-3">
               <div class="font-mono text-[10px] text-mute tracking-widest uppercase mb-2">test3 · Passthrough</div>
@@ -820,8 +871,8 @@ tailwind.config = {
     <div id="sight-watch" class="sight-panel hidden border hr-thin border-t-0 bg-surface p-10 md:p-14">
       <div class="grid grid-cols-12 gap-10">
         <div class="col-span-12 md:col-span-5">
-          <div class="label mb-4">SIGHT · 04 · multi_match_summary</div>
-          <h3 class="font-light text-3xl md:text-4xl mb-4 text-bone">Suppress.</h3>
+          <div class="label mb-4">SIGHT · 04 · SUPPRESS</div>
+          <!-- <h3 class="font-light text-3xl md:text-4xl mb-4 text-bone">Suppress.</h3> -->
           <p class="text-smoke leading-relaxed mb-6">Opportunity-adjusted fragging — a stat-fixer suppresses kills by <span class="text-bone">declining winnable duels</span> in low-visibility ('high-deniability') moments, not by missing. Measured across 31 matches against the player's own baseline.</p>
           <div class="space-y-3 mb-8">
             <div class="flex items-baseline gap-4"><div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-36">Matches analysed</div><div class="font-mono text-bone">31</div></div>
@@ -873,7 +924,7 @@ tailwind.config = {
             <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-4">Worst matches by total kills</div>
             <div class="overflow-x-auto">
               <table class="dossier-table w-full text-sm">
-                <thead><tr><th>Demo</th><th>Map</th><th class="text-center">Res</th><th class="text-center">K</th><th class="text-center">D</th></tr></thead>
+                <thead><tr><th>Date</th><th>Map</th><th class="text-center">Res</th><th class="text-center">K</th><th class="text-center">D</th></tr></thead>
                 <tbody>
                   <tr style="background:rgba(137,147,163,0.06);"><td class="font-mono font-bold text-bone">flagged.dem <span class="text-mute text-[10px]">· reviewed</span></td><td class="font-mono text-smoke">de_ancient</td><td class="text-center font-mono text-smoke">loss</td><td class="text-center font-mono font-bold text-bone">5</td><td class="text-center font-mono text-smoke">13</td></tr>
                   <tr><td class="font-mono text-bone">match18.dem</td><td class="font-mono text-smoke">de_ancient</td><td class="text-center font-mono text-smoke">loss</td><td class="text-center font-mono text-smoke">8</td><td class="text-center font-mono text-smoke">14</td></tr>
@@ -908,15 +959,15 @@ tailwind.config = {
   <div class="max-w-7xl mx-auto px-6 lg:px-10">
 
     <div class="reveal mb-16">
-      <div class="chapter-num text-sm mb-4">CH 05 · INTEL FEED</div>
-      <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em]">Open-source observations.<br><span class="text-smoke">Match X · IEM Chengdu 2025</span></h2>
+      <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>CH 05 · INTEL FEED</div>
+      <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em]">Social Platform Observations.<br><span class="text-smoke"></span></h2>
     </div>
 
     <!-- HLTV -->
     <div class="reveal mb-10">
       <div class="flex items-center gap-3 mb-6">
         <div class="h-px flex-1" style="background:#1a1f28;"></div>
-        <span class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase">publicly archived discussion thread</span>
+        <span class="font-mono text-[13px] text-mute tracking-[0.2em] uppercase">publicly archived discussion thread</span>
         <div class="h-px flex-1" style="background:#1a1f28;"></div>
       </div>
       <div class="border hr-thin">
@@ -961,7 +1012,7 @@ tailwind.config = {
           </div>
         </div>
         <div style="background:#0c0e13;border-top:1px solid #1a1f28;padding:10px 32px;">
-          <div class="font-mono text-[10px] text-mute tracking-[0.15em]">OSINT ARCHIVE · CASE FILE 095-N · HLTV MATCH THREAD</div>
+          <!-- <div class="font-mono text-[10px] text-mute tracking-[0.15em]">OSINT ARCHIVE · CASE FILE 095-N · HLTV MATCH THREAD</div> -->
         </div>
       </div>
     </div>
@@ -970,7 +1021,7 @@ tailwind.config = {
     <div class="reveal">
       <div class="flex items-center gap-3 mb-6">
         <div class="h-px flex-1" style="background:#1a1f28;"></div>
-        <span class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase">social media surveillance</span>
+        <span class="font-mono text-[13px] text-mute tracking-[0.2em] uppercase">social media surveillance</span>
         <div class="h-px flex-1" style="background:#1a1f28;"></div>
       </div>
       <div class="border hr-thin">
@@ -1104,13 +1155,13 @@ tailwind.config = {
   <div class="max-w-7xl mx-auto px-6 lg:px-10">
 
     <div class="reveal mb-16">
-      <div class="chapter-num text-sm mb-4">CH 06 · GAMEPLAY ANALYSIS</div>
-      <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em]">Video Evidence<br><span class="text-smoke">IEM Chengdu 2025 · Match X · Map 3</span></h2>
+      <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>CH 06 · GAMEPLAY ANALYSIS</div>
+      <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em]">Round-By-Round Analysis<br><span class="text-smoke"></span></h2>
     </div>
 
     <div class="flex items-center gap-3 mb-8 reveal">
       <div class="h-px flex-1" style="background:#1a1f28;"></div>
-      <span class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase">Round-by-round clips</span>
+      <span class="font-mono text-[13px] text-mute tracking-[0.2em] uppercase">Round-by-round clips</span>
       <div class="h-px flex-1" style="background:#1a1f28;"></div>
     </div>
 
@@ -1123,8 +1174,8 @@ tailwind.config = {
           </video>
         </div>
         <div class="p-4 border-t hr-thin">
-          <div class="font-mono text-[10px] text-signal tracking-[0.15em] uppercase mb-2">Round 2</div>
-          <div id="ga-desc-1" class="text-sm text-smoke desc-clamp leading-relaxed">What is the need to rush as CT? Should have stayed at Site A and let T come to them. Also playing against a better team #8 vs #20.</div>
+          <div class="font-mono text-[14px] text-signal tracking-[0.15em] uppercase mb-2">Round 2</div>
+          <div id="ga-desc-1" class="text-sm text-smoke desc-clamp leading-relaxed">What is the need to rush as CT? Should have stayed at Site A and let T come to them. Also playing against a better team #4 vs #17.</div>
           <button onclick="toggleGaDesc('ga-desc-1', this)" class="font-mono text-[11px] text-signal mt-2 hover:text-bone transition-colors cursor-pointer">Read more</button>
         </div>
       </div>
@@ -1136,7 +1187,7 @@ tailwind.config = {
           </video>
         </div>
         <div class="p-4 border-t hr-thin">
-          <div class="font-mono text-[10px] text-signal tracking-[0.15em] uppercase mb-2">Round 3</div>
+          <div class="font-mono text-[14px] text-signal tracking-[0.15em] uppercase mb-2">Round 3</div>
           <div class="text-sm text-smoke leading-relaxed">Could have saved gun or kill 1 by hiding — 3+ enemies alive.</div>
         </div>
       </div>
@@ -1148,7 +1199,7 @@ tailwind.config = {
           </video>
         </div>
         <div class="p-4 border-t hr-thin">
-          <div class="font-mono text-[10px] text-signal tracking-[0.15em] uppercase mb-2">Round 7</div>
+          <div class="font-mono text-[14px] text-signal tracking-[0.15em] uppercase mb-2">Round 7</div>
           <div class="text-sm text-smoke leading-relaxed">Could have used flash when he knew there were opponents heading towards site B.</div>
         </div>
       </div>
@@ -1172,7 +1223,7 @@ tailwind.config = {
           </video>
         </div>
         <div class="p-4 border-t hr-thin">
-          <div class="font-mono text-[10px] text-signal tracking-[0.15em] uppercase mb-2">Round 10</div>
+          <div class="font-mono text-[14px] text-signal tracking-[0.15em] uppercase mb-2">Round 10</div>
           <div class="text-sm text-smoke leading-relaxed">Use flashbang when going through smoke. Low health would have died anyways.</div>
         </div>
       </div>
@@ -1184,7 +1235,7 @@ tailwind.config = {
           </video>
         </div>
         <div class="p-4 border-t hr-thin">
-          <div class="font-mono text-[10px] text-signal tracking-[0.15em] uppercase mb-2">Round 14</div>
+          <div class="font-mono text-[14px] text-signal tracking-[0.15em] uppercase mb-2">Round 14</div>
           <div class="text-sm text-smoke leading-relaxed">Why is he stepping in incendiary grenade?</div>
         </div>
       </div>
@@ -1196,7 +1247,7 @@ tailwind.config = {
           </video>
         </div>
         <div class="p-4 border-t hr-thin">
-          <div class="font-mono text-[10px] text-signal tracking-[0.15em] uppercase mb-2">Round 15</div>
+          <div class="font-mono text-[14px] text-signal tracking-[0.15em] uppercase mb-2">Round 15</div>
           <div id="ga-desc-7" class="text-sm text-smoke desc-clamp leading-relaxed">Could have planted the bomb when he reached site B. Instead he chose to engage with enemy and dies in the process.</div>
           <button onclick="toggleGaDesc('ga-desc-7', this)" class="font-mono text-[11px] text-signal mt-2 hover:text-bone transition-colors cursor-pointer">Read more</button>
         </div>
@@ -1223,18 +1274,18 @@ tailwind.config = {
   <div class="max-w-7xl mx-auto px-6 lg:px-10">
 
     <div class="reveal mb-16">
-      <div class="chapter-num text-sm mb-4">CH 07 · NEXT</div>
-      <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em] max-w-3xl">A pilot, for one incident, with evidence then a decision.</h2>
+      <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>CH 07 · WHAT NOW  </div>
+      <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em] max-w-3xl">Start with one case. Decide with the evidence in hand.</h2>
     </div>
 
     <div class="mt-20 text-center reveal">
       <div class="chapter-num text-sm mb-6">CONTACT</div>
-      <a href="mailto:integrity@integritymentors.in?subject=Integra%20pilot%20%E2%80%94%20discovery%20call"
+      <a href="mailto:dhruvyadav@integritymentors.in?subject=Integra%20pilot%20%E2%80%94%20discovery%20call"
          class="inline-flex items-center gap-4 px-10 py-5 bg-signal text-ink font-mono text-sm tracking-[0.2em] uppercase font-medium hover:bg-bone transition-colors">
         <span>Request a pilot</span>
         <span>→</span>
       </a>
-      <div class="font-mono text-[11px] text-mute mt-8 tracking-[0.2em] uppercase">integrity@integritymentors.in · reference 095-N</div>
+      <div class="font-mono text-[11px] text-mute mt-8 tracking-[0.2em] uppercase">dhruvyadav@integritymentors.in · reference 095-N</div>
     </div>
 
   </div>
@@ -1361,6 +1412,7 @@ tailwind.config = {
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;overflow:auto;-webkit-overflow-scrolling:touch;padding:24px 16px;cursor:zoom-out;';
     var inner = document.createElement('div');
     inner.style.cssText = 'max-width:1060px;margin:0 auto;cursor:default;';
+    inner.className = 'tg-render';
     inner.innerHTML = src.innerHTML;
     inner.onclick = function(e) { e.stopPropagation(); };
     var closeBtn = document.createElement('div');
@@ -1395,6 +1447,13 @@ tailwind.config = {
     var ctxP = document.getElementById('perfChart').getContext('2d');
     var actualBaseline = [1.18, 0.78, 83.8, 0.66, '18%'];
     var actualCurrent  = [0.61, 0.44, 32.7, 0.72, '11.05% (20/181)'];
+    var metricInfo = [
+      ['KDR — Kill / Death Ratio.', 'Total kills divided by total deaths.'],
+      ['KPR — Kills Per Round.', 'Average kills per round played.'],
+      ['ADR — Avg Damage per Round.', 'Damage dealt to enemies each round.'],
+      ['DPR — Deaths Per Round.', 'Average deaths per round played.'],
+      ['ACC — Shot Accuracy.', 'Percent of shots fired that hit a target.']
+    ];
     var baselineLine = {
       id: 'baselineLine',
       afterDatasetsDraw: function(chart) {
@@ -1441,6 +1500,52 @@ tailwind.config = {
       },
       plugins: [baselineLine]
     });
+
+    // ── Hover explanations on the X-axis metric labels (KDR/KPR/ADR/DPR/ACC) ──
+    (function () {
+      var canvas = perfChartInstance.canvas;
+      var holder = canvas.parentNode;            // position:relative wrapper
+      var tip = holder.querySelector('.axis-tip');
+      if (!tip) {
+        tip = document.createElement('div');
+        tip.className = 'axis-tip';
+        tip.style.cssText = 'position:absolute;z-index:30;pointer-events:none;display:none;max-width:240px;'
+          + 'background:#0c0e13;border:1px solid #1a1f28;border-radius:4px;'
+          + "color:#e5ebf2;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.55;"
+          + 'padding:10px 12px;box-shadow:0 8px 24px -8px rgba(0,0,0,0.65);';
+        holder.appendChild(tip);
+      }
+      if (canvas._axisTipBound) return;          // bind listeners only once
+      canvas._axisTipBound = true;
+
+      canvas.addEventListener('mousemove', function (e) {
+        var chart = perfChartInstance;           // always the current instance
+        if (!chart || !chart.scales || !chart.chartArea) { tip.style.display = 'none'; return; }
+        var xScale = chart.scales.x, area = chart.chartArea;
+        var rect = canvas.getBoundingClientRect();
+        var mx = e.clientX - rect.left, my = e.clientY - rect.top;
+
+        // Only react in the strip just below the plot, where the tick labels sit
+        if (my < area.bottom || my > area.bottom + 42) { tip.style.display = 'none'; canvas.style.cursor = ''; return; }
+
+        var found = -1, best = 1e9;
+        for (var i = 0; i < xScale.ticks.length; i++) {
+          var d = Math.abs(xScale.getPixelForTick(i) - mx);
+          if (d < best) { best = d; found = i; }
+        }
+        var half = (area.right - area.left) / xScale.ticks.length / 2;
+        if (found < 0 || best > half || !metricInfo[found]) { tip.style.display = 'none'; canvas.style.cursor = ''; return; }
+
+        var info = metricInfo[found];
+        tip.innerHTML = '<div style="color:#5fffc1;margin-bottom:4px;">' + info[0] + '</div>' + info[1];
+        tip.style.display = 'block';
+        canvas.style.cursor = 'help';
+        var left = Math.max(4, Math.min(mx - tip.offsetWidth / 2, holder.clientWidth - tip.offsetWidth - 4));
+        tip.style.left = left + 'px';
+        tip.style.top = (area.bottom - tip.offsetHeight - 8) + 'px';
+      });
+      canvas.addEventListener('mouseleave', function () { tip.style.display = 'none'; canvas.style.cursor = ''; });
+    })();
   }
 
   window.addEventListener('DOMContentLoaded', function() {
@@ -1449,15 +1554,17 @@ tailwind.config = {
       type: 'line',
       data: {
         labels: [
-          ['After Map 2', 'End (14:17)'],
-          ['Before Drop', '(14:17)'],
-          ['−2 Drop Point', '(14:21)'],
-          ['+1 · 9 Min Before', 'Map 3 (14:23)'],
-          ['5 Min Before', 'Map 3 (14:25)']
+          ['Map 2 in play', '(14:15)'],
+          ['Break', '(14:17)'],
+          ['9 mins before Map 3', '(14:21)'],
+          ['30 secs after drop', '(14:21)'],
+          ['7 mins before Map 3', '(14:23)'],          
+          ['5 mins before Map 3', 'Map 3 (14:25)'],
+          ['Map 3 Starts', 'Map 3 (14:30)'],
         ],
         datasets: [{
           label: 'Kill Line',
-          data: [15.5, 15.5, 13.5, 14.5, 14.5],
+          data: [15.5, 15.5, 13.5, 14.5, 14.5, 14.5, 14.5],
           borderColor: '#ff5c5c',
           backgroundColor: 'transparent',
           fill: false, tension: 0, borderWidth: 2.5,
@@ -1486,7 +1593,7 @@ tailwind.config = {
           },
           x: {
             grid: { display: false },
-            ticks: { color: '#8993a3', font: { family: 'JetBrains Mono', size: 9 }, padding: 8 }
+            ticks: { color: '#8993a3', font: { family: 'JetBrains Mono', size: 13 }, padding: 8 }
           }
         }
       }
