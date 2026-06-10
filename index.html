@@ -303,7 +303,7 @@ tailwind.config = {
     <div class="flex items-end justify-between mb-16 reveal">
       <div>
         <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>CH 01 · METHOD</div>
-        <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em] max-w-2xl">Five signals. One under-performing player. The same trail every time.</h2>
+        <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em] max-w-4xl">Five signals to detect any<br/><span class="text-signal">intentional under-performance.</span></h2>
       </div>
       <div class="hidden md:block font-mono text-[10px] text-mute tracking-[0.2em] uppercase">↓ Scroll to read</div>
     </div>
@@ -397,17 +397,17 @@ tailwind.config = {
   <div class="max-w-7xl mx-auto px-6 lg:px-10 pt-16 pb-20 md:pt-24 md:pb-32 relative">
 
     <div class="flex items-center justify-between gap-3 mb-10">
-      <div class="chapter-num text-sm"><span style="color:#5fffc1;">➤ </span>CH 02 · SIGNAL</div>
+      <div class="chapter-num text-sm"><span style="color:#5fffc1;">➤ </span>CH 02 · MARKET DRIFT</div>
       <div class="font-mono text-[10px] md:text-[11px] text-mute pulse-dot tracking-[0.2em] uppercase text-right">Live · Detection layer online</div>
     </div>
 
     <h1 class="font-light text-4xl md:text-5xl leading-[1.1] tracking-[-0.02em] max-w-5xl">
-      The scoreboard says nothing.<br>
-      One player still <span class="text-signal">threw his line</span>.
+      Two points off the line.<br>
+      <span class="text-signal">One early sign.</span>
     </h1>
 
     <p class="mt-10 max-w-2xl text-smoke text-lg leading-relaxed font-light">
-      Spot-fixing doesn't need the team to lose on purpose — it hides inside a normal result. Win or lose, one player quietly drops under his own kill line: a few rounds of soft peeks, missed utility, deaths that don't fit his record. It rarely starts on the server; it starts on the order book, where his line moves before tip-off. <span class="text-bone">Integra is the detection layer that catches a single under-performing player before anyone else.</span>
+      Before the map went live, his kill line fell — 15.5 to 13.5, a drop the match odds don't tell.<span class="text-bone"> Integra captured the drift as the very first sign.</span>
     </p>
 
     <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-px bg-hairline border hr-thin">
@@ -449,7 +449,7 @@ tailwind.config = {
 
     <div class="reveal mb-12">
       <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>CH 03 · PERFORMANCE MATRIX</div>
-      <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em] max-w-3xl">Dominant on his weakest map.<br><span style="color:#ff5c5c;">Crashed on his strongest.</span></h2>
+      <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em] max-w-4xl">Dominant on his weakest map. <br><span style="color:#ff5c5c;">Crashed on his strongest map.</span></h2>
     </div>
 
     <!-- Sub-tabs -->
@@ -462,8 +462,8 @@ tailwind.config = {
     <!-- INVERSION -->
     <div id="perf-panel-inversion" class="perf-panel border hr-thin border-t-0 bg-ink p-10 md:p-14 reveal">
       <div class="space-y-14">
-        <!--
-        <div>
+        
+        <!-- <div>
           <div class="flex justify-between items-center mb-5">
             <div>
               <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#5fffc1;" class="mb-1">MAP 1 — OVERPASS</div>
@@ -472,8 +472,21 @@ tailwind.config = {
             <div class="text-right font-mono text-sm text-smoke">Team A 10 / Team B 13</div>
           </div>
           <img src="assets/images/HLTV-MAP1.jpeg" alt="Map 1 Overpass" class="w-full h-auto" style="border:1px solid #1a1f28;">
+        </div> -->
+
+        <div>
+          <div class="flex justify-between items-center mb-5">
+            <div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#5fffc1;" class="mb-1">MAP 1 — OVERPASS</div>
+              <span class="font-mono text-base" style="color:#5fffc1;">Player N · Rating 1.18</span>
+            </div>
+            <div class="text-right font-mono text-base" style="color:#5fffc1;">Team A 10 <br/> Team B 13</div>
+          </div>
+          <img src="assets/images/HLTV-MAP1.jpeg" alt="Map 2 Inferno" class="w-full h-auto" style="border:1px solid #5fffc1;">
         </div>
-        -->
+
+        
+
         <div>
           <div class="flex justify-between items-center mb-5">
             <div>
@@ -530,12 +543,12 @@ tailwind.config = {
             <thead><tr><th>Rank</th><th class="text-center">Kills</th><th class="text-center">K-D</th><th>Map</th><th>Date</th><th>Opponent</th><th class="text-center">Opp. Ranking</th></tr></thead>
             <tbody class="text-sm">
               <tr><td class="font-mono" style="color:#e5ebf2;">1st</td><td class="text-center font-mono">5</td><td class="text-center font-mono">5 - 14</td><td style="color:#e5ebf2;" class="font-medium">Overpass</td><td class="font-mono text-smoke">10/08/25</td><td class="font-mono text-smoke">Aurora</td><td class="text-center font-mono text-smoke">#7</td></tr>
-              <tr class="flagged"><td class="font-mono font-bold">1st</td><td class="text-center font-mono font-bold">5</td><td class="text-center font-mono font-bold">5 - 13</td><td class="font-bold">Ancient</td><td class="font-mono font-bold">03/11/25</td><td class="font-mono font-bold">The MongolZ</td><td class="text-center font-mono font-bold">#4</td></tr>
+              <tr class="flagged"><td class="font-mono font-bold">2nd</td><td class="text-center font-mono font-bold">5</td><td class="text-center font-mono font-bold">5 - 13</td><td class="font-bold">Ancient</td><td class="font-mono font-bold">03/11/25</td><td class="font-mono font-bold">The MongolZ</td><td class="text-center font-mono font-bold">#4</td></tr>
               <tr><td class="font-mono" style="color:#e5ebf2;">3rd</td><td class="text-center font-mono">6</td><td class="text-center font-mono">6 - 15</td><td style="color:#e5ebf2;" class="font-medium">Dust2</td><td class="font-mono text-smoke">11/08/25</td><td class="font-mono text-smoke">Passion UA</td><td class="text-center font-mono text-smoke">#33</td></tr>
               <tr><td class="font-mono" style="color:#e5ebf2;">4th</td><td class="text-center font-mono">7</td><td class="text-center font-mono">7 - 17</td><td style="color:#e5ebf2;" class="font-medium">Nuke</td><td class="font-mono text-smoke">27/07/25</td><td class="font-mono text-smoke">Spirit</td><td class="text-center font-mono text-smoke">#6</td></tr>
-              <tr><td class="font-mono" style="color:#e5ebf2;">4th</td><td class="text-center font-mono">7</td><td class="text-center font-mono">7 - 16</td><td style="color:#e5ebf2;" class="font-medium">Dust2</td><td class="font-mono text-smoke">16/07/25</td><td class="font-mono text-smoke">BIG</td><td class="text-center font-mono text-smoke">#25</td></tr>
+              <tr><td class="font-mono" style="color:#e5ebf2;">5th</td><td class="text-center font-mono">7</td><td class="text-center font-mono">7 - 16</td><td style="color:#e5ebf2;" class="font-medium">Dust2</td><td class="font-mono text-smoke">16/07/25</td><td class="font-mono text-smoke">BIG</td><td class="text-center font-mono text-smoke">#25</td></tr>
               <tr><td class="font-mono" style="color:#e5ebf2;">6th</td><td class="text-center font-mono">8</td><td class="text-center font-mono">8 - 14</td><td style="color:#e5ebf2;" class="font-medium">Ancient</td><td class="font-mono text-smoke">05/11/25</td><td class="font-mono text-smoke">Spirit</td><td class="text-center font-mono text-smoke">#6</td></tr>
-              <tr><td class="font-mono" style="color:#e5ebf2;">9th</td><td class="text-center font-mono">9</td><td class="text-center font-mono">9 - 14</td><td style="color:#e5ebf2;" class="font-medium">Inferno</td><td class="font-mono text-smoke">03/11/25</td><td class="font-mono text-smoke">The MongolZ</td><td class="text-center font-mono text-smoke">#4</td></tr>
+              <tr><td class="font-mono" style="color:#e5ebf2;">7th</td><td class="text-center font-mono">9</td><td class="text-center font-mono">9 - 14</td><td style="color:#e5ebf2;" class="font-medium">Inferno</td><td class="font-mono text-smoke">03/11/25</td><td class="font-mono text-smoke">The MongolZ</td><td class="text-center font-mono text-smoke">#4</td></tr>
             </tbody>
           </table>
         </div>
@@ -625,7 +638,7 @@ tailwind.config = {
               <div class="col-span-2 text-right">Status</div>
             </div>
             <div class="grid grid-cols-12 gap-4 px-6 py-4 text-sm items-center bg-surface" style="border-left:2px solid #ff5c5c;">
-              <div class="col-span-4 font-mono text-bone">IntegraSight · Drift</div>
+              <div class="col-span-4 font-mono text-bone">IntegraSight · Crosshair</div>
               <div class="col-span-2 text-center font-mono" style="color:#ff5c5c;">−5.998</div>
               <div class="col-span-2 text-center font-mono text-smoke">30%</div>
               <div class="col-span-2 text-center font-mono" style="color:#ff5c5c;">−1.799</div>
@@ -1109,7 +1122,7 @@ tailwind.config = {
                   <div style="padding:2px 12px;display:flex;gap:8px;align-items:flex-end;"><div style="width:26px;height:26px;border-radius:50%;background:#9b59b6;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0;">N</div><div><div style="color:#9b59b6;font-size:11px;font-weight:600;margin-bottom:1px;">NightOwl_V</div><div style="background:#182533;border-radius:10px 10px 10px 0;padding:6px 10px;max-width:420px;"><div style="color:#e5ebf2;font-size:12px;">anyone have the confirmed lineups yet?</div><div style="color:#8d9aab;font-size:10px;text-align:right;margin-top:2px;">9:22</div></div></div></div>
                   <div style="padding:2px 12px;display:flex;gap:8px;align-items:flex-end;"><div style="width:26px;height:26px;border-radius:50%;background:#3d9a6e;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0;">S</div><div><div style="color:#3d9a6e;font-size:11px;font-weight:600;margin-bottom:1px;">scout99</div><div style="background:#182533;border-radius:10px 10px 10px 0;padding:6px 10px;max-width:420px;"><div style="color:#e5ebf2;font-size:12px;">full roster, no subs</div><div style="color:#8d9aab;font-size:10px;text-align:right;margin-top:2px;">9:31</div></div></div></div>
                   <div style="padding:2px 12px;display:flex;gap:8px;align-items:flex-end;"><div style="width:26px;height:26px;border-radius:50%;background:#e67e22;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0;">K</div><div><div style="color:#e67e22;font-size:11px;font-weight:600;margin-bottom:1px;">K_intel</div><div style="background:#182533;border-radius:10px 10px 10px 0;padding:6px 10px;max-width:420px;"><div style="color:#e5ebf2;font-size:12px;">anyone watching the match tonight</div><div style="color:#8d9aab;font-size:10px;text-align:right;margin-top:2px;">10:08</div></div></div></div>
-                  <div style="padding:2px 12px;display:flex;gap:8px;align-items:flex-end;"><div style="width:26px;height:26px;border-radius:50%;background:#c0392b;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0;">R</div><div><div style="color:#c0392b;font-size:11px;font-weight:600;margin-bottom:1px;">RawSource_7</div><div style="background:#182533;border-radius:10px 10px 10px 0;padding:6px 10px;max-width:420px;"><div style="color:#e5ebf2;font-size:12px;line-height:1.5;">yeah obviously 🫡 btw got something to share — if it goes to map 3, Player N won't be putting in a performance. solid source 🤫</div><div style="color:#8d9aab;font-size:10px;text-align:right;margin-top:2px;">10:16</div></div></div></div>
+                  <div style="padding:2px 12px;display:flex;gap:8px;align-items:flex-end;"><div style="width:26px;height:26px;border-radius:50%;background:#c0392b;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0;">R</div><div><div style="color:#c0392b;font-size:11px;font-weight:600;margin-bottom:1px;">RawSource_7</div><div style="background:#182533;border-radius:10px 10px 10px 0;padding:6px 10px;max-width:420px;"><div style="color:#e5ebf2;font-size:12px;line-height:1.5;">yeah obviously 🫡 btw got something to share — if it goes to map 3, Nilo won't be putting in a performance. solid source 🤫</div><div style="color:#8d9aab;font-size:10px;text-align:right;margin-top:2px;">10:16</div></div></div></div>
                   <div style="padding:2px 12px;display:flex;gap:8px;align-items:flex-end;"><div style="width:26px;height:26px;border-radius:50%;background:#e67e22;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0;">K</div><div><div style="color:#e67e22;font-size:11px;font-weight:600;margin-bottom:1px;">K_intel</div><div style="background:#182533;border-radius:10px 10px 10px 0;padding:6px 10px;max-width:420px;"><div style="border-left:2px solid #c0392b;padding-left:7px;margin-bottom:4px;"><div style="color:#c0392b;font-size:10px;font-weight:600;">RawSource_7</div><div style="color:#8d9aab;font-size:11px;">yeah obviously 🫡 btw got something to share...</div></div><div style="color:#e5ebf2;font-size:12px;">lol wait he never has a bad game 😭</div><div style="color:#8d9aab;font-size:10px;text-align:right;margin-top:2px;">10:17</div></div></div></div>
                   <div style="padding:2px 12px;display:flex;gap:8px;align-items:flex-end;"><div style="width:26px;height:26px;border-radius:50%;background:#c0392b;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0;">R</div><div><div style="color:#c0392b;font-size:11px;font-weight:600;margin-bottom:1px;">RawSource_7</div><div style="background:#182533;border-radius:10px 10px 10px 0;padding:6px 10px;max-width:420px;"><div style="color:#e5ebf2;font-size:12px;">not today. just keep a close eye on map 3. you'll see</div><div style="color:#8d9aab;font-size:10px;text-align:right;margin-top:2px;">10:19</div></div></div></div>
                   <div style="padding:2px 12px 10px;display:flex;gap:8px;align-items:flex-end;"><div style="width:26px;height:26px;border-radius:50%;background:#e67e22;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0;">K</div><div><div style="color:#e67e22;font-size:11px;font-weight:600;margin-bottom:1px;">K_intel</div><div style="background:#182533;border-radius:10px 10px 10px 0;padding:6px 10px;max-width:420px;"><div style="color:#e5ebf2;font-size:12px;">noted 👀</div><div style="color:#8d9aab;font-size:10px;text-align:right;margin-top:2px;">10:20</div></div></div></div>
@@ -1175,8 +1188,8 @@ tailwind.config = {
         </div>
         <div class="p-4 border-t hr-thin">
           <div class="font-mono text-[14px] text-signal tracking-[0.15em] uppercase mb-2">Round 2</div>
-          <div id="ga-desc-1" class="text-sm text-smoke desc-clamp leading-relaxed">What is the need to rush as CT? Should have stayed at Site A and let T come to them. Also playing against a better team #4 vs #17.</div>
-          <button onclick="toggleGaDesc('ga-desc-1', this)" class="font-mono text-[11px] text-signal mt-2 hover:text-bone transition-colors cursor-pointer">Read more</button>
+          <!-- <div id="ga-desc-1" class="text-sm text-smoke desc-clamp leading-relaxed">What is the need to rush as CT? Should have stayed at Site A and let T come to them. Also playing against a better team #4 vs #17.</div> -->
+          <!-- <button onclick="toggleGaDesc('ga-desc-1', this)" class="font-mono text-[11px] text-signal mt-2 hover:text-bone transition-colors cursor-pointer">Read more</button> -->
         </div>
       </div>
 
@@ -1188,7 +1201,7 @@ tailwind.config = {
         </div>
         <div class="p-4 border-t hr-thin">
           <div class="font-mono text-[14px] text-signal tracking-[0.15em] uppercase mb-2">Round 3</div>
-          <div class="text-sm text-smoke leading-relaxed">Could have saved gun or kill 1 by hiding — 3+ enemies alive.</div>
+          <!-- <div class="text-sm text-smoke leading-relaxed">Could have saved gun or kill 1 by hiding — 3+ enemies alive.</div> -->
         </div>
       </div>
 
@@ -1200,7 +1213,7 @@ tailwind.config = {
         </div>
         <div class="p-4 border-t hr-thin">
           <div class="font-mono text-[14px] text-signal tracking-[0.15em] uppercase mb-2">Round 7</div>
-          <div class="text-sm text-smoke leading-relaxed">Could have used flash when he knew there were opponents heading towards site B.</div>
+          <!-- <div class="text-sm text-smoke leading-relaxed">Could have used flash when he knew there were opponents heading towards site B.</div> -->
         </div>
       </div>
 <!-- 
@@ -1224,7 +1237,7 @@ tailwind.config = {
         </div>
         <div class="p-4 border-t hr-thin">
           <div class="font-mono text-[14px] text-signal tracking-[0.15em] uppercase mb-2">Round 10</div>
-          <div class="text-sm text-smoke leading-relaxed">Use flashbang when going through smoke. Low health would have died anyways.</div>
+          <!-- <div class="text-sm text-smoke leading-relaxed">Use flashbang when going through smoke. Low health would have died anyways.</div> -->
         </div>
       </div>
 
@@ -1236,7 +1249,7 @@ tailwind.config = {
         </div>
         <div class="p-4 border-t hr-thin">
           <div class="font-mono text-[14px] text-signal tracking-[0.15em] uppercase mb-2">Round 14</div>
-          <div class="text-sm text-smoke leading-relaxed">Why is he stepping in incendiary grenade?</div>
+          <!-- <div class="text-sm text-smoke leading-relaxed">Why is he stepping in incendiary grenade?</div> -->
         </div>
       </div>
 
@@ -1248,8 +1261,8 @@ tailwind.config = {
         </div>
         <div class="p-4 border-t hr-thin">
           <div class="font-mono text-[14px] text-signal tracking-[0.15em] uppercase mb-2">Round 15</div>
-          <div id="ga-desc-7" class="text-sm text-smoke desc-clamp leading-relaxed">Could have planted the bomb when he reached site B. Instead he chose to engage with enemy and dies in the process.</div>
-          <button onclick="toggleGaDesc('ga-desc-7', this)" class="font-mono text-[11px] text-signal mt-2 hover:text-bone transition-colors cursor-pointer">Read more</button>
+          <!-- <div id="ga-desc-7" class="text-sm text-smoke desc-clamp leading-relaxed">Could have planted the bomb when he reached site B. Instead he chose to engage with enemy and dies in the process.</div> -->
+          <!-- <button onclick="toggleGaDesc('ga-desc-7', this)" class="font-mono text-[11px] text-signal mt-2 hover:text-bone transition-colors cursor-pointer">Read more</button> -->
         </div>
       </div>
 <!-- 
