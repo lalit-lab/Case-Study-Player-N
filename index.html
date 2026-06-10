@@ -597,17 +597,17 @@ tailwind.config = {
       <div class="flex flex-wrap gap-px bg-hairline">
         <button class="sight-tab flex-1 min-w-[140px]" data-sight="drift">Crosshair</button>
         <button class="sight-tab flex-1 min-w-[140px]" data-sight="reflex">Reflex</button>
-        <button class="sight-tab flex-1 min-w-[140px]" data-sight="phantom">Phantom</button>
+        <!-- <button class="sight-tab flex-1 min-w-[140px]" data-sight="phantom">Phantom</button> -->
         <button class="sight-tab flex-1 min-w-[140px]" data-sight="watch">Suppress</button>
       </div>
     </div>
 
     <!-- ── INTEGRA (aggregate) ── -->
-    <div id="sight-integra" class="sight-panel border hr-thin border-t-0 bg-surface p-10 md:p-14">
+    <!-- <div id="sight-integra" class="sight-panel border hr-thin border-t-0 bg-surface p-10 md:p-14">
       <div class="grid grid-cols-12 gap-10">
         <div class="col-span-12 md:col-span-4">
           <div class="label mb-4">AGGREGATE · CASE 095-N</div>
-          <!-- <h3 class="font-light text-3xl md:text-4xl mb-6 text-bone">Combined result.</h3> -->
+          <h3 class="font-light text-3xl md:text-4xl mb-6 text-bone">Combined result.</h3>
           <div class="space-y-5">
             <div>
               <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-1">Combined Z-score</div>
@@ -638,28 +638,28 @@ tailwind.config = {
               <div class="col-span-2 text-right">Status</div>
             </div>
             <div class="grid grid-cols-12 gap-4 px-6 py-4 text-sm items-center bg-surface" style="border-left:2px solid #ff5c5c;">
-              <div class="col-span-4 font-mono text-bone">IntegraSight · Crosshair</div>
+              <div class="col-span-4 font-mono text-bone">Crosshair</div>
               <div class="col-span-2 text-center font-mono" style="color:#ff5c5c;">−5.998</div>
               <div class="col-span-2 text-center font-mono text-smoke">30%</div>
               <div class="col-span-2 text-center font-mono" style="color:#ff5c5c;">−1.799</div>
               <div class="col-span-2 text-right font-mono text-[11px] uppercase tracking-widest" style="color:#ff5c5c;">Positive</div>
             </div>
             <div class="grid grid-cols-12 gap-4 px-6 py-4 text-sm items-center bg-surface">
-              <div class="col-span-4 font-mono text-bone">IntegraSight · Reflex</div>
+              <div class="col-span-4 font-mono text-bone">Reflex</div>
               <div class="col-span-2 text-center font-mono text-smoke">0.000</div>
               <div class="col-span-2 text-center font-mono text-smoke">20%</div>
               <div class="col-span-2 text-center font-mono text-smoke">0.000</div>
               <div class="col-span-2 text-right font-mono text-[11px] uppercase tracking-widest text-signal">Negative</div>
             </div>
             <div class="grid grid-cols-12 gap-4 px-6 py-4 text-sm items-center bg-surface">
-              <div class="col-span-4 font-mono text-bone">IntegraSight · Phantom</div>
+              <div class="col-span-4 font-mono text-bone">Phantom</div>
               <div class="col-span-2 text-center font-mono text-smoke">0.000</div>
               <div class="col-span-2 text-center font-mono text-smoke">30%</div>
               <div class="col-span-2 text-center font-mono text-smoke">0.000</div>
               <div class="col-span-2 text-right font-mono text-[11px] uppercase tracking-widest text-signal">Negative</div>
             </div>
             <div class="grid grid-cols-12 gap-4 px-6 py-4 text-sm items-center bg-surface">
-              <div class="col-span-4 font-mono text-bone">IntegraSight · Suppress</div>
+              <div class="col-span-4 font-mono text-bone">Suppress</div>
               <div class="col-span-2 text-center font-mono text-signal">−1.83</div>
               <div class="col-span-2 text-center font-mono text-smoke">20%</div>
               <div class="col-span-2 text-center font-mono text-smoke">0.000</div>
@@ -678,7 +678,7 @@ tailwind.config = {
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- ── DRIFT (test1_crosshair) ── -->
     <div id="sight-drift" class="sight-panel hidden border hr-thin border-t-0 bg-surface p-10 md:p-14">
@@ -689,16 +689,16 @@ tailwind.config = {
           <p class="text-smoke leading-relaxed mb-6">Crosshair angle displacement measured against the player's career baseline. A sustained shift in aim angle — without an opponent-force explanation — indicates pre-deliberate positioning.</p>
           <div class="space-y-3 mb-8">
             <div class="flex items-baseline gap-4">
-              <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">Z-score</div>
-              <div class="font-mono text-bone" style="color:#ff5c5c;">−5.998 · TRIPPED</div>
+              <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">Status</div>
+              <div class="font-mono text-bone" style="color:#ff5c5c;"> Positive</div>
             </div>
             <div class="flex items-baseline gap-4">
-              <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">p-value</div>
-              <div class="font-mono text-bone">0.5708</div>
+              <!-- <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">p-value</div> -->
+              <!-- <div class="font-mono text-bone">0.5708</div> -->
             </div>
             <div class="flex items-baseline gap-4">
-              <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">KS statistic</div>
-              <div class="font-mono text-bone">0.325</div>
+              <!-- <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">KS statistic</div> -->
+              <!-- <div class="font-mono text-bone">0.325</div> -->
             </div>
             <div class="flex items-baseline gap-4">
               <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">Flagged mean</div>
@@ -718,7 +718,7 @@ tailwind.config = {
           </div>
         </div>
         <div class="col-span-12 md:col-span-7">
-          <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-4">CASE 095-N · Map 3 · Crosshair Angle Distribution</div>
+          <!-- <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-4">CASE 095-N · Map 3 · Crosshair Angle Distribution</div> -->
           <svg viewBox="0 0 600 240" class="w-full" aria-label="Drift crosshair">
             <g>
               <line x1="40" y1="20" x2="40" y2="210" class="grid-line"/>
@@ -755,8 +755,8 @@ tailwind.config = {
           <p class="text-smoke leading-relaxed mb-6">First-contact reaction time measured in milliseconds against the player's own 90-day rolling baseline. A slow player is not a suspicious player — only their own deviation matters.</p>
           <div class="space-y-3 mb-8">
             <div class="flex items-baseline gap-4">
-              <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">Z-score</div>
-              <div class="font-mono text-signal">0.000 · CLEAR</div>
+              <!-- <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">Z-score</div> -->
+              <!-- <div class="font-mono text-signal">0.000 · CLEAR</div> -->
             </div>
             <div class="flex items-baseline gap-4">
               <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">Flagged median</div>
@@ -768,11 +768,11 @@ tailwind.config = {
             </div>
             <div class="flex items-baseline gap-4">
               <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">Delta</div>
-              <div class="font-mono text-amber">+93.8 ms</div>
+              <div class="font-mono text-amber">93.8 ms</div>
             </div>
             <div class="flex items-baseline gap-4">
               <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">Exceeds 50ms</div>
-              <div class="font-mono text-smoke">false</div>
+              <div class="font-mono text-smoke" style="color:#ff5c5c">true</div>
             </div>
           </div>
           <div class="border-l-2 border-signal pl-5 text-smoke text-sm italic">
@@ -780,7 +780,7 @@ tailwind.config = {
           </div>
         </div>
         <div class="col-span-12 md:col-span-7">
-          <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-4">CASE 095-N · Map 3 · First-contact Reaction Time</div>
+          <!-- <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-4">CASE 095-N · Map 3 · First-contact Reaction Time</div> -->
           <svg viewBox="0 0 600 240" class="w-full" aria-label="Reflex reaction">
             <!-- baseline bell centred at 125ms -->
             <path d="M60,200 C110,200 130,60 160,60 C190,60 210,200 260,200" class="signal-dim"/>
@@ -804,12 +804,12 @@ tailwind.config = {
     </div>
 
     <!-- ── PHANTOM (test3 + test4 + peeks) ── -->
-    <div id="sight-phantom" class="sight-panel hidden border hr-thin border-t-0 bg-surface p-10 md:p-14">
+    <!-- <div id="sight-phantom" class="sight-panel hidden border hr-thin border-t-0 bg-surface p-10 md:p-14">
       <div class="space-y-10">
         <div class="grid grid-cols-12 gap-10">
           <div class="col-span-12 md:col-span-5">
             <div class="label mb-4">SIGHT · 03 · PHANTOM</div>
-            <!-- <h3 class="font-light text-3xl md:text-4xl mb-4 text-bone">Phantom.</h3> -->
+            <h3 class="font-light text-3xl md:text-4xl mb-4 text-bone">Phantom.</h3>
             <p class="text-smoke leading-relaxed mb-6">Frame-level decision parsing. Pass-through behaviour measured against the player's own career patterns at equal economy states.</p>
             <div class="space-y-3">
               <div class="font-mono text-[10px] text-mute tracking-widest uppercase mb-2">test3 · Passthrough</div>
@@ -843,7 +843,7 @@ tailwind.config = {
           </div>
         </div>
 
-        <!-- KD by leverage -->
+       
         <div>
           <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-4">KD UNDERPERFORMANCE BY LEVERAGE · FLAGGED vs BASELINE</div>
           <div class="grid grid-cols-1 md:grid-cols-4 gap-px bg-hairline border hr-thin">
@@ -878,7 +878,7 @@ tailwind.config = {
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- ── SUPPRESS (multi_match_summary) ── -->
     <div id="sight-watch" class="sight-panel hidden border hr-thin border-t-0 bg-surface p-10 md:p-14">
