@@ -94,7 +94,7 @@ tailwind.config = {
   /* Bracketed mono labels */
   .label {
     font-family:'JetBrains Mono',monospace;
-    font-size:11px; letter-spacing:0.18em; text-transform:uppercase;
+    font-size:15px; letter-spacing:0.18em; text-transform:uppercase;
     color:#5fffc1;
   }
   .label::before { content:''; }
@@ -129,7 +129,7 @@ tailwind.config = {
   .step-num {
     width:36px; height:36px; border:1px solid #2a8a6c; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
-    font-family:'JetBrains Mono',monospace; font-size:13px;
+    font-family:'JetBrains Mono',monospace; font-size:15px;
     color:#5fffc1; background:#0c0e13;
   }
 
@@ -163,7 +163,7 @@ tailwind.config = {
   .dossier-table th {
     background:#0c0e13; color:#5fffc1;
     font-family:'JetBrains Mono',monospace;
-    font-size:10px; text-transform:uppercase; letter-spacing:0.18em;
+    font-size:15px; text-transform:uppercase; letter-spacing:0.18em;
     padding:12px 20px; border-bottom:1px solid #1a1f28;
   }
   .dossier-table td { padding:12px 20px; border-bottom:1px solid #1a1f28; color:#8993a3; }
@@ -210,35 +210,71 @@ tailwind.config = {
     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif !important;
   }
 
-  /* CH 01 · Method — enlarge column 1 (number + label) and
-     column 3 (caption) so they read at the same, larger size. */
-  #chapter-02 .label    { font-size:14px !important; }
-  #chapter-02 .step-num { font-size:15px; }
-  #chapter-02 .md\:col-span-4.font-mono { font-size:14px; }
+  /* CH 01 · Method — match the readable scale of CH 03+ */
+  #chapter-02 .label                     { font-size:20px !important; }
+  #chapter-02 .step-num                  { font-size:20px !important; width:48px !important; height:48px !important; }
+  #chapter-02 .text-\[10px\]             { font-size:17px !important; }
+  #chapter-02 .text-\[11px\]             { font-size:18px !important; }
+  #chapter-02 .text-\[13px\]             { font-size:19px !important; }
+  #chapter-02 .text-\[17px\]             { font-size:20px !important; }
+  #chapter-02 .text-xs                   { font-size:19px !important; }
+  #chapter-02 .text-sm                   { font-size:19px !important; }
+  #chapter-02 .text-base                 { font-size:21px !important; }
+  #chapter-02 p                          { font-size:19px !important; line-height:1.75 !important; }
+  #chapter-02 [style*="font-size:11px"]  { font-size:20px !important; }
+  #chapter-02 .md\:col-span-4.font-mono  { font-size:19px !important; }
+
+  /* CH 02 · Market Drift — same scale */
+  #hero .text-\[10px\]             { font-size:17px !important; }
+  #hero .text-\[11px\]             { font-size:18px !important; }
+  #hero .text-\[13px\]             { font-size:19px !important; }
+  #hero .text-xs                   { font-size:19px !important; }
+  #hero .text-sm                   { font-size:19px !important; }
+  #hero .text-base                 { font-size:21px !important; }
+  #hero p                          { font-size:19px !important; line-height:1.75 !important; }
+  #hero [style*="font-size:11px"]  { font-size:20px !important; }
+  #hero [style*="font-size:10px"]  { font-size:17px !important; }
 
   /* CH 03 · Performance Matrix — larger map/section labels,
-     table headers and the index caption. */
-  #chapter-03 [style*="font-size:11px"] { font-size:14px !important; }
-  #chapter-03 .dossier-table th         { font-size:13px !important; color:#ffffff !important; }
-  #chapter-03 .text-xs                  { font-size:14px !important; }
+     tabs, table headers, table body and the index caption. */
+  #chapter-03 .perf-tab                 { font-size:21px !important; padding:18px 32px !important; }
+  #chapter-03 [style*="font-size:11px"] { font-size:20px !important; }
+  #chapter-03 .dossier-table th         { font-size:18px !important; color:#ffffff !important; padding:16px 24px !important; }
+  #chapter-03 .dossier-table td         { font-size:18px !important; padding:16px 24px !important; }
+  #chapter-03 .text-xs                  { font-size:19px !important; }
+  #chapter-03 .text-sm                  { font-size:19px !important; }
+  #chapter-03 .text-base                { font-size:21px !important; }
+  #chapter-03 .perf-panel               { padding:4rem 5rem !important; }
 
   /* CH 04 · IntegraSight panels — enlarge the small labels & data
      rows so they fill the available space and read clearly. */
-  #chapter-04 .sight-panel .label         { font-size:15px !important; }
-  #chapter-04 .sight-panel .text-\[10px\] { font-size:13px !important; }
-  #chapter-04 .sight-panel .text-\[11px\] { font-size:14px !important; }
-  #chapter-04 .sight-panel .text-xs       { font-size:15px !important; }
-  #chapter-04 .sight-panel .text-sm       { font-size:16px !important; }
-  #chapter-04 .sight-panel p              { font-size:16px !important; line-height:1.7 !important; }
-  #chapter-04 .sight-panel svg text       { font-size:13px !important; }
+  #chapter-04 .sight-tab                   { font-size:21px !important; padding:18px 32px !important; }
+  #chapter-04 .sight-panel .label          { font-size:20px !important; }
+  #chapter-04 .sight-panel .text-\[10px\]  { font-size:17px !important; }
+  #chapter-04 .sight-panel .text-\[11px\]  { font-size:18px !important; }
+  #chapter-04 .sight-panel .text-xs        { font-size:19px !important; }
+  #chapter-04 .sight-panel .text-sm        { font-size:19px !important; }
+  #chapter-04 .sight-panel .text-base      { font-size:21px !important; }
+  #chapter-04 .sight-panel p               { font-size:19px !important; line-height:1.7 !important; }
+  #chapter-04 .sight-panel svg text        { font-size:15px !important; }
+  #chapter-04 [style*="font-size:11px"]    { font-size:20px !important; }
+  #chapter-04 p                            { font-size:19px !important; line-height:1.7 !important; }
+  #chapter-04 .sight-panel                 { padding:3.5rem 4.5rem !important; }
+  #chapter-04 .dossier-table th            { font-size:18px !important; color:#ffffff !important; padding:16px 24px !important; }
+  #chapter-04 .dossier-table td            { font-size:18px !important; padding:16px 24px !important; }
 
-  /* CH 05/06/07 — bring the remaining content labels & captions
-     up to the same readable floor as CH 03/04 (cards' inline chrome
-     left as-is so their layout stays intact). */
-  #chapter-05 .text-\[10px\], #chapter-06 .text-\[10px\], #chapter-07 .text-\[10px\] { font-size:13px !important; }
-  #chapter-05 .text-\[11px\], #chapter-06 .text-\[11px\], #chapter-07 .text-\[11px\] { font-size:14px !important; }
-  #chapter-05 .text-xs,       #chapter-06 .text-xs,       #chapter-07 .text-xs       { font-size:15px !important; }
-  #chapter-05 .text-sm,       #chapter-06 .text-sm,       #chapter-07 .text-sm       { font-size:16px !important; }
+  /* CH 05/06/07 — match the same readable scale as CH 03/04. */
+  #chapter-05 .text-\[10px\], #chapter-06 .text-\[10px\], #chapter-07 .text-\[10px\] { font-size:17px !important; }
+  #chapter-05 .text-\[11px\], #chapter-06 .text-\[11px\], #chapter-07 .text-\[11px\] { font-size:18px !important; }
+  #chapter-05 .text-\[13px\], #chapter-06 .text-\[13px\], #chapter-07 .text-\[13px\] { font-size:19px !important; }
+  #chapter-05 .text-\[14px\], #chapter-06 .text-\[14px\], #chapter-07 .text-\[14px\] { font-size:20px !important; }
+  #chapter-05 .text-xs,       #chapter-06 .text-xs,       #chapter-07 .text-xs       { font-size:19px !important; }
+  #chapter-05 .text-sm,       #chapter-06 .text-sm,       #chapter-07 .text-sm       { font-size:19px !important; }
+  #chapter-05 .text-base,     #chapter-06 .text-base,     #chapter-07 .text-base     { font-size:21px !important; }
+  #chapter-05 p,              #chapter-06 p,              #chapter-07 p              { font-size:19px !important; line-height:1.75 !important; }
+  #chapter-05 [style*="font-size:11px"], #chapter-06 [style*="font-size:11px"], #chapter-07 [style*="font-size:11px"] { font-size:20px !important; }
+  #chapter-05 .dossier-table th, #chapter-06 .dossier-table th, #chapter-07 .dossier-table th { font-size:18px !important; color:#ffffff !important; padding:16px 24px !important; }
+  #chapter-05 .dossier-table td, #chapter-06 .dossier-table td, #chapter-07 .dossier-table td { font-size:18px !important; padding:16px 24px !important; }
 </style>
 </head>
 
@@ -305,7 +341,7 @@ tailwind.config = {
         <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>CH 01 · METHOD</div>
         <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em] max-w-4xl">Five signals to detect any<br/><span class="text-signal">intentional under-performance.</span></h2>
       </div>
-      <div class="hidden md:block font-mono text-[10px] text-mute tracking-[0.2em] uppercase">↓ Scroll to read</div>
+      <div class="hidden md:block font-mono text-[13px] text-mute tracking-[0.2em] uppercase">↓ Scroll to read</div>
     </div>
 
     <div class="space-y-px bg-hairline border hr-thin">
@@ -321,7 +357,10 @@ tailwind.config = {
         </div>
         <div class="col-span-12 md:col-span-4 font-mono text-xs text-mute leading-relaxed">
           <div class="text-signal mb-1">→ DRIFT</div>
-          Continuous polling · cross-referenced against that player's historic kill line at the same map.
+
+          <span class="font-mono text-[17px]">
+            Continuous polling · cross-referenced against that player's historic kill line at the same map.
+          </span>
         </div>
       </div>
 
@@ -337,7 +376,9 @@ tailwind.config = {
         </div>
         <div class="col-span-12 md:col-span-4 font-mono text-xs text-mute leading-relaxed">
           <div class="text-signal mb-1">→ INDEX</div>
-          KDR · KPR · ADR · DPR · Shot accuracy — all measured against the player's own baseline, never a tour average.
+          <span class="font-mono text-[17px]">
+            KDR · KPR · ADR · DPR · Shot accuracy — all measured against the player's own baseline, never a tour average.
+          </span>
         </div>
       </div>
 
@@ -353,7 +394,9 @@ tailwind.config = {
         </div>
         <div class="col-span-12 md:col-span-4 font-mono text-xs text-mute leading-relaxed">
           <div class="text-signal mb-1">→ REFLEX · PHANTOM</div>
+          <span class="font-mono text-[17px]">
           Tick-precise reaction timing and crosshair tracking · frame-level demo parsing · all measured against the player's own 90-day window, never a tour average.
+          </span>
         </div>
       </div>
 
@@ -369,7 +412,9 @@ tailwind.config = {
         </div>
         <div class="col-span-12 md:col-span-4 font-mono text-xs text-mute leading-relaxed">
           <div class="text-signal mb-1">→ WATCH</div>
+          <span class="font-mono text-[17px]">
           Public HLTV, Telegram and Discord monitoring · phrases matched to the flagged player and surfaced before the map ends.
+          </span>
         </div>
       </div>
 
@@ -385,7 +430,9 @@ tailwind.config = {
         </div>
         <div class="col-span-12 md:col-span-4 font-mono text-xs text-mute leading-relaxed">
           <div class="text-signal mb-1">→ GAMEPLAY</div>
+          <span class="font=mono text-[17px]">
           Round-by-round footage · disadvantaged peeks, unused utility and passive positioning matched against the player's own career pattern.
+          </span>
         </div>
       </div>
     </div>
@@ -398,7 +445,7 @@ tailwind.config = {
 
     <div class="flex items-center justify-between gap-3 mb-10">
       <div class="chapter-num text-sm"><span style="color:#5fffc1;">➤ </span>CH 02 · MARKET DRIFT</div>
-      <div class="font-mono text-[10px] md:text-[11px] text-mute pulse-dot tracking-[0.2em] uppercase text-right">Live · Detection layer online</div>
+      <div class="font-mono text-[10px] md:text-[13px] text-mute pulse-dot tracking-[0.2em] uppercase text-right">Live · Detection layer online</div>
     </div>
 
     <h1 class="font-light text-4xl md:text-5xl leading-[1.1] tracking-[-0.02em] max-w-5xl">
@@ -412,19 +459,19 @@ tailwind.config = {
 
     <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-px bg-hairline border hr-thin">
       <div class="bg-surface p-4 md:p-6">
-        <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-2">Competition</div>
+        <div class="font-mono text-[13px] text-mute tracking-[0.2em] uppercase mb-2">Competition</div>
         <div class="font-mono text-base sm:text-xl md:text-2xl text-bone break-words">IEM Chengdu 2025</div>
       </div>
       <div class="bg-surface p-4 md:p-6">
-        <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-2">Flagged Map</div>
+        <div class="font-mono text-[13px] text-mute tracking-[0.2em] uppercase mb-2">Flagged Map</div>
         <div class="font-mono text-base sm:text-xl md:text-2xl text-bone break-words">Map 3 · Ancient</div>
       </div>
       <div class="bg-surface p-4 md:p-6">
-        <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-2">Match Outcome</div>
+        <div class="font-mono text-[13px] text-mute tracking-[0.2em] uppercase mb-2">Match Outcome</div>
         <div class="font-mono text-base sm:text-xl md:text-2xl text-bone break-words">Series Lost 2-1</div>
       </div>
       <div class="bg-surface p-4 md:p-6">
-        <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-2">Player Position</div>
+        <div class="font-mono text-[13px] text-mute tracking-[0.2em] uppercase mb-2">Player Position</div>
         <div class="font-mono text-base sm:text-xl md:text-2xl text-bone break-words">Pos 1/5 · Team Rank 17</div>
       </div>
     </div>
@@ -433,12 +480,19 @@ tailwind.config = {
     <div class="mt-16 border hr-thin" style="background:#0c0e13;padding:28px 32px;">
       <div class="flex justify-between items-center mb-6">
         <div>
-          <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-1">Case 095-N · Map 3 Kill Line</div>
+          <div class="font-mono text-[13px] text-mute tracking-[0.2em] uppercase mb-1">Case 095-N · Map 3 Kill Line</div>
           <div class="font-mono text-sm text-bone">Player N's Kill Line Drift</div>
         </div>
-        <div class="font-mono text-[11px] tracking-[0.2em] uppercase" style="color:#ff5c5c;">DRIFT  −2.0pt </div>
+        <div class="font-mono text-[13px] tracking-[0.2em] uppercase" style="color:#ff5c5c;">DRIFT  −2.0pt </div>
       </div>
       <div style="position:relative;height:360px;"><canvas id="integraMarketChart"></canvas></div>
+      <div class="border-l-2 mt-6 pl-4" style="border-color:#2a8a6c;">
+        <div class="font-mono text-[13px] text-mute tracking-[0.15em] uppercase mb-3" style="color:#5fffc1;">What is a Kill Line?</div>
+        <div class="font-mono text-sm space-y-2">
+          <div><span style="color:#5fffc1;">✦</span> <span class="text-smoke">If kill line of player</span> <span style="color:#5fffc1;">increases</span> <span class="text-smoke">→</span> <span style="color:#5fffc1;">Over Performance</span></div>
+          <div><span style="color:#ff5c5c;">✦</span> <span class="text-smoke">If kill line of player</span> <span style="color:#ff5c5c;">decreases</span> <span class="text-smoke">→</span> <span style="color:#ff5c5c;">Under Performance</span></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -514,12 +568,12 @@ tailwind.config = {
     <div id="perf-panel-index" class="perf-panel hidden border hr-thin border-t-0 bg-ink p-10 md:p-14">
       <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#5fffc1;" class="mb-3">PERFORMANCE INDEX</div>
       <p class="font-mono text-xs text-mute mb-8">% of career avg baseline — gold line = 100% (normal)</p>
-      <div style="position:relative;height:480px;"><canvas id="perfChart"></canvas></div>
+      <div style="position:relative;height:540px;"><canvas id="perfChart"></canvas></div>
     </div>
 
 
     <!-- MAP RATINGS -->
-    <div id="perf-panel-ratings" class="perf-panel hidden border hr-thin border-t-0 bg-ink p-10 md:p-14 space-y-10">
+    <div id="perf-panel-ratings" class="perf-panel hidden border hr-thin border-t-0 bg-ink p-10 md:p-14 space-y-14">
       <div>
         <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#ffffff;" class="mb-4">CAREER MAP RATINGS — Before the Game</div>
         <div class="overflow-x-auto">
@@ -1477,8 +1531,8 @@ tailwind.config = {
         c.strokeStyle = '#ffb454'; c.lineWidth = 1.5; c.setLineDash([8, 4]);
         c.beginPath(); c.moveTo(chartArea.left, y100); c.lineTo(chartArea.right, y100); c.stroke();
         c.setLineDash([]);
-        c.fillStyle = '#ffb454'; c.font = '10px JetBrains Mono'; c.textAlign = 'right';
-        c.fillText('Baseline 100%', chartArea.right - 4, y100 - 6);
+        c.fillStyle = '#ffb454'; c.font = 'bold 17px JetBrains Mono'; c.textAlign = 'right';
+        c.fillText('Baseline 100%', chartArea.right - 4, y100 - 8);
         c.restore();
       }
     };
@@ -1494,10 +1548,12 @@ tailwind.config = {
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'bottom', labels: { color: '#8993a3', font: { family: 'JetBrains Mono', size: 11 } } },
+          legend: { position: 'bottom', labels: { color: '#8993a3', font: { family: 'JetBrains Mono', size: 18 }, padding: 20 } },
           tooltip: {
             backgroundColor: '#0c0e13', borderColor: '#1a1f28', borderWidth: 1,
             titleColor: '#5fffc1', bodyColor: '#e5ebf2',
+            titleFont: { family: 'JetBrains Mono', size: 15 },
+            bodyFont:  { family: 'JetBrains Mono', size: 15 },
             callbacks: {
               label: function(ctx) {
                 var actual = ctx.datasetIndex === 0 ? actualBaseline[ctx.dataIndex] : actualCurrent[ctx.dataIndex];
@@ -1507,8 +1563,8 @@ tailwind.config = {
           }
         },
         scales: {
-          y: { min: 0, max: 120, grid: { color: '#1a1f28' }, ticks: { color: '#8993a3', font: { family: 'JetBrains Mono' }, callback: function(v) { return v + '%'; } } },
-          x: { grid: { display: false }, ticks: { color: '#8993a3', font: { family: 'JetBrains Mono', weight: 'bold' } } }
+          y: { min: 0, max: 120, grid: { color: '#1a1f28' }, ticks: { color: '#8993a3', font: { family: 'JetBrains Mono', size: 16 }, callback: function(v) { return v + '%'; } } },
+          x: { grid: { display: false }, ticks: { color: '#8993a3', font: { family: 'JetBrains Mono', size: 16, weight: 'bold' } } }
         }
       },
       plugins: [baselineLine]
@@ -1524,7 +1580,7 @@ tailwind.config = {
         tip.className = 'axis-tip';
         tip.style.cssText = 'position:absolute;z-index:30;pointer-events:none;display:none;max-width:240px;'
           + 'background:#0c0e13;border:1px solid #1a1f28;border-radius:4px;'
-          + "color:#e5ebf2;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.55;"
+          + "color:#e5ebf2;font-family:'JetBrains Mono',monospace;font-size:14px;line-height:1.55;"
           + 'padding:10px 12px;box-shadow:0 8px 24px -8px rgba(0,0,0,0.65);';
         holder.appendChild(tip);
       }
