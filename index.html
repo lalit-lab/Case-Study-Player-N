@@ -369,6 +369,24 @@ tailwind.config = {
     #chapter-06 [style*="font-size:11px"], #chapter-07 [style*="font-size:11px"] { font-size:13px !important; }
     #hero [style*="font-size:10px"] { font-size:13px !important; }
   }
+
+  /* ═══════════════ MOBILE FIXES · CH 02 PERFORMANCE MATRIX (≤640px) ═══════════════ */
+  @media (max-width:640px){
+    /* (1) MAP RATINGS — the wide "Worst Ranked" (7 col) & "Avg Kills" (4 col)
+       data tables: give them a min-width so the headers stay on one line and
+       stop mashing together; the existing .overflow-x-auto wrapper scrolls them
+       horizontally. The blurred canvas data re-aligns automatically because
+       drawTable() measures the (new) table width when the tab opens. */
+    #chapter-03 #perf-panel-ratings table[style*="table-layout"] { min-width:600px; }
+
+    /* (2) INVERSION — stack each map's [title] / [score] vertically instead of a
+       side-by-side flex row, so the score no longer overflows the right edge and
+       the title no longer spills off the left. */
+    #perf-panel-inversion .flex.justify-between.items-center {
+      flex-direction:column; align-items:flex-start; gap:6px;
+    }
+    #perf-panel-inversion .text-right { text-align:left !important; }
+  }
 </style>
 </head>
 
