@@ -369,61 +369,10 @@ tailwind.config = {
     #chapter-06 [style*="font-size:11px"], #chapter-07 [style*="font-size:11px"] { font-size:13px !important; }
     #hero [style*="font-size:10px"] { font-size:13px !important; }
   }
-
-  /* ═══════════════ MOBILE PREMIUM PASS ═══════════════ */
-  /* Floating chrome — base styles (shown only ≤640px in the media block below) */
-  #m-progress { position:fixed; top:0; left:0; height:3px; width:0%; background:#5fffc1;
-    box-shadow:0 0 12px #5fffc1; z-index:10002; transition:width .12s linear; display:none; }
-  #m-cta { position:fixed; left:12px; right:12px; bottom:12px; z-index:9000; display:none;
-    align-items:center; justify-content:center; gap:10px; padding:15px 18px; text-decoration:none;
-    background:#5fffc1; color:#07080b; font-family:'JetBrains Mono',monospace; font-weight:700;
-    font-size:13px; letter-spacing:.18em; text-transform:uppercase; border-radius:2px;
-    box-shadow:0 12px 34px -8px rgba(95,255,193,.6);
-    transform:translateY(160%); transition:transform .38s cubic-bezier(.4,0,.2,1); }
-  #m-cta.show { transform:translateY(0); }
-
-  @keyframes imDraw { to { stroke-dashoffset:0; } }
-  @keyframes imGrow { from { transform:scaleY(0); opacity:.25; } to { transform:scaleY(1); opacity:1; } }
-  @keyframes imRise { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-
-  @media (max-width:640px){
-    /* show floating chrome on phones */
-    #m-progress { display:block; }
-    #m-cta { display:flex; }
-
-    /* ── DUAL-FONT — human voice in Inter (sans); instruments stay mono ── */
-    h1, h2, h3, h4, h5, p, li, blockquote { font-family:'Inter','sans-serif' !important; }
-    .font-mono, .label, .chapter-num, .bigstat, .step-num, .nav-link,
-    .sight-tab, .perf-tab, .nda-tag, .nda-btn,
-    .dossier-table, .dossier-table th, .dossier-table td { font-family:'JetBrains Mono','monospace' !important; }
-
-    /* ── TAP FEEDBACK (touch has no :hover) ── */
-    .card { transition:border-color .2s ease, transform .12s ease; }
-    .card:active { border-color:#5fffc1 !important; transform:scale(.985); }
-    .sight-tab:active, .perf-tab:active { color:#07080b !important; background:#5fffc1 !important; border-color:#5fffc1 !important; }
-    a:active, button:active { opacity:.82; }
-    .nda-btn:active, #m-cta:active { transform:scale(.97); }
-
-    /* ── SVG INSTRUMENTS draw themselves in when the panel is shown ── */
-    .sight-panel:not(.hidden) svg line,
-    .sight-panel:not(.hidden) svg path[stroke] { stroke-dasharray:620; stroke-dashoffset:620; animation:imDraw 1.1s ease-out forwards; }
-    .sight-panel:not(.hidden) svg rect { transform-box:fill-box; transform-origin:bottom; animation:imGrow .75s ease-out forwards; }
-    .sight-panel:not(.hidden) svg text { animation:imRise .9s ease-out both; animation-delay:.4s; }
-  }
-
-  @media (prefers-reduced-motion: reduce){
-    .sight-panel svg line, .sight-panel svg path[stroke] { stroke-dasharray:none !important; stroke-dashoffset:0 !important; animation:none !important; }
-    .sight-panel svg rect, .sight-panel svg text { animation:none !important; }
-    #m-cta { transition:none; }
-  }
 </style>
 </head>
 
 <body class="bg-ink text-bone">
-
-<!-- Mobile-only floating chrome (scroll progress + sticky CTA) -->
-<div id="m-progress"></div>
-<a id="m-cta" href="mailto:dhruvyadav@integritymentors.in?subject=Integra%20pilot%20—%20095-X1">Request a Pilot →</a>
 
 <!-- ═══════════════════ NDA MODAL — shown when "Request a Pilot" is clicked ═══════════════════ -->
 <div id="nda-gate" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="nda-title">
@@ -2458,66 +2407,6 @@ tailwind.config = {
   window.__cid = cid;
 })();
 // ── END TRACKING ──────────────────────────────────────────────────
-</script>
-
-<script>
-/* ── MOBILE PREMIUM PASS (≤640px): scroll progress, sticky CTA, KPI count-up ── */
-(function () {
-  var mq     = window.matchMedia('(max-width:640px)');
-  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var bar = document.getElementById('m-progress');
-  var cta = document.getElementById('m-cta');
-
-  // Scroll progress bar + sticky CTA show/hide
-  function onScroll() {
-    var st   = window.scrollY || document.documentElement.scrollTop;
-    var docH = document.documentElement.scrollHeight - window.innerHeight;
-    var pct  = docH > 0 ? (st / docH) * 100 : 0;
-    if (bar) bar.style.width = pct + '%';
-    if (cta) {
-      var nearBottom = st > (docH - 220);
-      if (st > 520 && !nearBottom) cta.classList.add('show');
-      else cta.classList.remove('show');
-    }
-  }
-  window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', onScroll, { passive: true });
-  onScroll();
-
-  // Count-up on the big KPI numbers (mobile only; respects reduced-motion)
-  if (mq.matches && !reduce) {
-    var stats = [];
-    document.querySelectorAll('.bigstat').forEach(function (el) {
-      var raw = el.textContent.trim();
-      var m = raw.match(/[0-9]+(?:\.[0-9]+)?/);
-      if (!m) return;
-      var n = m[0];
-      el._t = parseFloat(n);
-      el._d = (n.split('.')[1] || '').length;
-      el._pre = raw.slice(0, m.index);
-      el._suf = raw.slice(m.index + n.length);
-      el.textContent = el._pre + (0).toFixed(el._d) + el._suf;  // start at zero
-      stats.push(el);
-    });
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (!e.isIntersecting) return;
-        var el = e.target; io.unobserve(el);
-        var dur = 900, t0 = null;
-        function step(ts) {
-          if (!t0) t0 = ts;
-          var p = Math.min((ts - t0) / dur, 1);
-          var eased = 1 - Math.pow(1 - p, 3);
-          el.textContent = el._pre + (el._t * eased).toFixed(el._d) + el._suf;
-          if (p < 1) requestAnimationFrame(step);
-          else el.textContent = el._pre + el._t.toFixed(el._d) + el._suf;
-        }
-        requestAnimationFrame(step);
-      });
-    }, { threshold: 0.5 });
-    stats.forEach(function (s) { io.observe(s); });
-  }
-})();
 </script>
 
 </body>
