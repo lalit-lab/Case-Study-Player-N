@@ -396,6 +396,14 @@ tailwind.config = {
   @media (max-width:640px){
     #chapter-02 .md\:col-span-4.font-mono { font-size:13.5px !important; line-height:1.6 !important; }
     #chapter-02 .md\:col-span-4 .text-\[17px\] { font-size:14px !important; }
+
+    /* Each step is a 12-col grid; on phones the 11 column-gaps (gap-8 = 32px
+       each) exceed the narrow width and push the col-span-12 blocks off the
+       right edge. Stack them as plain blocks instead — no phantom grid gaps. */
+    #chapter-02 .grid.grid-cols-12 { display:block !important; padding:1.25rem !important; }
+    #chapter-02 .grid.grid-cols-12 > * + * { margin-top:0.85rem !important; }
+    /* Safety net: let long words wrap instead of spilling out */
+    #chapter-02 h2, #chapter-02 h3, #chapter-02 p, #chapter-02 .font-mono { overflow-wrap:break-word; }
   }
 </style>
 </head>
