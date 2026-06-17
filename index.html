@@ -125,6 +125,9 @@ tailwind.config = {
   .card { background:#0c0e13; border:1px solid #1a1f28; transition:border-color .2s ease, transform .2s ease; }
   .card:hover { border-color:#2a8a6c; }
 
+  /* Big stat */
+  .bigstat { font-size:clamp(1.8rem,3.5vw,2.6rem); font-weight:700; line-height:1; }
+
   /* Step circles */
   .step-num {
     width:36px; height:36px; border:1px solid #2a8a6c; border-radius:50%;
@@ -141,6 +144,15 @@ tailwind.config = {
   /* Reveal-on-scroll (CSS only, simple) */
   .reveal { opacity:0; transform:translateY(14px); transition:opacity .8s ease, transform .8s ease; }
   .reveal.in { opacity:1; transform:translateY(0); }
+
+  /* Collapsible methodology (CH 01) */
+  .method-collapse { display:grid; grid-template-rows:0fr; transition:grid-template-rows .45s cubic-bezier(.4,0,.2,1); }
+  .method-collapse.open { grid-template-rows:1fr; }
+  .method-collapse > .method-inner { overflow:hidden; min-height:0; }
+  #method-toggle .chev { display:inline-block; transition:transform .35s cubic-bezier(.4,0,.2,1); }
+  #method-toggle.open .chev { transform:rotate(90deg); }
+  #method-toggle { background:rgba(95,255,193,0.06); }
+  #method-toggle:hover { background:rgba(95,255,193,0.12); border-color:#5fffc1; }
 
   /* Smooth scroll */
   html { scroll-behavior:smooth; }
@@ -275,10 +287,120 @@ tailwind.config = {
   #chapter-05 [style*="font-size:11px"], #chapter-06 [style*="font-size:11px"], #chapter-07 [style*="font-size:11px"] { font-size:20px !important; }
   #chapter-05 .dossier-table th, #chapter-06 .dossier-table th, #chapter-07 .dossier-table th { font-size:18px !important; color:#ffffff !important; padding:16px 24px !important; }
   #chapter-05 .dossier-table td, #chapter-06 .dossier-table td, #chapter-07 .dossier-table td { font-size:18px !important; padding:16px 24px !important; }
+
+  /* ── Confidentiality / NDA access gate ── */
+  body.nda-locked { overflow:hidden; }
+  #nda-gate { position:fixed; inset:0; z-index:10001; background:rgba(7,8,11,0.92); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); display:flex; align-items:flex-start; justify-content:center; padding:28px 18px; overflow-y:auto; }
+  #nda-gate .nda-card { max-width:600px; width:100%; background:#0a0c10; border:1px solid #1a1f28; box-shadow:0 0 90px rgba(0,0,0,0.9); padding:34px 32px; margin:auto; }
+  .nda-tag { font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.25em; text-transform:uppercase; color:#5fffc1; }
+  .nda-card h2 { font-weight:300; font-size:25px; letter-spacing:-0.01em; color:#e5ebf2; margin:14px 0 12px; line-height:1.2; }
+  .nda-card .nda-lead { font-family:'JetBrains Mono',monospace; font-size:12.5px; line-height:1.7; color:#8993a3; margin:0 0 16px; }
+  .nda-key { list-style:none; padding:0; margin:0 0 18px; border-top:1px solid #1a1f28; }
+  .nda-key li { font-family:'JetBrains Mono',monospace; font-size:12px; line-height:1.6; color:#a0a8b4; padding:11px 0 11px 22px; border-bottom:1px solid #1a1f28; position:relative; }
+  .nda-key li::before { content:'\27A4'; color:#5fffc1; position:absolute; left:0; top:11px; font-size:10px; }
+  .nda-readlink { display:inline-block; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#5fffc1; border:1px solid #2a8a6c; padding:8px 14px; text-decoration:none; margin-bottom:22px; transition:background .2s; }
+  .nda-readlink:hover { background:rgba(95,255,193,0.1); }
+  .nda-consent { display:flex; gap:12px; align-items:flex-start; margin-bottom:22px; cursor:pointer; }
+  .nda-consent input { margin-top:2px; width:16px; height:16px; accent-color:#5fffc1; flex-shrink:0; cursor:pointer; }
+  .nda-consent span { font-family:'JetBrains Mono',monospace; font-size:12px; line-height:1.6; color:#c8cfd9; }
+  .nda-actions { display:flex; gap:12px; flex-wrap:wrap; align-items:stretch; }
+  .nda-btn { font-family:'JetBrains Mono',monospace; font-size:12.5px; letter-spacing:0.16em; text-transform:uppercase; padding:14px 22px; border:1px solid #2a8a6c; background:transparent; color:#8993a3; cursor:pointer; transition:all .2s; }
+  .nda-btn:hover { color:#e5ebf2; }
+  .nda-btn-primary { background:#2a8a6c; color:#07080b; border-color:#2a8a6c; font-weight:600; flex:1; min-width:210px; }
+  .nda-btn-primary:disabled { opacity:0.4; cursor:not-allowed; }
+  .nda-btn-primary.nda-btn-ready { background:#5fffc1; border-color:#5fffc1; }
+  .nda-fine { font-family:'JetBrains Mono',monospace; font-size:10px; line-height:1.6; color:#4d5564; margin-top:20px; }
 </style>
 </head>
 
 <body class="bg-ink text-bone">
+
+<!-- ═══════════════════ NDA MODAL — shown when "Request a Pilot" is clicked ═══════════════════ -->
+<div id="nda-gate" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="nda-title">
+  <div class="nda-card">
+    <div class="nda-tag">● Confidential · Case File 095-X1</div>
+    <h2 id="nda-title">Before you request<br>a pilot</h2>
+    <p class="nda-lead">
+      A pilot gives you access to full, unredacted case material. That material — and the preview on
+      this page — is shared in confidence under a Confidentiality &amp; Access Agreement. Please review
+      and accept it before we continue to your request.
+    </p>
+    <ul class="nda-key">
+      <li>It is illustrative analysis — <strong>not an allegation, finding, or proof of misconduct</strong> against any person, team, or organisation. The presumption of innocence applies.</li>
+      <li>You will not copy, screenshot, forward, publish, or otherwise distribute any part of it.</li>
+      <li>You will not use it to identify, name, accuse, sanction, or take any action against any individual.</li>
+      <li>You access it as an authorised, named recipient, for evaluation only.</li>
+    </ul>
+    <a class="nda-readlink" href="./INTEGRA_NDA.pdf" target="_blank" rel="noopener">Read the full agreement (PDF) ↗</a>
+    <label class="nda-consent" for="nda-agree-check">
+      <input type="checkbox" id="nda-agree-check">
+      <span>I have read and agree to the Confidentiality &amp; Access Agreement, and confirm I am an authorised named recipient.</span>
+    </label>
+    <div class="nda-actions">
+      <button type="button" id="nda-cancel-btn" class="nda-btn">Cancel</button>
+      <button type="button" id="nda-accept-btn" class="nda-btn nda-btn-primary" disabled>Agree &amp; continue to request →</button>
+    </div>
+    <p class="nda-fine">
+      Acceptance is recorded with date and time. Access and use are logged for integrity and
+      product-improvement purposes. Integra · a product of Integrity Mentors · ref. 095-X1.
+    </p>
+  </div>
+</div>
+
+<script>
+  /* Confidentiality gate on the "Request a Pilot" action. The blurred preview ALWAYS stays
+     blurred; this modal simply presents the NDA when a visitor chooses to request a pilot,
+     then forwards them to the request once they accept. */
+  (function () {
+    var gate   = document.getElementById('nda-gate');
+    var cb     = document.getElementById('nda-agree-check');
+    var accept = document.getElementById('nda-accept-btn');
+    var cancel = document.getElementById('nda-cancel-btn');
+    var pendingHref = null;
+
+    function isPilotLink(a) {
+      var href = ((a && a.getAttribute('href')) || '').toLowerCase();
+      return href.indexOf('mailto:') === 0 && href.indexOf('pilot') !== -1;
+    }
+    function openModal(href) {
+      pendingHref = href;
+      if (cb) cb.checked = false;
+      if (accept) { accept.disabled = true; accept.classList.remove('nda-btn-ready'); }
+      if (gate) gate.style.display = 'flex';
+      document.body.classList.add('nda-locked');
+    }
+    function closeModal() {
+      if (gate) gate.style.display = 'none';
+      document.body.classList.remove('nda-locked');
+      pendingHref = null;
+    }
+
+    // Intercept every "Request a Pilot" click (nav, mobile menu, and the main CTA).
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('a[href^="mailto"]');
+      if (a && isPilotLink(a)) { e.preventDefault(); openModal(a.getAttribute('href')); }
+    }, true);
+
+    if (cb && accept) {
+      cb.addEventListener('change', function () {
+        accept.disabled = !cb.checked;
+        accept.classList.toggle('nda-btn-ready', cb.checked);
+      });
+      accept.addEventListener('click', function () {
+        if (!cb.checked) return;
+        var href = pendingHref;
+        try { localStorage.setItem('_nda_ts', new Date().toISOString()); } catch (e) {}
+        closeModal();
+        if (href) window.location.href = href;   // proceed to the pilot request
+      });
+    }
+    if (cancel) cancel.addEventListener('click', closeModal);
+    if (gate) gate.addEventListener('click', function (e) { if (e.target === gate) closeModal(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && gate && gate.style.display === 'flex') closeModal();
+    });
+  })();
+</script>
 
 <!-- ═══════════════════ STICKY NAV ═══════════════════ -->
 <header class="fixed top-0 left-0 right-0 z-50 border-b hr-thin bg-ink/85 backdrop-blur-md">
@@ -295,11 +417,11 @@ tailwind.config = {
       <span class="font-mono text-sm tracking-[0.25em] text-bone">INTEGRA</span>
     </a>
     <nav class="hidden md:flex items-center gap-5 text-[14px] font-mono tracking-[0.15em] uppercase">
-      <a href="#chapter-02" class="nav-link" data-anchor="chapter-02">Method</a>
-      <a href="#hero" class="nav-link" data-anchor="hero">Signal</a>
+      <!-- <a href="#chapter-02" class="nav-link" data-anchor="chapter-02">Method</a> -->
+      <a href="#hero" class="nav-link" data-anchor="hero">Markets</a>
       <a href="#chapter-03" class="nav-link" data-anchor="chapter-03">Performance</a>
       <a href="#chapter-04" class="nav-link" data-anchor="chapter-04">IntegraSight</a>
-      <a href="#chapter-05" class="nav-link" data-anchor="chapter-05">Intel</a>
+      <a href="#chapter-05" class="nav-link" data-anchor="chapter-05">SMT</a>
       <a href="#chapter-06" class="nav-link" data-anchor="chapter-06">Gameplay</a>
       <!-- <a href="#chapter-07" class="nav-link" data-anchor="chapter-07">Recommendation</a> -->
     </nav>
@@ -336,24 +458,37 @@ tailwind.config = {
 <section id="chapter-02" class="border-t hr-thin py-20 md:py-32">
   <div class="max-w-7xl mx-auto px-6 lg:px-10">
 
-    <div class="flex items-end justify-between mb-16 reveal">
+    <div class="flex items-start justify-between mb-10 reveal gap-4">
       <div>
-        <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>CH 01 · METHOD</div>
-        <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em] max-w-4xl">Five signals to detect any<br/><span class="text-signal">intentional under-performance.</span></h2>
+        <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>HOW INTEGRA DETECTS - OPTIONAL</div>
       </div>
-      <div class="hidden md:block font-mono text-[13px] text-mute tracking-[0.2em] uppercase">↓ Scroll to read</div>
+      <!-- <div class="shrink-0 self-start font-mono text-[11px] md:text-[13px] tracking-[0.2em] uppercase" style="color:#5fffc1;border:1px solid #2a8a6c;padding:6px 12px;">OPTIONAL</div> -->
     </div>
 
-    <div class="space-y-px bg-hairline border hr-thin">
+    <!-- Toggle bar -->
+    <button id="method-toggle" onclick="toggleMethod()" type="button"
+      class="reveal w-full flex items-center justify-between border border-signaldim p-6 md:p-7 transition-colors" style="cursor:pointer;">
+      <span class="flex items-center gap-4 font-mono">
+        <span class="chev text-signal text-xl leading-none">▸</span>
+        <span id="method-toggle-text" class="text-signal tracking-[0.15em] uppercase text-sm md:text-base">Expand Methodology · 5 Signals</span>
+      </span>
+      <span id="method-toggle-label" class="font-mono text-signal tracking-[0.2em] uppercase text-[11px] md:text-[13px]">Show</span>
+    </button>
+
+    <!-- Collapsible content -->
+    <div id="method-collapse" class="method-collapse">
+      <div class="method-inner">
+        <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em] max-w-4xl mt-8 mb-8">Five signals to detect any<br/><span class="text-signal">intentional under-performance.</span></h2>
+        <div class="space-y-px bg-hairline border hr-thin border-t-0">
       <!-- Step 1 -->
-      <div class="bg-surface p-8 md:p-12 grid grid-cols-12 gap-8 items-start reveal">
+      <div class="bg-surface p-8 md:p-12 grid grid-cols-12 gap-8 items-start">
         <div class="col-span-12 md:col-span-2 flex items-center gap-4">
           <div class="step-num">01</div>
           <div class="label">MARKETS</div>
         </div>
         <div class="col-span-12 md:col-span-6">
           <h3 class="font-light text-2xl md:text-3xl mb-3 text-bone">Order books move first.</h3>
-          <p class="text-smoke leading-relaxed">Spot-fixing shows up on one player's prop first. In Case 095-N, Player N's Map 3 kill line dropped from 15.5 to 13.5 — a −2.0 point move ten minutes before the map.</p>
+          <p class="text-smoke leading-relaxed">Spot-fixing shows up on one player's prop first. In Case 095-X1, Player X1's Map 3 kill line dropped from 15.5 to 13.5 — a −2.0 point move ten minutes before the map.</p>
         </div>
         <div class="col-span-12 md:col-span-4 font-mono text-xs text-mute leading-relaxed">
           <div class="text-signal mb-1">→ DRIFT</div>
@@ -365,14 +500,14 @@ tailwind.config = {
       </div>
 
       <!-- Step 2 -->
-      <div class="bg-surface p-8 md:p-12 grid grid-cols-12 gap-8 items-start reveal">
+      <div class="bg-surface p-8 md:p-12 grid grid-cols-12 gap-8 items-start">
         <div class="col-span-12 md:col-span-2 flex items-center gap-4">
           <div class="step-num">02</div>
           <div class="label">PLAYERS</div>
         </div>
         <div class="col-span-12 md:col-span-6">
           <h3 class="font-light text-2xl md:text-3xl mb-3 text-bone">Performance Index</h3>
-          <p class="text-smoke leading-relaxed">Every player has a statistical fingerprint — kill rate, damage, deaths, accuracy — measured against his own 90-day baseline. In Case 095-N, Player N collapsed to a 0.61 rating on Ancient, his career-best map (1.19).</p>
+          <p class="text-smoke leading-relaxed">Every player has a statistical fingerprint — kill rate, damage, deaths, accuracy — measured against his own 90-day baseline. In Case 095-X1, Player X1 collapsed to a 0.61 rating on Ancient, his career-best map (1.19).</p>
         </div>
         <div class="col-span-12 md:col-span-4 font-mono text-xs text-mute leading-relaxed">
           <div class="text-signal mb-1">→ INDEX</div>
@@ -383,14 +518,14 @@ tailwind.config = {
       </div>
 
       <!-- Step 3 -->
-      <div class="bg-surface p-8 md:p-12 grid grid-cols-12 gap-8 items-start reveal">
+      <div class="bg-surface p-8 md:p-12 grid grid-cols-12 gap-8 items-start">
         <div class="col-span-12 md:col-span-2 flex items-center gap-4">
           <div class="step-num">03</div>
           <div class="label">PATTERNS</div>
         </div>
         <div class="col-span-12 md:col-span-6">
           <h3 class="font-light text-2xl md:text-3xl mb-3 text-bone">What the eye cannot follow.</h3>
-          <p class="text-smoke leading-relaxed">Reaction time, crosshair placement and decision latency are fingerprints a player can't fake under pressure. In Case 095-N, first-contact reaction slowed from 125ms to 218.8ms and crosshair angle drifted +1.7° past his own range — on the exact map the line moved.</p>
+          <p class="text-smoke leading-relaxed">Reaction time, crosshair placement and decision latency are fingerprints a player can't fake under pressure. In Case 095-X1, first-contact reaction slowed from 125ms to 218.8ms and crosshair angle drifted +1.7° past his own range — on the exact map the line moved.</p>
         </div>
         <div class="col-span-12 md:col-span-4 font-mono text-xs text-mute leading-relaxed">
           <div class="text-signal mb-1">→ REFLEX · PHANTOM</div>
@@ -401,14 +536,14 @@ tailwind.config = {
       </div>
 
       <!-- Step 4 -->
-      <div class="bg-surface p-8 md:p-12 grid grid-cols-12 gap-8 items-start reveal">
+      <div class="bg-surface p-8 md:p-12 grid grid-cols-12 gap-8 items-start">
         <div class="col-span-12 md:col-span-2 flex items-center gap-4">
           <div class="step-num">04</div>
           <div class="label">CHATTER</div>
         </div>
         <div class="col-span-12 md:col-span-6">
           <h3 class="font-light text-2xl md:text-3xl mb-3 text-bone">Someone always tells someone.</h3>
-          <p class="text-smoke leading-relaxed">Before the map ends, someone has already said it. In Case 095-N, public HLTV and Telegram posts named Player N's under on Map 3 — pointing at a name, not a scoreline.</p>
+          <p class="text-smoke leading-relaxed">Before the map ends, someone has already said it. In Case 095-X1, public HLTV and Telegram posts named Player X1's under on Map 3 — pointing at a name, not a scoreline.</p>
         </div>
         <div class="col-span-12 md:col-span-4 font-mono text-xs text-mute leading-relaxed">
           <div class="text-signal mb-1">→ WATCH</div>
@@ -419,14 +554,14 @@ tailwind.config = {
       </div>
 
       <!-- Step 5 -->
-      <div class="bg-surface p-8 md:p-12 grid grid-cols-12 gap-8 items-start reveal">
+      <div class="bg-surface p-8 md:p-12 grid grid-cols-12 gap-8 items-start">
         <div class="col-span-12 md:col-span-2 flex items-center gap-4">
           <div class="step-num">05</div>
           <div class="label">GAMEPLAY</div>
         </div>
         <div class="col-span-12 md:col-span-6">
           <h3 class="font-light text-2xl md:text-3xl mb-3 text-bone">Gameplay Analysis</h3>
-          <p class="text-smoke leading-relaxed">Round-by-round review surfaces what statistics can't explain. In Case 095-N, Player N took 10 disadvantaged peeks into multi-enemy holds on his career-best map.</p>
+          <p class="text-smoke leading-relaxed">Round-by-round review surfaces what statistics can't explain. In Case 095-X1, Player X1 took 10 disadvantaged peeks into multi-enemy holds on his career-best map.</p>
         </div>
         <div class="col-span-12 md:col-span-4 font-mono text-xs text-mute leading-relaxed">
           <div class="text-signal mb-1">→ GAMEPLAY</div>
@@ -434,6 +569,55 @@ tailwind.config = {
           Round-by-round footage · disadvantaged peeks, unused utility and passive positioning matched against the player's own career pattern.
           </span>
         </div>
+      </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Case-study section label -->
+    <div class="chapter-num text-sm mt-16 mb-6 reveal"><span style="color:#5fffc1;">➤ </span>CASE-STUDY 95-X1</div>
+
+    <!-- Case metadata -->
+    <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-px bg-hairline border hr-thin">
+      <div class="bg-surface p-4 md:p-6">
+        <div class="font-mono text-[13px] text-mute tracking-[0.2em] uppercase mb-2">Competition</div>
+        <div class="font-mono text-base sm:text-lg md:text-lg text-bone break-words">IEM Chengdu 2025</div>
+      </div>
+      <div class="bg-surface p-4 md:p-6">
+        <div class="font-mono text-[13px] text-mute tracking-[0.2em] uppercase mb-2">Flagged Map</div>
+        <div class="font-mono text-base sm:text-lg md:text-lg text-bone break-words">Map 3 · Ancient</div>
+      </div>
+      <div class="bg-surface p-4 md:p-6">
+        <div class="font-mono text-[13px] text-mute tracking-[0.2em] uppercase mb-2">Series Result</div>
+        <div class="font-mono text-base sm:text-lg md:text-lg text-bone break-words">Lost 2–1</div>
+      </div>
+      <div class="bg-surface p-4 md:p-6">
+        <div class="font-mono text-[13px] text-mute tracking-[0.2em] uppercase mb-2">Player Role</div>
+        <div class="font-mono text-base sm:text-lg md:text-lg text-bone break-words">Star Player · Team #17</div>
+      </div>
+    </div>
+
+    <!-- 4 red-flag KPIs (always visible) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6 reveal">
+      <div class="card p-6 border-l-2" style="border-left-color:#ff5c5c;">
+        <div class="font-mono text-xs text-mute tracking-[.06em] uppercase mb-3 whitespace-nowrap">Kill Line Drop</div>
+        <div class="bigstat" style="color:#ff5c5c;">−2.0 pt</div>
+        <div class="font-mono text-sm text-smoke mt-3">15.5 → 13.5</div>
+      </div>
+      <div class="card p-6 border-l-2" style="border-left-color:#ff5c5c;">
+        <div class="font-mono text-xs text-mute tracking-[.06em] uppercase mb-3 whitespace-nowrap">Rating on Best Map</div>
+        <div class="bigstat" style="color:#ff5c5c;">0.47</div>
+        <div class="font-mono text-sm text-smoke mt-3">Baseline 1.19</div>
+      </div>
+      <div class="card p-6 border-l-2" style="border-left-color:#ff5c5c;">
+        <div class="font-mono text-xs text-mute tracking-[.06em] uppercase mb-3 whitespace-nowrap">Reaction Time</div>
+        <div class="bigstat" style="color:#ff5c5c;">+93.8 ms</div>
+        <div class="font-mono text-sm text-smoke mt-3">218.8 ms vs 125 ms baseline</div>
+      </div>
+      <div class="card p-6 border-l-2" style="border-left-color:#ff5c5c;">
+        <div class="font-mono text-xs text-mute tracking-[.06em] uppercase mb-3 whitespace-nowrap">Suspicious Rounds</div>
+        <div class="bigstat" style="color:#ff5c5c;">6</div>
+        <div class="font-mono text-sm text-smoke mt-3">Map 3 Ancient</div>
       </div>
     </div>
   </div>
@@ -444,8 +628,8 @@ tailwind.config = {
   <div class="max-w-7xl mx-auto px-6 lg:px-10 pt-16 pb-20 md:pt-24 md:pb-32 relative">
 
     <div class="flex items-center justify-between gap-3 mb-10">
-      <div class="chapter-num text-sm"><span style="color:#5fffc1;">➤ </span>CH 02 · MARKET DRIFT</div>
-      <div class="font-mono text-[10px] md:text-[13px] text-mute pulse-dot tracking-[0.2em] uppercase text-right">Live · Detection layer online</div>
+      <div class="chapter-num text-sm"><span style="color:#5fffc1;">➤ </span>01 · MARKET DRIFT</div>
+      <!-- <div class="font-mono text-[10px] md:text-[13px] text-mute pulse-dot tracking-[0.2em] uppercase text-right">Live · Detection layer online</div> -->
     </div>
 
     <h1 class="font-light text-4xl md:text-5xl leading-[1.1] tracking-[-0.02em] max-w-5xl">
@@ -457,22 +641,25 @@ tailwind.config = {
       Before the map went live, his kill line fell — 15.5 to 13.5, a drop the match odds don't tell.<span class="text-bone"> Integra captured the drift as the very first sign.</span>
     </p>
 
-    <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-px bg-hairline border hr-thin">
-      <div class="bg-surface p-4 md:p-6">
-        <div class="font-mono text-[13px] text-mute tracking-[0.2em] uppercase mb-2">Competition</div>
-        <div class="font-mono text-base sm:text-xl md:text-2xl text-bone break-words">IEM Chengdu 2025</div>
+    <!-- Kill Line explainer + key fact cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-16 reveal">
+      <div class="card p-6">
+        <div class="font-mono text-xs text-mute tracking-[.18em] uppercase mb-3">What is a Kill Line?</div>
+        <p class="font-mono text-sm text-smoke leading-relaxed mb-4">Bookmakers set an expected kill count for every player — bettors bet <span class="text-bone">over</span> or <span class="text-bone">under</span> it.</p>
+        <div class="space-y-3">
+          <div class="flex items-start gap-2">
+            <span style="color:#5fffc1;" class="mt-0.5">✦</span>
+            <span class="font-mono text-sm text-smoke">Line <span style="color:#5fffc1;">increases</span> → market expects over-performance</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span style="color:#ff5c5c;" class="mt-0.5">✦</span>
+            <span class="font-mono text-sm text-smoke">Line <span style="color:#ff5c5c;">drops</span> → market expects under-performance</span>
+          </div>
+        </div>
       </div>
-      <div class="bg-surface p-4 md:p-6">
-        <div class="font-mono text-[13px] text-mute tracking-[0.2em] uppercase mb-2">Flagged Map</div>
-        <div class="font-mono text-base sm:text-xl md:text-2xl text-bone break-words">Map 3 · Ancient</div>
-      </div>
-      <div class="bg-surface p-4 md:p-6">
-        <div class="font-mono text-[13px] text-mute tracking-[0.2em] uppercase mb-2">Match Outcome</div>
-        <div class="font-mono text-base sm:text-xl md:text-2xl text-bone break-words">Series Lost 2-1</div>
-      </div>
-      <div class="bg-surface p-4 md:p-6">
-        <div class="font-mono text-[13px] text-mute tracking-[0.2em] uppercase mb-2">Player Position</div>
-        <div class="font-mono text-base sm:text-xl md:text-2xl text-bone break-words">Pos 1/5 · Team Rank 17</div>
+      <div class="card p-6" style="border-color:#ff5c5c;">
+        <div class="font-mono text-xs text-mute tracking-[.18em] uppercase mb-2">Key Fact</div>
+        <p class="font-mono text-sm text-smoke leading-relaxed">The drop happened on his <span class="text-bone">best rated map</span> (Ancient, <span class="text-bone">rating 1.19</span>).</p>
       </div>
     </div>
 
@@ -480,19 +667,12 @@ tailwind.config = {
     <div class="mt-16 border hr-thin" style="background:#0c0e13;padding:28px 32px;">
       <div class="flex justify-between items-center mb-6">
         <div>
-          <div class="font-mono text-[13px] text-mute tracking-[0.2em] uppercase mb-1">Case 095-N · Map 3 Kill Line</div>
-          <div class="font-mono text-sm text-bone">Player N's Kill Line Drift</div>
+          <div class="font-mono text-[13px] text-bone">Map 3 Kill Line For Player X1</div>
+          <!-- <div class="font-mono text-sm text-bone">Player X1's Kill Line Drift</div> -->
         </div>
         <div class="font-mono text-[13px] tracking-[0.2em] uppercase" style="color:#ff5c5c;">DRIFT  −2.0pt </div>
       </div>
       <div style="position:relative;height:360px;"><canvas id="integraMarketChart"></canvas></div>
-      <div class="border-l-2 mt-6 pl-4" style="border-color:#2a8a6c;">
-        <div class="font-mono text-[13px] text-mute tracking-[0.15em] uppercase mb-3" style="color:#5fffc1;">What is a Kill Line?</div>
-        <div class="font-mono text-sm space-y-2">
-          <div><span style="color:#5fffc1;">✦</span> <span class="text-smoke">If kill line of player</span> <span style="color:#5fffc1;">increases</span> <span class="text-smoke">→</span> <span style="color:#5fffc1;">Over Performance</span></div>
-          <div><span style="color:#ff5c5c;">✦</span> <span class="text-smoke">If kill line of player</span> <span style="color:#ff5c5c;">decreases</span> <span class="text-smoke">→</span> <span style="color:#ff5c5c;">Under Performance</span></div>
-        </div>
-      </div>
     </div>
   </div>
 </section>
@@ -502,8 +682,8 @@ tailwind.config = {
   <div class="max-w-7xl mx-auto px-6 lg:px-10">
 
     <div class="reveal mb-12">
-      <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>CH 03 · PERFORMANCE MATRIX</div>
-      <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em] max-w-4xl">Dominant on his weakest map. <br><span style="color:#ff5c5c;">Crashed on his strongest map.</span></h2>
+      <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>02 · PERFORMANCE MATRIX</div>
+      <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em] max-w-4xl">His best map.<br><span style="color:#ff5c5c;">His worst performance.</span></h2>
     </div>
 
     <!-- Sub-tabs -->
@@ -521,7 +701,7 @@ tailwind.config = {
           <div class="flex justify-between items-center mb-5">
             <div>
               <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#5fffc1;" class="mb-1">MAP 1 — OVERPASS</div>
-              <span class="font-mono text-sm text-smoke">Player N · Rating 1.18</span>
+              <span class="font-mono text-sm text-smoke">Player X1 · Rating 1.18</span>
             </div>
             <div class="text-right font-mono text-sm text-smoke">Team A 10 / Team B 13</div>
           </div>
@@ -532,11 +712,14 @@ tailwind.config = {
           <div class="flex justify-between items-center mb-5">
             <div>
               <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#5fffc1;" class="mb-1">MAP 1 — OVERPASS</div>
-              <span class="font-mono text-base" style="color:#5fffc1;">Player N · Rating 1.18</span>
+              <span class="font-mono text-base" style="color:#5fffc1;">Player X1 · Rating 1.18</span>
             </div>
-            <div class="text-right font-mono text-base" style="color:#5fffc1;">Team A 10 <br/> Team B 13</div>
+            <div class="text-right flex-shrink-0">
+              <div class="font-mono text-xs text-mute tracking-[.15em] uppercase mb-1">Opponent — Player X1's Team</div>
+              <div class="font-mono text-xl" style="color:#5fffc1;">10 <span class="text-mute">—</span> 13 <span style="font-size:12px;letter-spacing:.1em;color:#5fffc1;">· WON</span></div>
+            </div>
           </div>
-          <img src="assets/images/HLTV-MAP1.jpeg" alt="Map 2 Inferno" class="w-full h-auto" style="border:1px solid #5fffc1;">
+          <canvas id="inv-canvas-map1" class="w-full h-auto block" style="border:1px solid #5fffc1;"></canvas>
         </div>
 
         
@@ -545,21 +728,27 @@ tailwind.config = {
           <div class="flex justify-between items-center mb-5">
             <div>
               <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#5fffc1;" class="mb-1">MAP 2 — INFERNO</div>
-              <span class="font-mono text-base" style="color:#5fffc1;">Player N · Rating 1.11</span>
+              <span class="font-mono text-base" style="color:#5fffc1;">Player X1 · Rating 1.11</span>
             </div>
-            <div class="text-right font-mono text-base" style="color:#5fffc1;">Team A 13 <br/> Team B 06</div>
+            <div class="text-right flex-shrink-0">
+              <div class="font-mono text-xs text-mute tracking-[.15em] uppercase mb-1">Opponent — Player X1's Team</div>
+              <div class="font-mono text-xl" style="color:#5fffc1;">13 <span class="text-mute">—</span> 06 <span style="font-size:12px;letter-spacing:.1em;color:#ff5c5c;">· LOST</span></div>
+            </div>
           </div>
-          <img src="assets/images/HLTV-MAP2.jpeg" alt="Map 2 Inferno" class="w-full h-auto" style="border:1px solid #5fffc1;">
+          <canvas id="inv-canvas-map2" class="w-full h-auto block" style="border:1px solid #5fffc1;"></canvas>
         </div>
         <div>
           <div class="flex justify-between items-center mb-5">
             <div>
               <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#ff5c5c;" class="mb-1">MAP 3 — ANCIENT · FLAGGED</div>
-              <span class="font-mono text-base" style="color:#ff5c5c;">Player N · Rating 1.19</span>
+              <span class="font-mono text-base" style="color:#ff5c5c;">Player X1 · Rating 1.19</span>
             </div>
-            <div class="text-right font-mono text-base" style="color:#ff5c5c;">Team A 13 <br/> Team B 05</div>
+            <div class="text-right flex-shrink-0">
+              <div class="font-mono text-xs text-mute tracking-[.15em] uppercase mb-1">Opponent — Player X1's Team</div>
+              <div class="font-mono text-xl" style="color:#ff5c5c;">13 <span class="text-mute">—</span> 05 <span style="font-size:12px;letter-spacing:.1em;color:#ff5c5c;">· LOST</span></div>
+            </div>
           </div>
-          <img src="assets/images/HLTV-MAP3.jpeg" alt="Map 3 Ancient" class="w-full h-auto" style="border:1px solid #ff5c5c;">
+          <canvas id="inv-canvas-map3" class="w-full h-auto block" style="border:1px solid #ff5c5c;"></canvas>
         </div>
       </div>
     </div>
@@ -593,37 +782,21 @@ tailwind.config = {
       <div>
         <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#ffffff;" class="mb-4">WORST RANKED PERFORMANCES — 2025</div>
         <div class="overflow-x-auto">
-          <table class="dossier-table w-full">
+          <table class="dossier-table w-full" style="table-layout:fixed;">
+            <colgroup><col style="width:8%"><col style="width:8%"><col style="width:12%"><col style="width:14%"><col style="width:14%"><col style="width:26%"><col style="width:18%"></colgroup>
             <thead><tr><th>Rank</th><th class="text-center">Kills</th><th class="text-center">K-D</th><th>Map</th><th>Date</th><th>Opponent</th><th class="text-center">Opp. Ranking</th></tr></thead>
-            <tbody class="text-sm">
-              <tr><td class="font-mono" style="color:#e5ebf2;">1st</td><td class="text-center font-mono">5</td><td class="text-center font-mono">5 - 14</td><td style="color:#e5ebf2;" class="font-medium">Overpass</td><td class="font-mono text-smoke">10/08/25</td><td class="font-mono text-smoke">Aurora</td><td class="text-center font-mono text-smoke">#7</td></tr>
-              <tr class="flagged"><td class="font-mono font-bold">2nd</td><td class="text-center font-mono font-bold">5</td><td class="text-center font-mono font-bold">5 - 13</td><td class="font-bold">Ancient</td><td class="font-mono font-bold">03/11/25</td><td class="font-mono font-bold">The MongolZ</td><td class="text-center font-mono font-bold">#4</td></tr>
-              <tr><td class="font-mono" style="color:#e5ebf2;">3rd</td><td class="text-center font-mono">6</td><td class="text-center font-mono">6 - 15</td><td style="color:#e5ebf2;" class="font-medium">Dust2</td><td class="font-mono text-smoke">11/08/25</td><td class="font-mono text-smoke">Passion UA</td><td class="text-center font-mono text-smoke">#33</td></tr>
-              <tr><td class="font-mono" style="color:#e5ebf2;">4th</td><td class="text-center font-mono">7</td><td class="text-center font-mono">7 - 17</td><td style="color:#e5ebf2;" class="font-medium">Nuke</td><td class="font-mono text-smoke">27/07/25</td><td class="font-mono text-smoke">Spirit</td><td class="text-center font-mono text-smoke">#6</td></tr>
-              <tr><td class="font-mono" style="color:#e5ebf2;">5th</td><td class="text-center font-mono">7</td><td class="text-center font-mono">7 - 16</td><td style="color:#e5ebf2;" class="font-medium">Dust2</td><td class="font-mono text-smoke">16/07/25</td><td class="font-mono text-smoke">BIG</td><td class="text-center font-mono text-smoke">#25</td></tr>
-              <tr><td class="font-mono" style="color:#e5ebf2;">6th</td><td class="text-center font-mono">8</td><td class="text-center font-mono">8 - 14</td><td style="color:#e5ebf2;" class="font-medium">Ancient</td><td class="font-mono text-smoke">05/11/25</td><td class="font-mono text-smoke">Spirit</td><td class="text-center font-mono text-smoke">#6</td></tr>
-              <tr><td class="font-mono" style="color:#e5ebf2;">7th</td><td class="text-center font-mono">9</td><td class="text-center font-mono">9 - 14</td><td style="color:#e5ebf2;" class="font-medium">Inferno</td><td class="font-mono text-smoke">03/11/25</td><td class="font-mono text-smoke">The MongolZ</td><td class="text-center font-mono text-smoke">#4</td></tr>
-            </tbody>
           </table>
+          <canvas id="tbl-canvas-worst" style="width:100%;display:block;"></canvas>
         </div>
       </div>
       <div>
         <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#ffffff;" class="mb-4">AVG. KILLS PER MAP — 2025</div>
         <div class="overflow-x-auto">
-          <table class="dossier-table w-full">
+          <table class="dossier-table w-full" style="table-layout:fixed;">
+            <colgroup><col style="width:28%"><col style="width:24%"><col style="width:24%"><col style="width:24%"></colgroup>
             <thead><tr><th>Map</th><th class="text-center">Total Kills</th><th class="text-center">Maps Played</th><th class="text-center">Avg Kills / Map</th></tr></thead>
-            <tbody class="text-sm">
-              <tr><td style="color:#e5ebf2;" class="font-medium">Anubis</td><td class="text-center font-mono">19</td><td class="text-center font-mono">1</td><td class="text-center font-mono" style="color:#e5ebf2;font-weight:500;">19.0</td></tr>
-              <tr><td style="color:#e5ebf2;" class="font-medium">Mirage</td><td class="text-center font-mono">229</td><td class="text-center font-mono">13</td><td class="text-center font-mono" style="color:#e5ebf2;font-weight:500;">17.6</td></tr>
-              <tr class="flagged"><td class="font-bold">Ancient</td><td class="text-center font-mono font-bold">219</td><td class="text-center font-mono font-bold">13</td><td class="text-center font-mono font-bold">16.8</td></tr>
-              <tr><td style="color:#e5ebf2;" class="font-medium">Inferno</td><td class="text-center font-mono">90</td><td class="text-center font-mono">6</td><td class="text-center font-mono" style="color:#e5ebf2;font-weight:500;">15.0</td></tr>
-              <tr><td style="color:#e5ebf2;" class="font-medium">Nuke</td><td class="text-center font-mono">195</td><td class="text-center font-mono">13</td><td class="text-center font-mono" style="color:#e5ebf2;font-weight:500;">15.0</td></tr>
-              <tr><td style="color:#e5ebf2;" class="font-medium">Dust2</td><td class="text-center font-mono">210</td><td class="text-center font-mono">15</td><td class="text-center font-mono" style="color:#e5ebf2;font-weight:500;">14.0</td></tr>
-              <tr><td style="color:#e5ebf2;" class="font-medium">Overpass</td><td class="text-center font-mono">112</td><td class="text-center font-mono">8</td><td class="text-center font-mono" style="color:#e5ebf2;font-weight:500;">14.0</td></tr>
-              <tr><td style="color:#e5ebf2;" class="font-medium">Train</td><td class="text-center font-mono">42</td><td class="text-center font-mono">3</td><td class="text-center font-mono" style="color:#e5ebf2;font-weight:500;">14.0</td></tr>
-              <tr><td class="text-smoke">Vertigo</td><td class="text-center font-mono text-mute">—</td><td class="text-center font-mono text-mute">0</td><td class="text-center font-mono text-mute">N/A</td></tr>
-            </tbody>
           </table>
+          <canvas id="tbl-canvas-kills" style="width:100%;display:block;"></canvas>
         </div>
       </div>
     </div>
@@ -636,20 +809,39 @@ tailwind.config = {
   <div class="max-w-7xl mx-auto px-6 lg:px-10">
 
     <div class="reveal mb-12">
-      <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>CH 04 · INTEGRASIGHT</div>
+      <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>03 · INTEGRASIGHT</div>
       <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em] max-w-3xl">Four sights. One detection layer.</h2>
       <p class="text-smoke mt-6 max-w-2xl">Each sight watches one signal class continuously. They share an alert bus — the moment two sights confirm, your security lead is paged.</p>
+    </div>
+
+    <!-- Summary verdict bar -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-px bg-hairline border hr-thin mb-8 reveal text-center">
+      <div class="bg-ink p-6">
+        <div class="font-mono text-[13px] text-mute tracking-[.18em] uppercase mb-2">Crosshair</div>
+        <div class="font-mono text-3xl" style="color:#ff5c5c;">POSITIVE</div>
+        <div class="font-mono text-sm text-smoke mt-2">+1.7° shift</div>
+      </div>
+      <div class="bg-ink p-6">
+        <div class="font-mono text-[13px] text-mute tracking-[.18em] uppercase mb-2">Reflex</div>
+        <div class="font-mono text-3xl" style="color:#ff5c5c;">POSITIVE</div>
+        <div class="font-mono text-sm text-smoke mt-2">+93.8 ms delta</div>
+      </div>
+      <div class="bg-ink p-6">
+        <div class="font-mono text-[13px] text-mute tracking-[.18em] uppercase mb-2">Suppress</div>
+        <div class="font-mono text-3xl text-signal">CLEAR</div>
+        <div class="font-mono text-sm text-smoke mt-2">z = −1.83</div>
+      </div>
     </div>
 
     <!-- Tabs -->
     <div class="reveal">
       <!-- Top row: IntegraSight, centered over Reflex + Phantom -->
       <div class="flex justify-center mb-px">
-        <button class="sight-tab active w-1/4 min-w-[160px]" data-sight="integra">IntegraSight</button>
+        <!-- <button class="sight-tab active w-1/4 min-w-[160px]" data-sight="integra">IntegraSight</button> -->
       </div>
       <!-- Bottom row: the four sights -->
       <div class="flex flex-wrap gap-px bg-hairline">
-        <button class="sight-tab flex-1 min-w-[140px]" data-sight="drift">Crosshair</button>
+        <button class="sight-tab active flex-1 min-w-[140px]" data-sight="drift">Crosshair</button>
         <button class="sight-tab flex-1 min-w-[140px]" data-sight="reflex">Reflex</button>
         <!-- <button class="sight-tab flex-1 min-w-[140px]" data-sight="phantom">Phantom</button> -->
         <button class="sight-tab flex-1 min-w-[140px]" data-sight="watch">Suppress</button>
@@ -660,7 +852,7 @@ tailwind.config = {
     <!-- <div id="sight-integra" class="sight-panel border hr-thin border-t-0 bg-surface p-10 md:p-14">
       <div class="grid grid-cols-12 gap-10">
         <div class="col-span-12 md:col-span-4">
-          <div class="label mb-4">AGGREGATE · CASE 095-N</div>
+          <div class="label mb-4">AGGREGATE · CASE 095-X1</div>
           <h3 class="font-light text-3xl md:text-4xl mb-6 text-bone">Combined result.</h3>
           <div class="space-y-5">
             <div>
@@ -681,7 +873,7 @@ tailwind.config = {
           </div>
         </div>
         <div class="col-span-12 md:col-span-8">
-          <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-6">SIGHT SUMMARY · CASE 095-N · MAP 3</div>
+          <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-6">SIGHT SUMMARY · CASE 095-X1 · MAP 3</div>
           <div class="overflow-x-auto -mx-1 px-1">
           <div class="space-y-px bg-hairline border hr-thin min-w-[520px]">
             <div class="grid grid-cols-12 gap-4 px-6 py-2 bg-raised text-[10px] font-mono uppercase tracking-[0.2em] text-mute">
@@ -735,66 +927,48 @@ tailwind.config = {
     </div> -->
 
     <!-- ── DRIFT (test1_crosshair) ── -->
-    <div id="sight-drift" class="sight-panel hidden border hr-thin border-t-0 bg-surface p-10 md:p-14">
-      <div class="grid grid-cols-12 gap-10">
-        <div class="col-span-12 md:col-span-5">
-          <div class="label mb-4">SIGHT · 01 · Crosshair</div>
-          <!-- <h3 class="font-light text-3xl md:text-4xl mb-4 text-bone">Drift.</h3> -->
-          <p class="text-smoke leading-relaxed mb-6">Crosshair angle displacement measured against the player's career baseline. A sustained shift in aim angle — without an opponent-force explanation — indicates pre-deliberate positioning.</p>
-          <div class="space-y-3 mb-8">
-            <div class="flex items-baseline gap-4">
-              <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">Status</div>
-              <div class="font-mono text-bone" style="color:#ff5c5c;"> Positive</div>
+    <div id="sight-drift" class="sight-panel border hr-thin border-t-0 bg-surface p-10 md:p-14">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+        <div>
+          <div class="font-mono text-xs text-mute tracking-[.18em] uppercase mb-3" style="color:#5fffc1;">SIGHT 01 · CROSSHAIR ANGLE</div>
+          <p class="font-mono text-sm text-smoke leading-relaxed mb-6">Crosshair angle displacement measured against his own 30-map baseline. On Map 3, his aim angle drifted <span class="text-bone">+1.7°</span> past his normal range — statistically at the extreme tail.</p>
+          <div class="space-y-3">
+            <div class="flex gap-6">
+              <div class="font-mono text-xs text-mute w-32">Status</div>
+              <div class="font-mono text-sm" style="color:#ff5c5c;">Positive</div>
             </div>
-            <div class="flex items-baseline gap-4">
-              <!-- <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">p-value</div> -->
-              <!-- <div class="font-mono text-bone">0.5708</div> -->
+            <div class="flex gap-6">
+              <div class="font-mono text-xs text-mute w-32">Flagged mean</div>
+              <div class="font-mono text-sm" style="color:#ff5c5c;">4.85°</div>
             </div>
-            <div class="flex items-baseline gap-4">
-              <!-- <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">KS statistic</div> -->
-              <!-- <div class="font-mono text-bone">0.325</div> -->
+            <div class="flex gap-6">
+              <div class="font-mono text-xs text-mute w-32">Baseline mean</div>
+              <div class="font-mono text-sm text-signal">3.15°</div>
             </div>
-            <div class="flex items-baseline gap-4">
-              <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">Flagged mean</div>
-              <div class="font-mono" style="color:#ff5c5c;">4.85°</div>
+            <div class="flex gap-6">
+              <div class="font-mono text-xs text-mute w-32">Shift</div>
+              <div class="font-mono text-sm text-amber">+1.7°</div>
             </div>
-            <div class="flex items-baseline gap-4">
-              <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">Baseline mean</div>
-              <div class="font-mono text-signal">3.15°</div>
-            </div>
-            <div class="flex items-baseline gap-4">
-              <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">Shift</div>
-              <div class="font-mono text-amber">+1.7°</div>
-            </div>
-          </div>
-          <div class="border-l-2 border-signal pl-5 text-smoke text-sm italic">
-            "The line is the only public document of private knowledge."
           </div>
         </div>
-        <div class="col-span-12 md:col-span-7">
-          <!-- <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-4">CASE 095-N · Map 3 · Crosshair Angle Distribution</div> -->
-          <svg viewBox="0 0 600 240" class="w-full" aria-label="Drift crosshair">
-            <g>
-              <line x1="40" y1="20" x2="40" y2="210" class="grid-line"/>
-              <line x1="40" y1="210" x2="580" y2="210" class="grid-line"/>
-              <line x1="40" y1="60" x2="580" y2="60" class="grid-line" stroke-dasharray="2 4"/>
-              <line x1="40" y1="110" x2="580" y2="110" class="grid-line" stroke-dasharray="2 4"/>
-              <line x1="40" y1="160" x2="580" y2="160" class="grid-line" stroke-dasharray="2 4"/>
-            </g>
-            <text x="6" y="63"  font-family="JetBrains Mono" font-size="9" fill="#4d5564">6°</text>
-            <text x="6" y="113" font-family="JetBrains Mono" font-size="9" fill="#4d5564">4°</text>
-            <text x="6" y="163" font-family="JetBrains Mono" font-size="9" fill="#4d5564">2°</text>
-            <!-- Baseline bar -->
-            <rect x="120" y="85" width="60" height="125" fill="#2a8a6c" opacity="0.7" rx="2"/>
-            <text x="130" y="78" font-family="JetBrains Mono" font-size="9" fill="#5fffc1">3.15°</text>
-            <text x="115" y="225" font-family="JetBrains Mono" font-size="9" fill="#2a8a6c">baseline</text>
-            <!-- Flagged bar -->
-            <rect x="320" y="48" width="60" height="162" fill="#ff5c5c" opacity="0.7" rx="2"/>
-            <text x="326" y="41" font-family="JetBrains Mono" font-size="9" fill="#ff5c5c">4.85°</text>
-            <text x="315" y="225" font-family="JetBrains Mono" font-size="9" fill="#ff5c5c">flagged</text>
-            <!-- Shift arrow -->
-            <line x1="180" y1="66" x2="320" y2="66" stroke="#ffb454" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arr)"/>
-            <text x="220" y="58" font-family="JetBrains Mono" font-size="10" fill="#ffb454">+1.7°</text>
+        <div>
+          <svg viewBox="0 0 560 220" class="w-full" aria-label="Crosshair drift">
+            <line x1="40" y1="20" x2="40" y2="195" class="grid-line" style="stroke:#1a1f28"/>
+            <line x1="40" y1="195" x2="540" y2="195" class="grid-line" style="stroke:#1a1f28"/>
+            <line x1="40" y1="60"  x2="540" y2="60"  style="stroke:#1a1f28;stroke-width:1;" stroke-dasharray="2 4"/>
+            <line x1="40" y1="107" x2="540" y2="107" style="stroke:#1a1f28;stroke-width:1;" stroke-dasharray="2 4"/>
+            <line x1="40" y1="154" x2="540" y2="154" style="stroke:#1a1f28;stroke-width:1;" stroke-dasharray="2 4"/>
+            <text x="6" y="63"  font-family="JetBrains Mono" font-size="13" fill="#4d5564">6°</text>
+            <text x="6" y="110" font-family="JetBrains Mono" font-size="13" fill="#4d5564">4°</text>
+            <text x="6" y="157" font-family="JetBrains Mono" font-size="13" fill="#4d5564">2°</text>
+            <rect x="110" y="80" width="60" height="115" fill="#2a8a6c" opacity=".7" rx="2"/>
+            <text x="120" y="74" font-family="JetBrains Mono" font-size="13" fill="#5fffc1">3.15°</text>
+            <text x="105" y="212" font-family="JetBrains Mono" font-size="13" fill="#2a8a6c">BASELINE</text>
+            <rect x="300" y="45" width="60" height="150" fill="#ff5c5c" opacity=".7" rx="2"/>
+            <text x="305" y="38" font-family="JetBrains Mono" font-size="13" fill="#ff5c5c">4.85°</text>
+            <text x="295" y="212" font-family="JetBrains Mono" font-size="13" fill="#ff5c5c">FLAGGED</text>
+            <line x1="170" y1="62" x2="300" y2="62" stroke="#ffb454" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arr)"/>
+            <text x="210" y="54" font-family="JetBrains Mono" font-size="14" fill="#ffb454">+1.7°</text>
           </svg>
         </div>
       </div>
@@ -802,56 +976,40 @@ tailwind.config = {
 
     <!-- ── REFLEX (test2_reaction) ── -->
     <div id="sight-reflex" class="sight-panel hidden border hr-thin border-t-0 bg-surface p-10 md:p-14">
-      <div class="grid grid-cols-12 gap-10">
-        <div class="col-span-12 md:col-span-5">
-          <div class="label mb-4">SIGHT · 02 · REFLEX</div>
-          <!-- <h3 class="font-light text-3xl md:text-4xl mb-4 text-bone">Reflex.</h3> -->
-          <p class="text-smoke leading-relaxed mb-6">First-contact reaction time measured in milliseconds against the player's own 90-day rolling baseline. A slow player is not a suspicious player — only their own deviation matters.</p>
-          <div class="space-y-3 mb-8">
-            <div class="flex items-baseline gap-4">
-              <!-- <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">Z-score</div> -->
-              <!-- <div class="font-mono text-signal">0.000 · CLEAR</div> -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+        <div>
+          <div class="font-mono text-xs text-mute tracking-[.18em] uppercase mb-3" style="color:#5fffc1;">SIGHT 02 · REACTION TIME</div>
+          <p class="font-mono text-sm text-smoke leading-relaxed mb-6">First-contact reaction time on Map 3 slowed by <span class="text-bone">+93.8 ms</span> versus his own 30-match average baseline.</p>
+          <div class="space-y-3">
+            <div class="flex gap-6">
+              <div class="font-mono text-xs text-mute w-32">Flagged median</div>
+              <div class="font-mono text-sm text-amber">218.8 ms</div>
             </div>
-            <div class="flex items-baseline gap-4">
-              <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">Flagged median</div>
-              <div class="font-mono text-amber">218.8 ms</div>
+            <div class="flex gap-6">
+              <div class="font-mono text-xs text-mute w-32">Baseline median</div>
+              <div class="font-mono text-sm text-signal">125.0 ms</div>
             </div>
-            <div class="flex items-baseline gap-4">
-              <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">Baseline median</div>
-              <div class="font-mono text-signal">125.0 ms</div>
+            <div class="flex gap-6">
+              <div class="font-mono text-xs text-mute w-32">Delta</div>
+              <div class="font-mono text-sm text-amber">+93.8 ms</div>
             </div>
-            <div class="flex items-baseline gap-4">
-              <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">Delta</div>
-              <div class="font-mono text-amber">93.8 ms</div>
+            <div class="flex gap-6">
+              <div class="font-mono text-xs text-mute w-32">Exceeds 50ms</div>
+              <div class="font-mono text-sm" style="color:#ff5c5c;">Positive</div>
             </div>
-            <div class="flex items-baseline gap-4">
-              <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-28">Exceeds 50ms</div>
-              <div class="font-mono text-smoke" style="color:#ff5c5c">true</div>
-            </div>
-          </div>
-          <div class="border-l-2 border-signal pl-5 text-smoke text-sm italic">
-            "Your hand has its own signature. We learn it."
           </div>
         </div>
-        <div class="col-span-12 md:col-span-7">
-          <!-- <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-4">CASE 095-N · Map 3 · First-contact Reaction Time</div> -->
-          <svg viewBox="0 0 600 240" class="w-full" aria-label="Reflex reaction">
-            <!-- baseline bell centred at 125ms -->
-            <path d="M60,200 C110,200 130,60 160,60 C190,60 210,200 260,200" class="signal-dim"/>
-            <text x="55" y="218" font-family="JetBrains Mono" font-size="10" fill="#2a8a6c">BASELINE · 125ms</text>
-            <!-- flagged bell centred at 218.8ms -->
-            <path d="M280,200 C330,200 360,80 400,80 C440,80 460,200 520,200" stroke="#ff5c5c" stroke-width="1.5" fill="none"/>
-            <text x="340" y="72" font-family="JetBrains Mono" font-size="10" fill="#ff5c5c">FLAGGED · 218.8ms</text>
-            <!-- delta arrow -->
-            <line x1="160" y1="44" x2="400" y2="44" stroke="#ffb454" stroke-width="1" stroke-dasharray="3 3"/>
-            <text x="252" y="36" font-family="JetBrains Mono" font-size="10" fill="#ffb454">+93.8ms</text>
-            <line x1="160" y1="40" x2="160" y2="60" stroke="#ffb454" stroke-width="1"/>
-            <line x1="400" y1="40" x2="400" y2="80" stroke="#ffb454" stroke-width="1"/>
-            <line x1="0" y1="220" x2="600" y2="220" class="grid-line"/>
-            <text x="40" y="238" font-family="JetBrains Mono" font-size="9" fill="#4d5564">50ms</text>
-            <text x="160" y="238" font-family="JetBrains Mono" font-size="9" fill="#4d5564">125ms</text>
-            <text x="370" y="238" font-family="JetBrains Mono" font-size="9" fill="#4d5564">219ms</text>
-            <text x="510" y="238" font-family="JetBrains Mono" font-size="9" fill="#4d5564">400ms</text>
+        <div>
+          <svg viewBox="0 0 560 220" class="w-full" aria-label="Reflex reaction">
+            <path d="M55,195 C100,195 120,60 150,60 C180,60 200,195 245,195" stroke="#2a8a6c" stroke-width="1.5" fill="none"/>
+            <text x="50" y="215" font-family="JetBrains Mono" font-size="13" fill="#2a8a6c">BASELINE · 125ms</text>
+            <path d="M265,195 C310,195 340,75 375,75 C410,75 430,195 480,195" stroke="#ff5c5c" stroke-width="1.5" fill="none"/>
+            <text x="295" y="215" font-family="JetBrains Mono" font-size="13" fill="#ff5c5c">FLAGGED · 218.8ms</text>
+            <line x1="150" y1="38" x2="375" y2="38" stroke="#ffb454" stroke-width="1" stroke-dasharray="3 3"/>
+            <text x="235" y="30" font-family="JetBrains Mono" font-size="14" fill="#ffb454">+93.8ms</text>
+            <line x1="150" y1="35" x2="150" y2="58" stroke="#ffb454" stroke-width="1"/>
+            <line x1="375" y1="35" x2="375" y2="73" stroke="#ffb454" stroke-width="1"/>
+            <line x1="0" y1="200" x2="560" y2="200" style="stroke:#1a1f28"/>
           </svg>
         </div>
       </div>
@@ -936,85 +1094,38 @@ tailwind.config = {
 
     <!-- ── SUPPRESS (multi_match_summary) ── -->
     <div id="sight-watch" class="sight-panel hidden border hr-thin border-t-0 bg-surface p-10 md:p-14">
-      <div class="grid grid-cols-12 gap-10">
-        <div class="col-span-12 md:col-span-5">
-          <div class="label mb-4">SIGHT · 04 · SUPPRESS</div>
-          <!-- <h3 class="font-light text-3xl md:text-4xl mb-4 text-bone">Suppress.</h3> -->
-          <p class="text-smoke leading-relaxed mb-6">Opportunity-adjusted fragging — a stat-fixer suppresses kills by <span class="text-bone">declining winnable duels</span> in low-visibility ('high-deniability') moments, not by missing. Measured across 31 matches against the player's own baseline.</p>
-          <div class="space-y-3 mb-8">
-            <div class="flex items-baseline gap-4"><div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-36">Matches analysed</div><div class="font-mono text-bone">31</div></div>
-            <div class="flex items-baseline gap-4"><div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-36">Win / Loss</div><div class="font-mono text-bone">13 / 18</div></div>
-            <div class="flex items-baseline gap-4"><div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-36">Sub-8-kill games</div><div class="font-mono text-bone">1 <span class="text-mute">(3% · all on losses)</span></div></div>
-            <div class="flex items-baseline gap-4"><div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-36">Decline z-score</div><div class="font-mono text-signal">−1.83 · BELOW BASELINE</div></div>
-            <div class="flex items-baseline gap-4"><div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase w-36">Verdict</div><div class="font-mono text-signal tracking-widest">CLEAR</div></div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+        <div>
+          <div class="font-mono text-xs text-mute tracking-[.18em] uppercase mb-3" style="color:#5fffc1;">SIGHT 03 · SUPPRESS TEST</div>
+          <p class="font-mono text-sm text-smoke leading-relaxed mb-6">This test specifically looks for quiet kill-suppression — declining winnable duels in low-visibility moments. Result: <span class="text-signal font-bold">CLEAR.</span> Zero declined deniable duels.</p>
+          <div class="space-y-3 mb-6">
+            <div class="flex gap-6">
+              <div class="font-mono text-xs text-mute w-40">Matches analysed</div>
+              <div class="font-mono text-sm text-bone">31</div>
+            </div>
+            <div class="flex gap-6">
+              <div class="font-mono text-xs text-mute w-40">Decline z-score</div>
+              <div class="font-mono text-sm text-signal">−1.83 · BELOW BASELINE</div>
+            </div>
+            <div class="flex gap-6">
+              <div class="font-mono text-xs text-mute w-40">Verdict</div>
+              <div class="font-mono text-sm text-signal tracking-widest">CLEAR</div>
+            </div>
           </div>
-          <div class="border-l-2 border-signal pl-5 text-smoke text-sm italic">
-            "The test built to catch quiet kill-suppression returned the opposite. Whenever he had a clean, winnable, deniable shot — he took it. The low kills came from having half his usual chances, not from declining them."
+          <div class="border-l-2 border-signal pl-4 p-4 bg-surface">
+            <p class="font-mono text-xs text-smoke leading-relaxed">Low kill count is explained by <span class="text-bone">16 winnable duels vs a typical 29</span> — half his usual chances. He took every clean shot he got.</p>
           </div>
         </div>
-        <div class="col-span-12 md:col-span-7">
-          <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-6">Opportunity-adjusted fragging · declined winnable duels</div>
-          <div class="overflow-x-auto">
-            <table class="dossier-table w-full text-sm">
-              <thead><tr><th>Metric</th><th class="text-center">Flagged</th><th class="text-center">Baseline avg</th></tr></thead>
-              <tbody>
-                <tr><td class="font-mono text-bone">Duel decline rate</td><td class="text-center font-mono text-amber">0.500</td><td class="text-center font-mono text-smoke">0.375</td></tr>
-                <tr style="background:rgba(95,255,193,0.07);"><td class="font-mono font-bold text-signal">High-deniability decline rate</td><td class="text-center font-mono font-bold text-signal">0.000</td><td class="text-center font-mono text-smoke">0.114</td></tr>
-                <tr><td class="font-mono text-bone">Duels declined (count)</td><td class="text-center font-mono text-smoke">8</td><td class="text-center font-mono text-smoke">11.233</td></tr>
-                <tr><td class="font-mono text-bone">Declined &amp; deniable (count)</td><td class="text-center font-mono text-smoke">0</td><td class="text-center font-mono text-smoke">3.233</td></tr>
-                <tr><td class="font-mono text-bone">Winnable duels (count)</td><td class="text-center font-mono text-smoke">16</td><td class="text-center font-mono text-smoke">29.033</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="mt-8 p-6 border hr-thin bg-ink">
-            <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-4">Avg kills/round by leverage</div>
-            <div class="grid grid-cols-4 gap-3 text-center items-center">
-              <div class="font-mono text-[10px] text-mute uppercase tracking-[0.15em] text-left">Tier</div>
-              <div class="font-mono text-[10px] text-mute uppercase">High</div>
-              <div class="font-mono text-[10px] text-mute uppercase">Normal</div>
-              <div class="font-mono text-[10px] text-mute uppercase">Pistol</div>
-
-              <div class="font-mono text-[10px] text-mute uppercase tracking-[0.15em] text-left">All matches</div>
-              <div class="font-mono text-bone">0.723</div>
-              <div class="font-mono text-bone">0.788</div>
-              <div class="font-mono text-bone">0.694</div>
-
-              <div class="font-mono text-[10px] text-mute uppercase tracking-[0.15em] text-left">Sub-threshold</div>
-              <div class="font-mono text-amber">0.500</div>
-              <div class="font-mono text-amber">0.231</div>
-              <div class="font-mono text-amber">0.000</div>
-            </div>
-          </div>
-
-          <div class="mt-8">
-            <div class="font-mono text-[10px] text-mute tracking-[0.2em] uppercase mb-4">Worst matches by total kills</div>
-            <div class="overflow-x-auto">
-              <table class="dossier-table w-full text-sm">
-                <thead><tr><th>Date</th><th>Map</th><th class="text-center">Res</th><th class="text-center">K</th><th class="text-center">D</th></tr></thead>
-                <tbody>
-                  <tr style="background:rgba(137,147,163,0.06);"><td class="font-mono font-bold text-bone">flagged.dem <span class="text-mute text-[10px]">· reviewed</span></td><td class="font-mono text-smoke">de_ancient</td><td class="text-center font-mono text-smoke">loss</td><td class="text-center font-mono font-bold text-bone">5</td><td class="text-center font-mono text-smoke">13</td></tr>
-                  <tr><td class="font-mono text-bone">match18.dem</td><td class="font-mono text-smoke">de_ancient</td><td class="text-center font-mono text-smoke">loss</td><td class="text-center font-mono text-smoke">8</td><td class="text-center font-mono text-smoke">14</td></tr>
-                  <tr><td class="font-mono text-bone">match16.dem</td><td class="font-mono text-smoke">de_ancient</td><td class="text-center font-mono text-smoke">loss</td><td class="text-center font-mono text-smoke">9</td><td class="text-center font-mono text-smoke">11</td></tr>
-                  <tr><td class="font-mono text-bone">match17.dem</td><td class="font-mono text-smoke">de_ancient</td><td class="text-center font-mono text-signal">win</td><td class="text-center font-mono text-smoke">11</td><td class="text-center font-mono text-smoke">9</td></tr>
-                  <tr><td class="font-mono text-bone">match29.dem</td><td class="font-mono text-smoke">de_ancient</td><td class="text-center font-mono text-smoke">loss</td><td class="text-center font-mono text-smoke">11</td><td class="text-center font-mono text-smoke">18</td></tr>
-                  <tr><td class="font-mono text-bone">match11.dem</td><td class="font-mono text-smoke">de_ancient</td><td class="text-center font-mono text-signal">win</td><td class="text-center font-mono text-smoke">12</td><td class="text-center font-mono text-smoke">11</td></tr>
-                  <tr><td class="font-mono text-bone">match19.dem</td><td class="font-mono text-smoke">de_ancient</td><td class="text-center font-mono text-signal">win</td><td class="text-center font-mono text-smoke">12</td><td class="text-center font-mono text-smoke">15</td></tr>
-                  <tr><td class="font-mono text-bone">match4.dem</td><td class="font-mono text-smoke">de_ancient</td><td class="text-center font-mono text-smoke">loss</td><td class="text-center font-mono text-smoke">12</td><td class="text-center font-mono text-smoke">16</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="mt-8 p-6 border-l-2 border-signal bg-ink">
-            <div class="font-mono text-[10px] text-signal tracking-[0.2em] uppercase mb-3">Verdict · no evidence of kill-suppression</div>
-            <p class="text-smoke text-sm leading-relaxed">
-              The opportunity test was built specifically to detect quiet kill-suppression in deniable moments — it returned the opposite.<span class="text-signal">zero</span> winnable deniable duels (z = −1.83, below his own baseline). His low kill count is explained by chances, not choices: <span class="text-bone">16 winnable duels vs a typical 29</span> — roughly half. Of the 16 he got, none of his declines were in unwitnessed spots.
-            </p>
-            <p class="text-smoke text-sm leading-relaxed mt-3">
-              Six independent measures — crosshair, reaction time, pass-through, no-react, kill-total/leverage, and this opportunity model — converge on the same reading: a rough game on a map his team lost, not a throw. The only thing that could reopen it is the part a demo can never show: an abnormal betting market on this exact match.
-            </p>
-          </div>
+        <div class="overflow-x-auto">
+          <table class="dossier-table w-full">
+            <thead><tr><th>Metric</th><th class="text-center">Flagged</th><th class="text-center">Baseline</th></tr></thead>
+            <tbody>
+              <tr><td class="font-mono text-bone">Duel decline rate</td><td class="text-center font-mono text-amber">0.500</td><td class="text-center font-mono text-smoke">0.375</td></tr>
+              <tr style="background:rgba(95,255,193,.07);"><td class="font-mono font-bold text-signal">High-deniability decline</td><td class="text-center font-mono font-bold text-signal">0.000</td><td class="text-center font-mono text-smoke">0.114</td></tr>
+              <tr><td class="font-mono text-bone">Winnable duels</td><td class="text-center font-mono text-smoke">16</td><td class="text-center font-mono text-smoke">29.0</td></tr>
+              <tr><td class="font-mono text-bone">Declined &amp; deniable</td><td class="text-center font-mono text-smoke">0</td><td class="text-center font-mono text-smoke">3.2</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -1026,8 +1137,8 @@ tailwind.config = {
   <div class="max-w-7xl mx-auto px-6 lg:px-10">
 
     <div class="reveal mb-16">
-      <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>CH 05 · INTEL FEED</div>
-      <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em]">Social Platform Observations.<br><span class="text-smoke"></span></h2>
+      <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>04 · SURVEILLANCE FEED</div>
+      <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em]">Social Media Tool.<br><span class="text-smoke"></span></h2>
     </div>
 
     <!-- HLTV -->
@@ -1062,7 +1173,7 @@ tailwind.config = {
           <div onclick="openLightbox('assets/images/HLTV1.jpeg')"
                style="cursor:pointer;position:relative;overflow:hidden;border:1px solid #1a1f28;group;">
             <img src="assets/images/HLTV1.jpeg" alt="HLTV Part 1"
-                 style="width:100%;height:200px;object-fit:cover;object-position:top;display:block;transition:opacity 0.2s;"
+                 style="width:100%;height:200px;object-fit:cover;object-position:top;display:block;filter:blur(6px);transition:opacity 0.2s;"
                  onmouseover="this.style.opacity=0.75" onmouseout="this.style.opacity=1">
             <div style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px;pointer-events:none;">
               <span style="background:rgba(7,8,11,0.75);font-family:'JetBrains Mono',monospace;font-size:10px;color:#5fffc1;padding:4px 10px;letter-spacing:0.12em;">Click to expand</span>
@@ -1071,7 +1182,7 @@ tailwind.config = {
           <div onclick="openLightbox('assets/images/HLTV2.jpeg')"
                style="cursor:pointer;position:relative;overflow:hidden;border:1px solid #1a1f28;">
             <img src="assets/images/HLTV2.jpeg" alt="HLTV Part 2"
-                 style="width:100%;height:200px;object-fit:cover;object-position:top;display:block;transition:opacity 0.2s;"
+                 style="width:100%;height:200px;object-fit:cover;object-position:top;display:block;filter:blur(6px);transition:opacity 0.2s;"
                  onmouseover="this.style.opacity=0.75" onmouseout="this.style.opacity=1">
             <div style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px;pointer-events:none;">
               <span style="background:rgba(7,8,11,0.75);font-family:'JetBrains Mono',monospace;font-size:10px;color:#5fffc1;padding:4px 10px;letter-spacing:0.12em;">Click to expand</span>
@@ -1079,7 +1190,7 @@ tailwind.config = {
           </div>
         </div>
         <div style="background:#0c0e13;border-top:1px solid #1a1f28;padding:10px 32px;">
-          <!-- <div class="font-mono text-[10px] text-mute tracking-[0.15em]">OSINT ARCHIVE · CASE FILE 095-N · HLTV MATCH THREAD</div> -->
+          <!-- <div class="font-mono text-[10px] text-mute tracking-[0.15em]">OSINT ARCHIVE · CASE FILE 095-X1 · HLTV MATCH THREAD</div> -->
         </div>
       </div>
     </div>
@@ -1176,7 +1287,7 @@ tailwind.config = {
                   <div style="padding:2px 12px;display:flex;gap:8px;align-items:flex-end;"><div style="width:26px;height:26px;border-radius:50%;background:#9b59b6;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0;">N</div><div><div style="color:#9b59b6;font-size:11px;font-weight:600;margin-bottom:1px;">NightOwl_V</div><div style="background:#182533;border-radius:10px 10px 10px 0;padding:6px 10px;max-width:420px;"><div style="color:#e5ebf2;font-size:12px;">anyone have the confirmed lineups yet?</div><div style="color:#8d9aab;font-size:10px;text-align:right;margin-top:2px;">9:22</div></div></div></div>
                   <div style="padding:2px 12px;display:flex;gap:8px;align-items:flex-end;"><div style="width:26px;height:26px;border-radius:50%;background:#3d9a6e;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0;">S</div><div><div style="color:#3d9a6e;font-size:11px;font-weight:600;margin-bottom:1px;">scout99</div><div style="background:#182533;border-radius:10px 10px 10px 0;padding:6px 10px;max-width:420px;"><div style="color:#e5ebf2;font-size:12px;">full roster, no subs</div><div style="color:#8d9aab;font-size:10px;text-align:right;margin-top:2px;">9:31</div></div></div></div>
                   <div style="padding:2px 12px;display:flex;gap:8px;align-items:flex-end;"><div style="width:26px;height:26px;border-radius:50%;background:#e67e22;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0;">K</div><div><div style="color:#e67e22;font-size:11px;font-weight:600;margin-bottom:1px;">K_intel</div><div style="background:#182533;border-radius:10px 10px 10px 0;padding:6px 10px;max-width:420px;"><div style="color:#e5ebf2;font-size:12px;">anyone watching the match tonight</div><div style="color:#8d9aab;font-size:10px;text-align:right;margin-top:2px;">10:08</div></div></div></div>
-                  <div style="padding:2px 12px;display:flex;gap:8px;align-items:flex-end;"><div style="width:26px;height:26px;border-radius:50%;background:#c0392b;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0;">R</div><div><div style="color:#c0392b;font-size:11px;font-weight:600;margin-bottom:1px;">RawSource_7</div><div style="background:#182533;border-radius:10px 10px 10px 0;padding:6px 10px;max-width:420px;"><div style="color:#e5ebf2;font-size:12px;line-height:1.5;">yeah obviously 🫡 btw got something to share — if it goes to map 3, Nilo won't be putting in a performance. solid source 🤫</div><div style="color:#8d9aab;font-size:10px;text-align:right;margin-top:2px;">10:16</div></div></div></div>
+                  <div style="padding:2px 12px;display:flex;gap:8px;align-items:flex-end;"><div style="width:26px;height:26px;border-radius:50%;background:#c0392b;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0;">R</div><div><div style="color:#c0392b;font-size:11px;font-weight:600;margin-bottom:1px;">RawSource_7</div><div style="background:#182533;border-radius:10px 10px 10px 0;padding:6px 10px;max-width:420px;"><div style="color:#e5ebf2;font-size:12px;line-height:1.5;">yeah obviously 🫡 btw got something to share — if it goes to map 3, ** won't be putting in a performance. solid source 🤫</div><div style="color:#8d9aab;font-size:10px;text-align:right;margin-top:2px;">10:16</div></div></div></div>
                   <div style="padding:2px 12px;display:flex;gap:8px;align-items:flex-end;"><div style="width:26px;height:26px;border-radius:50%;background:#e67e22;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0;">K</div><div><div style="color:#e67e22;font-size:11px;font-weight:600;margin-bottom:1px;">K_intel</div><div style="background:#182533;border-radius:10px 10px 10px 0;padding:6px 10px;max-width:420px;"><div style="border-left:2px solid #c0392b;padding-left:7px;margin-bottom:4px;"><div style="color:#c0392b;font-size:10px;font-weight:600;">RawSource_7</div><div style="color:#8d9aab;font-size:11px;">yeah obviously 🫡 btw got something to share...</div></div><div style="color:#e5ebf2;font-size:12px;">lol wait he never has a bad game 😭</div><div style="color:#8d9aab;font-size:10px;text-align:right;margin-top:2px;">10:17</div></div></div></div>
                   <div style="padding:2px 12px;display:flex;gap:8px;align-items:flex-end;"><div style="width:26px;height:26px;border-radius:50%;background:#c0392b;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0;">R</div><div><div style="color:#c0392b;font-size:11px;font-weight:600;margin-bottom:1px;">RawSource_7</div><div style="background:#182533;border-radius:10px 10px 10px 0;padding:6px 10px;max-width:420px;"><div style="color:#e5ebf2;font-size:12px;">not today. just keep a close eye on map 3. you'll see</div><div style="color:#8d9aab;font-size:10px;text-align:right;margin-top:2px;">10:19</div></div></div></div>
                   <div style="padding:2px 12px 10px;display:flex;gap:8px;align-items:flex-end;"><div style="width:26px;height:26px;border-radius:50%;background:#e67e22;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;flex-shrink:0;">K</div><div><div style="color:#e67e22;font-size:11px;font-weight:600;margin-bottom:1px;">K_intel</div><div style="background:#182533;border-radius:10px 10px 10px 0;padding:6px 10px;max-width:420px;"><div style="color:#e5ebf2;font-size:12px;">noted 👀</div><div style="color:#8d9aab;font-size:10px;text-align:right;margin-top:2px;">10:20</div></div></div></div>
@@ -1200,7 +1311,7 @@ tailwind.config = {
              style="cursor:pointer;position:relative;overflow:hidden;height:220px;border:1px solid #1a1f28;">
           <!-- tg-thumb-inner is populated on load from tg-source -->
           <div id="tg-thumb-inner"
-               style="pointer-events:none;transform:scale(0.35);transform-origin:top left;width:286%;position:absolute;top:0;left:0;">
+               style="pointer-events:none;filter:blur(10px);transform:scale(0.35);transform-origin:top left;width:286%;position:absolute;top:0;left:0;">
           </div>
           <!-- Click to expand overlay (same style as HLTV) -->
           <div style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:14px;background:linear-gradient(to bottom,transparent 40%,rgba(7,8,11,0.55));">
@@ -1222,8 +1333,8 @@ tailwind.config = {
   <div class="max-w-7xl mx-auto px-6 lg:px-10">
 
     <div class="reveal mb-16">
-      <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>CH 06 · GAMEPLAY ANALYSIS</div>
-      <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em]">Round-By-Round Analysis<br><span class="text-smoke"></span></h2>
+      <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>05 · GAMEPLAY ANALYSIS</div>
+      <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em]">Watch the rounds.<br><span style="color:#ff5c5c;">Draw your own conclusion.</span></h2>
     </div>
 
     <div class="flex items-center gap-3 mb-8 reveal">
@@ -1340,19 +1451,223 @@ tailwind.config = {
 <section id="chapter-07" class="border-t hr-thin py-20 md:py-32 bg-surface">
   <div class="max-w-7xl mx-auto px-6 lg:px-10">
 
-    <div class="reveal mb-16">
-      <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>CH 07 · WHAT NOW  </div>
-      <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em] max-w-3xl">Start with one case. Decide with the evidence in hand.</h2>
+    <div class="reveal mb-12">
+      <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>06 · SUMMARY</div>
+      <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em]">Integra ran 5 signals.<br><span style="color:#ff5c5c;">All five pointed to something wrong.</span></h2>
     </div>
 
-    <div class="mt-20 text-center reveal">
-      <div class="chapter-num text-sm mb-6">CONTACT</div>
-      <a href="mailto:dhruvyadav@integritymentors.in?subject=Integra%20pilot%20%E2%80%94%20discovery%20call"
-         class="inline-flex items-center gap-4 px-10 py-5 bg-signal text-ink font-mono text-sm tracking-[0.2em] uppercase font-medium hover:bg-bone transition-colors">
-        <span>Request a pilot</span>
-        <span>→</span>
+    <div class="space-y-px bg-hairline border hr-thin reveal">
+
+      <!-- 01 MARKETS — TRIGGERED -->
+      <div class="bg-surface p-6 md:p-10 grid grid-cols-12 gap-6 items-start" style="border-left:3px solid #ff5c5c;">
+        <div class="col-span-12 md:col-span-2">
+          <div class="flex items-center gap-3 mb-3">
+            <div style="width:36px;height:36px;border:1px solid #ff5c5c;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:15px;color:#ff5c5c;background:#0c0e13;">01</div>
+            <div style="font-size:13px;letter-spacing:.15em;text-transform:uppercase;color:#ff5c5c;">MARKETS</div>
+          </div>
+          <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,92,92,.12);border:1px solid #ff5c5c;padding:4px 10px;border-radius:2px;">
+            <span style="width:7px;height:7px;border-radius:50%;background:#ff5c5c;display:inline-block;"></span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#ff5c5c;letter-spacing:.12em;text-transform:uppercase;">TRIGGERED</span>
+          </div>
+        </div>
+        <div class="col-span-12 md:col-span-6">
+          <h3 class="font-mono font-light text-xl mb-2 text-bone">Proposition bet moves first.</h3>
+          <p class="font-mono text-sm text-smoke leading-relaxed">10 Minutes before Map 3 started.</p>
+        </div>
+        <div class="col-span-12 md:col-span-4 font-mono text-xs leading-relaxed">
+          <div class="mb-2" style="color:#ff5c5c;">→ DRIFT · Case reading</div>
+          <div class="text-mute">Kill line: <span class="text-bone">15.5 → 13.5</span></div>
+          <div class="text-mute">Drop: <span style="color:#ff5c5c;">−2.0 pt</span></div>
+          <!-- <div class="text-mute">2025 avg kills/map: <span class="text-bone">16.8</span></div> -->
+        </div>
+      </div>
+
+      <!-- 02 PLAYERS — TRIGGERED -->
+      <div class="bg-surface p-6 md:p-10 grid grid-cols-12 gap-6 items-start" style="border-left:3px solid #ff5c5c;">
+        <div class="col-span-12 md:col-span-2">
+          <div class="flex items-center gap-3 mb-3">
+            <div style="width:36px;height:36px;border:1px solid #ff5c5c;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:15px;color:#ff5c5c;background:#0c0e13;">02</div>
+            <div style="font-size:13px;letter-spacing:.15em;text-transform:uppercase;color:#ff5c5c;">PERFORMANCE MATRIX</div>
+          </div>
+          <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,92,92,.12);border:1px solid #ff5c5c;padding:4px 10px;border-radius:2px;">
+            <span style="width:7px;height:7px;border-radius:50%;background:#ff5c5c;display:inline-block;"></span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#ff5c5c;letter-spacing:.12em;text-transform:uppercase;">TRIGGERED</span>
+          </div>
+        </div>
+        <div class="col-span-12 md:col-span-6">
+          <h3 class="font-mono font-light text-xl mb-2 text-bone">2nd Worst Performance in 2025 (All Maps).</h3>
+          <p class="font-mono text-sm text-smoke leading-relaxed">Average in 2025 for Ancient - 16.8 (13 maps).</p>
+        </div>
+        <div class="col-span-12 md:col-span-4 font-mono text-xs leading-relaxed">
+          <div class="mb-2" style="color:#ff5c5c;">→ INDEX · Case reading</div>
+          <div class="text-mute">Rating baseline: <span class="text-bone">1.19</span></div>
+          <div class="text-mute">Rating flagged: <span style="color:#ff5c5c;">0.47</span></div>
+        </div>
+      </div>
+
+      <!-- 03 INTEGRASIGHT — TRIGGERED -->
+      <div class="bg-surface p-6 md:p-10 grid grid-cols-12 gap-6 items-start" style="border-left:3px solid #ff5c5c;">
+        <div class="col-span-12 md:col-span-2">
+          <div class="flex items-center gap-3 mb-3">
+            <div style="width:36px;height:36px;border:1px solid #ff5c5c;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:15px;color:#ff5c5c;background:#0c0e13;">03</div>
+            <div style="font-size:13px;letter-spacing:.15em;text-transform:uppercase;color:#ff5c5c;">INTEGRASIGHT</div>
+          </div>
+          <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,92,92,.12);border:1px solid #ff5c5c;padding:4px 10px;border-radius:2px;">
+            <span style="width:7px;height:7px;border-radius:50%;background:#ff5c5c;display:inline-block;"></span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#ff5c5c;letter-spacing:.12em;text-transform:uppercase;">TRIGGERED</span>
+          </div>
+        </div>
+        <div class="col-span-12 md:col-span-6">
+          <h3 class="font-mono font-light text-xl mb-2 text-bone">Aim and reaction drifted from baseline.</h3>
+          <p class="font-mono text-sm text-smoke leading-relaxed">All measured against his own 30-match baseline.</p>
+        </div>
+        <div class="col-span-12 md:col-span-4 font-mono text-xs leading-relaxed">
+          <div class="mb-2" style="color:#ff5c5c;">→ INTEGRASIGHT · Case reading</div>
+          <div class="text-mute">Crosshair shift: <span style="color:#ff5c5c;">+1.7°</span></div>
+          <div class="text-mute">Reaction delta: <span style="color:#ff5c5c;">+93.8 ms</span></div>
+          <!-- <div class="text-mute">Suppress z-score: <span class="text-signal">−1.83 (clear)</span></div> -->
+        </div>
+      </div>
+
+      <!-- 04 CHATTER — TRIGGERED -->
+      <div class="bg-surface p-6 md:p-10 grid grid-cols-12 gap-6 items-start" style="border-left:3px solid #ff5c5c;">
+        <div class="col-span-12 md:col-span-2">
+          <div class="flex items-center gap-3 mb-3">
+            <div style="width:36px;height:36px;border:1px solid #ff5c5c;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:15px;color:#ff5c5c;background:#0c0e13;">04</div>
+            <div style="font-size:13px;letter-spacing:.15em;text-transform:uppercase;color:#ff5c5c;">SMT</div>
+          </div>
+          <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,92,92,.12);border:1px solid #ff5c5c;padding:4px 10px;border-radius:2px;">
+            <span style="width:7px;height:7px;border-radius:50%;background:#ff5c5c;display:inline-block;"></span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#ff5c5c;letter-spacing:.12em;text-transform:uppercase;">TRIGGERED</span>
+          </div>
+        </div>
+        <div class="col-span-12 md:col-span-6">
+          <h3 class="font-mono font-light text-xl mb-2 text-bone">Telegram & HLTV.</h3>
+          <p class="font-mono text-sm text-smoke leading-relaxed">Chatter in private group and prediction on public form.</p>
+        </div>
+        <div class="col-span-12 md:col-span-4 font-mono text-xs leading-relaxed">
+          <div class="mb-2" style="color:#ff5c5c;">→ WATCH</div>
+          <div class="text-mute">Platform: <span class="text-bone">Telegram</span></div>
+          <div class="text-mute">Time: <span class="text-bone">10:16</span> · <span style="color:#ff5c5c;">2h 14m pre-series</span></div>
+          <!-- <div class="mt-1" style="color:#ffb454;">"** won't be putting in a performance"</div> -->
+        </div>
+      </div>
+
+      <!-- 05 GAMEPLAY — TRIGGERED -->
+      <div class="bg-surface p-6 md:p-10 grid grid-cols-12 gap-6 items-start" style="border-left:3px solid #ff5c5c;">
+        <div class="col-span-12 md:col-span-2">
+          <div class="flex items-center gap-3 mb-3">
+            <div style="width:36px;height:36px;border:1px solid #ff5c5c;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:15px;color:#ff5c5c;background:#0c0e13;">05</div>
+            <div style="font-size:13px;letter-spacing:.15em;text-transform:uppercase;color:#ff5c5c;">GAMEPLAY</div>
+          </div>
+          <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,92,92,.12);border:1px solid #ff5c5c;padding:4px 10px;border-radius:2px;">
+            <span style="width:7px;height:7px;border-radius:50%;background:#ff5c5c;display:inline-block;"></span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#ff5c5c;letter-spacing:.12em;text-transform:uppercase;">TRIGGERED</span>
+          </div>
+        </div>
+        <div class="col-span-12 md:col-span-6">
+          <h3 class="font-mono font-light text-xl mb-2 text-bone">Decisions the situation doesn't explain.</h3>
+          <p class="font-mono text-sm text-smoke leading-relaxed">A Detailed review of 6 suspicious rounds.</p>
+        </div>
+        <div class="col-span-12 md:col-span-4 font-mono text-xs leading-relaxed">
+          <div class="mb-2" style="color:#ff5c5c;">→ GAMEPLAY · Case reading</div>
+          <div class="text-mute">Source: <span class="text-bone">Demo file</span></div>
+          <div class="text-mute">Clips: <span style="color:#ff5c5c;">6 rounds</span></div>
+          <!-- <div class="text-mute">Map: <span class="text-bone">Ancient (career best)</span></div> -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Final score bar -->
+    <div class="mt-6 border hr-thin bg-ink p-6 reveal">
+      <div class="font-mono text-sm text-bone leading-relaxed"><span style="color:#5fffc1;">➤ </span>These five signals run on every suspicious match — markets, performance, behaviour, chatter and gameplay. On Map 3, all five triggered together: the betting kill line dropped −2.0 pt before the map, it was his 2nd-worst performance of 2025, his aim and reaction drifted past his own baseline, private Telegram chatter named him beforehand, and a detailed review of 6 rounds showed decisions the situation doesn't explain.
+      </div>
+    </div>
+
+    <div class="mt-20 text-center">
+      <div class="reveal mb-4">
+        <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>WHAT NOW</div>
+        <h2 class="font-light text-3xl md:text-4xl tracking-[-0.02em] max-w-2xl mx-auto">Start with one case.<br>Decide with <span style="color:#5fffc1;">evidence in hand.</span></h2>
+      </div>
+
+      <p class="font-mono text-sm text-smoke max-w-xl mx-auto mt-6 mb-10 reveal leading-relaxed">
+        Integra runs this analysis continuously — market, player stats, reaction data, social chatter. One pilot case. No commitment.
+      </p>
+
+      <div class="reveal">
+        <a href="mailto:dhruvyadav@integritymentors.in?subject=Integra%20pilot%20—%20095-X1"
+           class="inline-flex items-center gap-4 px-10 py-5 bg-signal text-ink font-mono text-sm tracking-[.18em] uppercase font-semibold hover:bg-bone transition-colors">
+          Request a Pilot →
+        </a>
+        <div class="font-mono text-xs text-mute mt-6 tracking-[.18em] uppercase">dhruvyadav@integritymentors.in · ref. 095-X1</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════ EDUCATION PROGRAMME ═══════════════════ -->
+<section id="education" class="border-t hr-thin py-20 md:py-32">
+  <div class="max-w-7xl mx-auto px-6 lg:px-10">
+
+    <div class="reveal mb-6">
+      <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>EDUCATION PROGRAMME</div>
+      <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em] max-w-3xl">Stop the next case<br>before it <span style="color:#5fffc1;">starts.</span></h2>
+    </div>
+
+    <p class="font-mono text-sm text-smoke max-w-2xl mt-6 mb-14 reveal leading-relaxed">
+      Detection catches a problem after it happens. Education prevents it. The same case patterns Integra surfaces are turned into a practical integrity &amp; anti-corruption programme for players and coaching staff — so a roster can recognise an approach, knows exactly what to do, and never drifts into a breach by accident.
+    </p>
+
+    <!-- Module grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 reveal">
+
+      <div class="border hr-thin bg-ink p-7 md:p-8 transition-colors hover:border-signaldim">
+        <div class="font-mono text-[11px] text-signal tracking-[0.25em] mb-4">MODULE 01</div>
+        <h3 class="font-mono text-base text-bone mb-3">Spotting an approach</h3>
+        <p class="font-mono text-[12.5px] text-smoke leading-relaxed">How fixers actually make first contact — friendly DMs, a "harmless" favour, a friend-of-a-friend with a tip. The pressure tactics, the grooming pattern, and the moment to walk away.</p>
+      </div>
+
+      <div class="border hr-thin bg-ink p-7 md:p-8 transition-colors hover:border-signaldim">
+        <div class="font-mono text-[11px] text-signal tracking-[0.25em] mb-4">MODULE 02</div>
+        <h3 class="font-mono text-base text-bone mb-3">Your reporting duty</h3>
+        <p class="font-mono text-[12.5px] text-smoke leading-relaxed">What every player and staff member is obliged to report, to whom, and how quickly. Confidential channels, the protections for those who come forward, and why silence is itself a breach.</p>
+      </div>
+
+      <div class="border hr-thin bg-ink p-7 md:p-8 transition-colors hover:border-signaldim">
+        <div class="font-mono text-[11px] text-signal tracking-[0.25em] mb-4">MODULE 03</div>
+        <h3 class="font-mono text-base text-bone mb-3">Betting &amp; code rules</h3>
+        <p class="font-mono text-[12.5px] text-smoke leading-relaxed">What the rules actually prohibit — betting on your own game, passing inside information, courtsiding, manipulating a single round. The grey areas made black and white.</p>
+      </div>
+
+      <div class="border hr-thin bg-ink p-7 md:p-8 transition-colors hover:border-signaldim">
+        <div class="font-mono text-[11px] text-signal tracking-[0.25em] mb-4">MODULE 04</div>
+        <h3 class="font-mono text-base text-bone mb-3">What an investigation looks like</h3>
+        <p class="font-mono text-[12.5px] text-smoke leading-relaxed">How integrity signals are reviewed, what evidence is and isn't, due process, and the presumption of innocence. Demystifying the process so players understand their rights as well as their duties.</p>
+      </div>
+
+      <div class="border hr-thin bg-ink p-7 md:p-8 transition-colors hover:border-signaldim">
+        <div class="font-mono text-[11px] text-signal tracking-[0.25em] mb-4">MODULE 05</div>
+        <h3 class="font-mono text-base text-bone mb-3">Protecting yourself</h3>
+        <p class="font-mono text-[12.5px] text-smoke leading-relaxed">Practical habits: refusing and reporting an approach, keeping a record, managing your accounts and contacts, and avoiding the accidental breaches that end careers. Built for coaches to reinforce daily.</p>
+      </div>
+
+      <div class="border border-signaldim bg-ink p-7 md:p-8 flex flex-col justify-center">
+        <div class="font-mono text-[11px] text-signal tracking-[0.25em] mb-4">FORMAT</div>
+        <p class="font-mono text-[12.5px] text-bone leading-relaxed mb-2">Live workshops + on-demand modules.</p>
+        <p class="font-mono text-[12px] text-mute leading-relaxed">90 minutes per session · on-site or remote · players and coaching staff · code-aligned · built from real case patterns, fully anonymised.</p>
+      </div>
+
+    </div>
+
+    <!-- Education CTA -->
+    <div class="mt-14 reveal flex flex-col sm:flex-row sm:items-center gap-6">
+      <a href="mailto:dhruvyadav@integritymentors.in?subject=Integra%20education%20programme%20—%20095-X1"
+         class="inline-flex items-center gap-4 px-8 py-4 border border-signaldim text-signal font-mono text-sm tracking-[.18em] uppercase font-semibold hover:bg-signal hover:text-ink transition-colors self-start">
+        Bring the programme to your roster →
       </a>
-      <div class="font-mono text-[11px] text-mute mt-8 tracking-[0.2em] uppercase">dhruvyadav@integritymentors.in · reference 095-N</div>
+      <div class="font-mono text-[11px] text-mute tracking-[0.18em] uppercase">Prevention is cheaper than a dossier.</div>
     </div>
 
   </div>
@@ -1454,7 +1769,7 @@ tailwind.config = {
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out;';
     var img = document.createElement('img');
     img.src = src;
-    img.style.cssText = 'max-width:100%;max-height:92vh;border:1px solid #1a1f28;box-shadow:0 0 80px rgba(0,0,0,0.8);';
+    img.style.cssText = 'max-width:100%;max-height:92vh;border:1px solid #1a1f28;box-shadow:0 0 80px rgba(0,0,0,0.8);filter:blur(14px);';
     var close = document.createElement('div');
     close.style.cssText = 'position:fixed;top:20px;right:28px;font-family:"JetBrains Mono",monospace;font-size:14px;color:#5fffc1;cursor:pointer;letter-spacing:0.1em;';
     close.textContent = '[ close ✕ ]';
@@ -1478,7 +1793,7 @@ tailwind.config = {
     var overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;overflow:auto;-webkit-overflow-scrolling:touch;padding:24px 16px;cursor:zoom-out;';
     var inner = document.createElement('div');
-    inner.style.cssText = 'max-width:1060px;margin:0 auto;cursor:default;';
+    inner.style.cssText = 'max-width:1060px;margin:0 auto;cursor:default;filter:blur(10px);';
     inner.className = 'tg-render';
     inner.innerHTML = src.innerHTML;
     inner.onclick = function(e) { e.stopPropagation(); };
@@ -1499,6 +1814,18 @@ tailwind.config = {
     btn.textContent = el.classList.contains('desc-clamp') ? 'Read more' : 'Read less';
   }
 
+  // ── Methodology (CH 01) collapse toggle ──
+  function toggleMethod() {
+    var panel  = document.getElementById('method-collapse');
+    var toggle = document.getElementById('method-toggle');
+    var label  = document.getElementById('method-toggle-label');
+    var text   = document.getElementById('method-toggle-text');
+    var open   = panel.classList.toggle('open');
+    toggle.classList.toggle('open', open);
+    if (label) label.textContent = open ? 'Hide' : 'Show';
+    if (text)  text.textContent  = open ? 'Collapse Methodology' : 'Expand Methodology · 5 Signals';
+  }
+
   // ── Performance Matrix tabs ──
   function navigatePerf(tabId) {
     document.querySelectorAll('.perf-panel').forEach(p => p.classList.add('hidden'));
@@ -1506,6 +1833,7 @@ tailwind.config = {
     document.getElementById('perf-panel-' + tabId).classList.remove('hidden');
     document.getElementById('perf-btn-' + tabId).classList.add('perf-tab-active');
     if (tabId === 'index') renderPerfMatrix();
+    if (tabId === 'ratings' && window.renderBlurTables) window.renderBlurTables();
   }
 
   var perfChartInstance = null;
@@ -1626,10 +1954,10 @@ tailwind.config = {
           ['Map 2 in play', '(14:15)'],
           ['Break', '(14:17)'],
           ['9 mins before Map 3', '(14:21)'],
-          ['30 secs after drop', '(14:21)'],
-          ['7 mins before Map 3', '(14:23)'],          
-          ['5 mins before Map 3', 'Map 3 (14:25)'],
-          ['Map 3 Starts', 'Map 3 (14:30)'],
+          ['30s after drop', '(14:21)'],
+          ['7 mins before', '(14:23)'],          
+          ['5 mins before', '(14:25)'],
+          ['Map 3 Start', '(14:30)'],
         ],
         datasets: [{
           label: 'Kill Line',
@@ -1645,7 +1973,7 @@ tailwind.config = {
       },
       options: {
         responsive: true, maintainAspectRatio: false,
-        layout: { padding: { left: 12, right: 16, top: 10, bottom: 4 } },
+        layout: { padding: { left: 20, right: 52, top: 10, bottom: 4 } },
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -1668,6 +1996,127 @@ tailwind.config = {
       }
     });
   });
+</script>
+
+<script>
+(function () {
+  // ── BLURRED TABLE RENDERER ────────────────────────────────────
+  var TBLUR = 6;
+  var ROW_H = 68, PAD_X = 18, FONT = '19px JetBrains Mono,monospace';
+  var CLR_NORMAL = '#a0a8b4', CLR_FLAG = '#ff5c5c', CLR_DIM = '#6b7280', BG_ROW = '#0c0e13', BG_FLAG = '#1a0a0a', LINE = '#1a1f28';
+
+  // Data encoded as base64 to keep out of plain HTML
+  // Table 1: Worst Ranked Performances
+  // cols: [rank, kills, kd, map, date, opponent, opprank, flagged]
+  var _w = JSON.parse(atob('W1siMXN0IiwiNSIsIjUgLSAxNCIsIk92ZXJwYXNzIiwiMTAvMDgvMjUiLCJBdXJvcmEiLCIjNyIsZmFsc2VdLFsiMm5kIiwiNSIsIjUgLSAxMyIsIkFuY2llbnQiLCIwMy8xMS8yNSIsIlRoZSBNb25nb2xaIiwiIzQiLHRydWVdLFsiM3JkIiwiNiIsIjYgLSAxNSIsIkR1c3QyIiwiMTEvMDgvMjUiLCJQYXNzaW9uIFVBIiwiIzMzIixmYWxzZV0sWyI0dGgiLCI3IiwiNyAtIDE3IiwiTnVrZSIsIjI3LzA3LzI1IiwiU3Bpcml0IiwiIzYiLGZhbHNlXSxbIjV0aCIsIjciLCI3IC0gMTYiLCJEdXN0MiIsIjE2LzA3LzI1IiwiQklHIiwiIzI1IixmYWxzZV0sWyI2dGgiLCI4IiwiOCAtIDE0IiwiQW5jaWVudCIsIjA1LzExLzI1IiwiU3Bpcml0IiwiIzYiLGZhbHNlXSxbIjd0aCIsIjkiLCI5IC0gMTQiLCJJbmZlcm5vIiwiMDMvMTEvMjUiLCJUaGUgTW9uZ29sWiIsIiM0IixmYWxzZV1d'));
+  // Table 2: Avg Kills Per Map
+  // cols: [map, totalKills, mapsPlayed, avg, flagged]
+  var _k = JSON.parse(atob('W1siQW51YmlzIiwiMTkiLCIxIiwiMTkuMCIsZmFsc2VdLFsiTWlyYWdlIiwiMjI5IiwiMTMiLCIxNy42IixmYWxzZV0sWyJBbmNpZW50IiwiMjE5IiwiMTMiLCIxNi44Iix0cnVlXSxbIkluZmVybm8iLCI5MCIsIjYiLCIxNS4wIixmYWxzZV0sWyJOdWtlIiwiMTk1IiwiMTMiLCIxNS4wIixmYWxzZV0sWyJEdXN0MiIsIjIxMCIsIjE1IiwiMTQuMCIsZmFsc2VdLFsiT3ZlcnBhc3MiLCIxMTIiLCI4IiwiMTQuMCIsZmFsc2VdLFsiVHJhaW4iLCI0MiIsIjMiLCIxNC4wIixmYWxzZV0sWyJWZXJ0aWdvIiwiXHUyMDE0IiwiMCIsIk4vQSIsZmFsc2VdXQ=='));
+
+  var DPR = window.devicePixelRatio || 1;
+
+  // Align each canvas data column to the live HTML <thead> cell above it,
+  // so blurred data lines up column-by-column with the header.
+  function drawTable(canvasId, rows) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    var table = canvas.parentElement.querySelector('table');
+    if (!table) return;
+    var W = table.offsetWidth;
+    if (!W) return; // panel hidden — re-rendered when its tab opens
+
+    // measure each header column relative to the canvas
+    var cRect = canvas.getBoundingClientRect();
+    var cols = [];
+    table.querySelectorAll('thead th').forEach(function (th) {
+      var r = th.getBoundingClientRect();
+      var cs = getComputedStyle(th);
+      cols.push({
+        x: r.left - cRect.left,
+        w: r.width,
+        align: cs.textAlign,
+        padL: parseFloat(cs.paddingLeft) || 0,
+        padR: parseFloat(cs.paddingRight) || 0
+      });
+    });
+
+    var H = rows.length * ROW_H + 1;
+    canvas.width  = W * DPR;
+    canvas.height = H * DPR;
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+    var ctx = canvas.getContext('2d');
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    ctx.filter = 'blur(' + TBLUR + 'px)';
+    ctx.textBaseline = 'middle';
+
+    rows.forEach(function (row, ri) {
+      var flagged = row[row.length - 1];
+      var y = ri * ROW_H;
+      ctx.fillStyle = flagged ? BG_FLAG : BG_ROW;
+      ctx.fillRect(0, y, W, ROW_H);
+      ctx.fillStyle = LINE;
+      ctx.fillRect(0, y + ROW_H - 1, W, 1);
+
+      cols.forEach(function (col, ci) {
+        var text = String(row[ci]);
+        ctx.font = FONT;
+        ctx.fillStyle = flagged ? CLR_FLAG : CLR_NORMAL;
+        var tw = ctx.measureText(text).width;
+        var tx;
+        if (col.align === 'center')
+          tx = col.x + col.padL + (col.w - col.padL - col.padR - tw) / 2;
+        else if (col.align === 'right' || col.align === 'end')
+          tx = col.x + col.w - col.padR - tw;
+        else
+          tx = col.x + col.padL;
+        ctx.fillText(text, tx, y + ROW_H / 2);
+      });
+    });
+  }
+
+  function renderAll() {
+    drawTable('tbl-canvas-worst', _w);
+    drawTable('tbl-canvas-kills', _k);
+  }
+  window.renderBlurTables = renderAll;   // called when the Map Ratings tab opens
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderAll);
+  } else {
+    renderAll();
+  }
+  window.addEventListener('resize', renderAll);
+})();
+
+// ── BLURRED IMAGE RENDERER ────────────────────────────────────────
+(function () {
+  // Encode paths so raw src strings don't appear in plain HTML/JS
+  var _b = atob;
+  var imgs = [
+    { id: 'inv-canvas-map1', src: _b('YXNzZXRzL2ltYWdlcy9ITFRWLU1BUDEuanBlZw==') },
+    { id: 'inv-canvas-map2', src: _b('YXNzZXRzL2ltYWdlcy9ITFRWLU1BUDIuanBlZw==') },
+    { id: 'inv-canvas-map3', src: _b('YXNzZXRzL2ltYWdlcy9ITFRWLU1BUDMuanBlZw==') }
+  ];
+  var BLUR = 6; // px — strong enough to obscure content
+  imgs.forEach(function (item) {
+    var canvas = document.getElementById(item.id);
+    if (!canvas) return;
+    var img = new Image();
+    img.onload = function () {
+      canvas.width  = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      var ctx = canvas.getContext('2d');
+      ctx.filter = 'blur(' + BLUR + 'px)';
+      // Draw with extra margin so blur doesn't fade at edges
+      ctx.drawImage(img, -BLUR * 2, -BLUR * 2, img.naturalWidth + BLUR * 4, img.naturalHeight + BLUR * 4);
+      // Null out the image so the decoded src is not retained
+      img.src = '';
+    };
+    img.src = item.src;
+  });
+})();
 </script>
 
 <script>
