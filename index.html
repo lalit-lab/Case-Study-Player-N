@@ -2240,7 +2240,7 @@ tailwind.config = {
 
   function sendSheet(event, extra) {
     var payload = JSON.stringify({ cid: cid, event: event, extra: extra || {}, visit: visits, url: location.pathname });
-    try { fetch(SHEET_URL, { method: 'POST', body: payload }).catch(function(){}); } catch(e) {}
+    try { fetch(SHEET_URL, { method: 'POST', body: payload, keepalive: true }).catch(function(){}); } catch(e) {}
   }
 
   function t(event, extra) {
@@ -2444,11 +2444,20 @@ tailwind.config = {
   }, true);
 
   // ── SESSION END (total duration + max scroll depth) ──────────
-  window.addEventListener('beforeunload', function () {
+  // Mobile-reliable: iOS Safari / backgrounded Android often SKIP 'beforeunload',
+  // so fire on 'pagehide' + 'visibilitychange'(hidden) instead. This may send more
+  // than once (e.g. app-switch then close) — dedupe server-side by taking the
+  // last / max duration per cid+visit.
+  function sendSessionEnd() {
     var dur = Math.round((Date.now() - sessionStartTime) / 1000);
     var payload = JSON.stringify({ cid: cid, event: 'session_end', extra: { duration_s: dur, max_depth: maxDepth }, visit: visits, url: location.pathname });
-    try { if (navigator.sendBeacon) navigator.sendBeacon(SHEET_URL, payload); } catch(e) {}
-  });
+    try {
+      if (navigator.sendBeacon) navigator.sendBeacon(SHEET_URL, payload);
+      else fetch(SHEET_URL, { method: 'POST', body: payload, keepalive: true }).catch(function(){});
+    } catch(e) {}
+  }
+  window.addEventListener('pagehide', sendSessionEnd);
+  document.addEventListener('visibilitychange', function () { if (document.hidden) sendSessionEnd(); });
 
   window.__cid = cid;
 })();
