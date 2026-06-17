@@ -405,6 +405,13 @@ tailwind.config = {
     /* Safety net: let long words wrap instead of spilling out */
     #chapter-02 h2, #chapter-02 h3, #chapter-02 p, #chapter-02 .font-mono { overflow-wrap:break-word; }
   }
+
+  /* Mobile: enlarge the "➤ WHAT NOW" sub-label (the #chapter-07 .text-sm rule had
+     shrunk it to 14px). Scoped to the WHAT NOW one inside .text-center only —
+     leaves the "06 · SUMMARY" header alone. */
+  @media (max-width:640px){
+    #chapter-07 .text-center .chapter-num { font-size:18px !important; }
+  }
 </style>
 </head>
 
