@@ -2126,7 +2126,7 @@ tailwind.config = {
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     ctx.clearRect(0, 0, W, H);
     /* mobile: stronger blur so the small-screen rows aren't legible */
-    var blurPx = (window.matchMedia && window.matchMedia('(max-width:640px)').matches) ? 10 : TBLUR;
+    var blurPx = (window.matchMedia && window.matchMedia('(max-width:640px)').matches) ? 12 : TBLUR;
     ctx.filter = 'blur(' + blurPx + 'px)';
     ctx.textBaseline = 'middle';
 
