@@ -310,6 +310,65 @@ tailwind.config = {
   .nda-btn-primary:disabled { opacity:0.4; cursor:not-allowed; }
   .nda-btn-primary.nda-btn-ready { background:#5fffc1; border-color:#5fffc1; }
   .nda-fine { font-family:'JetBrains Mono',monospace; font-size:10px; line-height:1.6; color:#4d5564; margin-top:20px; }
+
+  /* ═══════════════ MOBILE-ONLY (≤640px) ═══════════════
+     The #chapter-xx rules above use id-level specificity, so they beat any
+     class-only mobile rule and win on phones too (media queries add no
+     specificity). These MIRROR those selectors with smaller type + padding,
+     placed last so they win at ≤640px. Desktop view is untouched. */
+  @media (max-width:640px){
+
+    /* Trim the excessive section gaps so mobile feels denser/alive */
+    #chapter-02, #chapter-03, #chapter-04, #chapter-05, #chapter-06, #chapter-07, #education {
+      padding-top:3.5rem !important; padding-bottom:3.5rem !important;
+    }
+
+    /* Panels: kill the huge side padding (was 72–80px) so content isn't squished */
+    #chapter-03 .perf-panel  { padding:1.5rem 1rem !important; }
+    #chapter-04 .sight-panel { padding:1.5rem 1rem !important; }
+
+    /* Instrument tabs: compact (min-width:50% still comes from the class rule above) */
+    #chapter-03 .perf-tab,
+    #chapter-04 .sight-tab { font-size:13px !important; padding:12px 10px !important; letter-spacing:0.08em !important; }
+
+    /* Dossier tables: smaller cells so they stop overflowing */
+    #chapter-03 .dossier-table th, #chapter-04 .dossier-table th,
+    #chapter-05 .dossier-table th, #chapter-06 .dossier-table th, #chapter-07 .dossier-table th,
+    #chapter-03 .dossier-table td, #chapter-04 .dossier-table td,
+    #chapter-05 .dossier-table td, #chapter-06 .dossier-table td, #chapter-07 .dossier-table td { font-size:12.5px !important; padding:9px 10px !important; }
+
+    /* Body copy across all chapters */
+    #chapter-02 p, #hero p, #chapter-03 p, #chapter-04 p, #chapter-04 .sight-panel p,
+    #chapter-05 p, #chapter-06 p, #chapter-07 p { font-size:14.5px !important; line-height:1.65 !important; }
+
+    /* Labels + step circles */
+    #chapter-02 .label, #chapter-04 .sight-panel .label { font-size:13px !important; }
+    #chapter-02 .step-num { font-size:14px !important; width:40px !important; height:40px !important; }
+
+    /* Bracketed mono helper sizes */
+    #chapter-02 .text-\[10px\], #hero .text-\[10px\], #chapter-04 .sight-panel .text-\[10px\],
+    #chapter-05 .text-\[10px\], #chapter-06 .text-\[10px\], #chapter-07 .text-\[10px\] { font-size:13px !important; }
+    #chapter-02 .text-\[11px\], #hero .text-\[11px\], #chapter-04 .sight-panel .text-\[11px\],
+    #chapter-05 .text-\[11px\], #chapter-06 .text-\[11px\], #chapter-07 .text-\[11px\] { font-size:13px !important; }
+    #chapter-02 .text-\[13px\], #hero .text-\[13px\],
+    #chapter-05 .text-\[13px\], #chapter-06 .text-\[13px\], #chapter-07 .text-\[13px\] { font-size:14px !important; }
+    #chapter-05 .text-\[14px\], #chapter-06 .text-\[14px\], #chapter-07 .text-\[14px\] { font-size:14px !important; }
+    #chapter-02 .text-\[17px\] { font-size:15px !important; }
+
+    /* Tailwind text-* helpers (mirrors the desktop scoping exactly) */
+    #chapter-02 .text-xs, #chapter-03 .text-xs, #chapter-04 .sight-panel .text-xs, #hero .text-xs,
+    #chapter-05 .text-xs, #chapter-06 .text-xs, #chapter-07 .text-xs { font-size:13.5px !important; }
+    #chapter-02 .text-sm, #chapter-03 .text-sm, #chapter-04 .sight-panel .text-sm, #hero .text-sm,
+    #chapter-05 .text-sm, #chapter-06 .text-sm, #chapter-07 .text-sm { font-size:14px !important; }
+    #chapter-02 .text-base, #chapter-03 .text-base, #chapter-04 .sight-panel .text-base, #hero .text-base,
+    #chapter-05 .text-base, #chapter-06 .text-base, #chapter-07 .text-base { font-size:15px !important; }
+
+    /* Inline style="font-size:11px/10px" overrides */
+    #chapter-02 [style*="font-size:11px"], #hero [style*="font-size:11px"], #chapter-03 [style*="font-size:11px"],
+    #chapter-04 [style*="font-size:11px"], #chapter-05 [style*="font-size:11px"],
+    #chapter-06 [style*="font-size:11px"], #chapter-07 [style*="font-size:11px"] { font-size:13px !important; }
+    #hero [style*="font-size:10px"] { font-size:13px !important; }
+  }
 </style>
 </head>
 
