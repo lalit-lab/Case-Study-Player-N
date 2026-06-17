@@ -460,6 +460,9 @@ tailwind.config = {
     var cancel = document.getElementById('nda-cancel-btn');
     var pendingHref = null;
 
+    // Funnel tracking → uses the global tracker exposed by the analytics script.
+    function ndaTrack(ev, extra) { try { if (window.__track) window.__track(ev, extra || {}); } catch (e) {} }
+
     function isPilotLink(a) {
       var href = ((a && a.getAttribute('href')) || '').toLowerCase();
       return href.indexOf('mailto:') === 0 && href.indexOf('pilot') !== -1;
@@ -470,11 +473,16 @@ tailwind.config = {
       if (accept) { accept.disabled = true; accept.classList.remove('nda-btn-ready'); }
       if (gate) gate.style.display = 'flex';
       document.body.classList.add('nda-locked');
+      ndaTrack('nda_open', { href: (href || '').slice(0, 80) });
     }
     function closeModal() {
       if (gate) gate.style.display = 'none';
       document.body.classList.remove('nda-locked');
       pendingHref = null;
+    }
+    function cancelModal() {
+      if (gate && gate.style.display === 'flex') ndaTrack('nda_cancel');
+      closeModal();
     }
 
     // Intercept every "Request a Pilot" click (nav, mobile menu, and the main CTA).
@@ -483,23 +491,29 @@ tailwind.config = {
       if (a && isPilotLink(a)) { e.preventDefault(); openModal(a.getAttribute('href')); }
     }, true);
 
+    // "Read the full agreement (PDF)" link
+    var readlink = document.querySelector('.nda-readlink');
+    if (readlink) readlink.addEventListener('click', function () { ndaTrack('nda_pdf_click'); });
+
     if (cb && accept) {
       cb.addEventListener('change', function () {
         accept.disabled = !cb.checked;
         accept.classList.toggle('nda-btn-ready', cb.checked);
+        if (cb.checked) ndaTrack('nda_agree_check');
       });
       accept.addEventListener('click', function () {
         if (!cb.checked) return;
         var href = pendingHref;
+        ndaTrack('nda_accept', { href: (href || '').slice(0, 80) });
         try { localStorage.setItem('_nda_ts', new Date().toISOString()); } catch (e) {}
         closeModal();
         if (href) window.location.href = href;   // proceed to the pilot request
       });
     }
-    if (cancel) cancel.addEventListener('click', closeModal);
-    if (gate) gate.addEventListener('click', function (e) { if (e.target === gate) closeModal(); });
+    if (cancel) cancel.addEventListener('click', cancelModal);
+    if (gate) gate.addEventListener('click', function (e) { if (e.target === gate) cancelModal(); });
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && gate && gate.style.display === 'flex') closeModal();
+      if (e.key === 'Escape' && gate && gate.style.display === 'flex') cancelModal();
     });
   })();
 </script>
@@ -2252,11 +2266,30 @@ tailwind.config = {
     }
     sendSheet(event, extra);
   }
+  window.__track = t;   // expose tracker so the NDA modal IIFE can log funnel events
+
+  // Device / viewport / referrer — so mobile-vs-desktop is visible in track.asp data too
+  function deviceInfo() {
+    var ua = navigator.userAgent || '';
+    return {
+      device: /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(ua) ? 'mobile' : 'desktop',
+      vw: window.innerWidth, vh: window.innerHeight,
+      sw: (window.screen && screen.width) || 0, sh: (window.screen && screen.height) || 0,
+      dpr: window.devicePixelRatio || 1,
+      lang: navigator.language || '',
+      ref: (document.referrer || '').slice(0, 120),
+      ua: ua.slice(0, 160)
+    };
+  }
+  var dev = deviceInfo();
 
   if (window.clarity) {
-    try { clarity('set', 'user_id', cid); clarity('set', 'visit_count', String(visits)); } catch(e) {}
+    try {
+      clarity('set', 'user_id', cid); clarity('set', 'visit_count', String(visits));
+      clarity('set', 'device', dev.device);
+    } catch(e) {}
   }
-  t('session_start', { cid: cid, visit: visits, returning: visits > 1 });
+  t('session_start', Object.assign({ cid: cid, visit: visits, returning: visits > 1 }, dev));
 
   // ── Helper: wrap an existing global function with a tracking call ──
   function wrap(name, fn) {
@@ -2308,13 +2341,23 @@ tailwind.config = {
     if (el) t('cta_click', { href: (el.getAttribute('href') || '').slice(0, 80) });
   });
 
-  // ── SECTION VIEW (first time each chapter enters view) ───────
+  // ── SECTION VIEW (first view) + DWELL (time spent per chapter) ───────
   var seenSection = {};
+  var sectionEnter = {};
+  function flushSection(id) {
+    if (sectionEnter[id]) {
+      t('section_dwell', { section: id, ms: Date.now() - sectionEnter[id] });
+      delete sectionEnter[id];
+    }
+  }
+  function flushSections() { for (var id in sectionEnter) flushSection(id); }
   var secIO = new IntersectionObserver(function (entries) {
     entries.forEach(function (e) {
-      if (e.isIntersecting && !seenSection[e.target.id]) {
-        seenSection[e.target.id] = 1;
-        t('section_view', { section: e.target.id });
+      if (e.isIntersecting) {
+        if (!seenSection[e.target.id]) { seenSection[e.target.id] = 1; t('section_view', { section: e.target.id }); }
+        if (!sectionEnter[e.target.id]) sectionEnter[e.target.id] = Date.now();
+      } else {
+        flushSection(e.target.id);
       }
     });
   }, { threshold: 0.4 });
@@ -2449,6 +2492,7 @@ tailwind.config = {
   // than once (e.g. app-switch then close) — dedupe server-side by taking the
   // last / max duration per cid+visit.
   function sendSessionEnd() {
+    flushSections();   // capture dwell for whatever chapter is on-screen at exit
     var dur = Math.round((Date.now() - sessionStartTime) / 1000);
     var payload = JSON.stringify({ cid: cid, event: 'session_end', extra: { duration_s: dur, max_depth: maxDepth }, visit: visits, url: location.pathname });
     try {
