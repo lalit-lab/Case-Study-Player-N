@@ -387,6 +387,16 @@ tailwind.config = {
     }
     #perf-panel-inversion .text-right { text-align:left !important; }
   }
+
+  /* ═══════════════ MOBILE FIX · CH 01 METHODOLOGY (≤640px) ═══════════════ */
+  /* The "→ DRIFT / → INDEX / …" detail block escaped mobile sizing: the desktop
+     rule  #chapter-02 .md\:col-span-4.font-mono {19px}  out-ranks .text-xs, so it
+     rendered oversized on phones (looked like a different/brighter mint). Match it
+     to the rest. Colors are unchanged — identical to desktop. */
+  @media (max-width:640px){
+    #chapter-02 .md\:col-span-4.font-mono { font-size:13.5px !important; line-height:1.6 !important; }
+    #chapter-02 .md\:col-span-4 .text-\[17px\] { font-size:14px !important; }
+  }
 </style>
 </head>
 
