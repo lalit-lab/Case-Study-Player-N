@@ -2346,7 +2346,7 @@ tailwind.config = {
   // vault). Emit the same tab_dwell / tab_bounce / tab_return / tab_<id> events
   // as chapters scroll into view, so the existing dashboard works unchanged.
   // DOM order chapter-02→hero→03→04→05→06 maps to profile→market→perf→intel→vault.
-  var SEC2TAB = { 'chapter-02':'profile', 'hero':'market', 'chapter-03':'perf', 'chapter-04':'perf', 'chapter-05':'intel', 'chapter-06':'vault' };
+  var SEC2TAB = { 'chapter-02':'profile', 'hero':'market', 'chapter-03':'perf', 'chapter-04':'sight', 'chapter-05':'intel', 'chapter-06':'vault', 'chapter-07':'summary' };
   var curTab = null, curTabEnter = 0, tabsVisited = {}, tabOrderArr = [];
   function tabSwitch(tab) {
     if (!tab || tab === curTab) return;

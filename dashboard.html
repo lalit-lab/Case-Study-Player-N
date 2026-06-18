@@ -142,8 +142,8 @@ function render(){
   var cards='';
   users.forEach(function(u){
     var ue=ALL.filter(function(r){return r.cid===u});
-    var validTabs=['profile','market','perf','intel','vault'];
-    var tabLabels={profile:'Player Profile',market:'Betting Market',perf:'Performance Matrix',intel:'Intel',vault:'Action Analysis'};
+    var validTabs=['profile','market','perf','sight','intel','vault','summary'];
+    var tabLabels={profile:'Method / Case',market:'Market Drift',perf:'Performance Matrix',sight:'IntegraSight',intel:'Surveillance · SMT',vault:'Gameplay Analysis',summary:'Summary / CTA'};
 
     var tabTimes={};
     ue.filter(function(r){return r.event==='tab_dwell'}).forEach(function(r){
@@ -237,7 +237,7 @@ function render(){
 
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;color:#64748b;margin-bottom:12px">'+
       '<span>Sessions: <b style="color:#e2e8f0">'+sessions+(sessions>1?' 🔄 Re-reading!':'')+' </b></span>'+
-      '<span>Tabs visited: <b style="color:#e2e8f0">'+tabOrder.length+'/5</b></span>'+
+      '<span>Sections visited: <b style="color:#e2e8f0">'+tabOrder.length+'/'+validTabs.length+'</b></span>'+
       '<span>Most time: <b style="color:#93c5fd">'+(topTab?tabLabels[topTab]||topTab:'—')+'</b></span>'+
       '<span>Pattern: <b style="color:#a5b4fc">'+pattern+'</b></span>'+
       '<span>CTA click: <b style="color:'+(ctaClick?'#22c55e':'#ef4444')+'">'+(ctaClick?'YES ✅':'NO')+'</b></span>'+
@@ -330,8 +330,8 @@ function dlExcel(){
   if(!ALL.length){alert('No data to export');return;}
   if(typeof XLSX==='undefined'){alert('SheetJS not loaded — check internet connection');return;}
 
-  var validTabs=['profile','market','perf','intel','vault'];
-  var tabFull={profile:'Player Profile',market:'Betting Market',perf:'Performance Matrix',intel:'Intel',vault:'Action Analysis'};
+  var validTabs=['profile','market','perf','sight','intel','vault','summary'];
+  var tabFull={profile:'Method / Case',market:'Market Drift',perf:'Performance Matrix',sight:'IntegraSight',intel:'Surveillance · SMT',vault:'Gameplay Analysis',summary:'Summary / CTA'};
 
   // ── SHEET 1: Layer 1 — Raw Activity Log (one row per event) ──────────
   var L1H=[
@@ -606,9 +606,9 @@ function generateReport(uid){
   var none=function(v){return (v===null||v===undefined||v==='')?'—':v;};
 
   // ── LAYER 1 DATA ────────────────────────────────────────────────────────
-  var validTabs=['profile','market','perf','intel','vault'];
-  var tabLabels={profile:'01 · Player Profile',market:'02 · Betting Market',perf:'03 · Performance Matrix',intel:'04 · Intel',vault:'05 · Action Analysis'};
-  var tabShort={profile:'Player Profile',market:'Betting Market',perf:'Performance Matrix',intel:'Intel',vault:'Action Analysis'};
+  var validTabs=['profile','market','perf','sight','intel','vault','summary'];
+  var tabLabels={profile:'01 · Method / Case',market:'02 · Market Drift',perf:'03 · Performance Matrix',sight:'04 · IntegraSight',intel:'05 · Surveillance · SMT',vault:'06 · Gameplay Analysis',summary:'07 · Summary / CTA'};
+  var tabShort={profile:'Method / Case',market:'Market Drift',perf:'Performance Matrix',sight:'IntegraSight',intel:'Surveillance · SMT',vault:'Gameplay Analysis',summary:'Summary / CTA'};
 
   var sessions=ue.filter(function(r){return r.event==='session_start';}).length;
   var firstSeen=fmt(ue[0].ts), lastSeen=fmt(ue[ue.length-1].ts);
@@ -1107,7 +1107,7 @@ function generateReport(uid){
     '<div><div style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em">Sessions</div><div style="font-weight:700;font-size:13px">'+sessions+(sessions>1?' 🔄':'')+'</div></div>'+
     '<div><div style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em">CTA Clicked</div><div style="font-weight:700;font-size:13px;color:'+(ctaClicked?'#86efac':'rgba(255,255,255,.3)')+'">'+(ctaClicked?'YES ✅':'NO')+'</div></div>'+
     '<div><div style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em">Printed</div><div style="font-weight:700;font-size:13px;color:'+(printEv?'#fde68a':'rgba(255,255,255,.3)')+'">'+(printEv?'YES 🖨':'NO')+'</div></div>'+
-    '<div><div style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em">Tabs Visited</div><div style="font-weight:700;font-size:13px">'+tabOrder.length+' / 5</div></div>'+
+    '<div><div style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em">Sections Visited</div><div style="font-weight:700;font-size:13px">'+tabOrder.length+' / '+validTabs.length+'</div></div>'+
     '</div></div>'+
 
     // ══════════════════════════════════════════
