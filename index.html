@@ -1289,7 +1289,7 @@ tailwind.config = {
           <div onclick="openLightbox('assets/images/HLTV1.jpeg')"
                style="cursor:pointer;position:relative;overflow:hidden;border:1px solid #1a1f28;group;">
             <img src="assets/images/HLTV1.jpeg" alt="HLTV Part 1"
-                 style="width:100%;height:200px;object-fit:cover;object-position:top;display:block;filter:blur(6px);transition:opacity 0.2s;"
+                 style="width:100%;height:200px;object-fit:cover;object-position:top;display:block;filter:blur(4px);transition:opacity 0.2s;"
                  onmouseover="this.style.opacity=0.75" onmouseout="this.style.opacity=1">
             <div style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px;pointer-events:none;">
               <span style="background:rgba(7,8,11,0.75);font-family:'JetBrains Mono',monospace;font-size:10px;color:#5fffc1;padding:4px 10px;letter-spacing:0.12em;">Click to expand</span>
@@ -1298,7 +1298,7 @@ tailwind.config = {
           <div onclick="openLightbox('assets/images/HLTV2.jpeg')"
                style="cursor:pointer;position:relative;overflow:hidden;border:1px solid #1a1f28;">
             <img src="assets/images/HLTV2.jpeg" alt="HLTV Part 2"
-                 style="width:100%;height:200px;object-fit:cover;object-position:top;display:block;filter:blur(6px);transition:opacity 0.2s;"
+                 style="width:100%;height:200px;object-fit:cover;object-position:top;display:block;filter:blur(4px);transition:opacity 0.2s;"
                  onmouseover="this.style.opacity=0.75" onmouseout="this.style.opacity=1">
             <div style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px;pointer-events:none;">
               <span style="background:rgba(7,8,11,0.75);font-family:'JetBrains Mono',monospace;font-size:10px;color:#5fffc1;padding:4px 10px;letter-spacing:0.12em;">Click to expand</span>
@@ -1886,7 +1886,7 @@ tailwind.config = {
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out;';
     var img = document.createElement('img');
     img.src = src;
-    img.style.cssText = 'max-width:100%;max-height:92vh;border:1px solid #1a1f28;box-shadow:0 0 80px rgba(0,0,0,0.8);filter:blur(14px);';
+    img.style.cssText = 'max-width:100%;max-height:92vh;border:1px solid #1a1f28;box-shadow:0 0 80px rgba(0,0,0,0.8);filter:blur(7px);';
     var close = document.createElement('div');
     close.style.cssText = 'position:fixed;top:20px;right:28px;font-family:"JetBrains Mono",monospace;font-size:14px;color:#5fffc1;cursor:pointer;letter-spacing:0.1em;';
     close.textContent = '[ close ✕ ]';
@@ -2218,7 +2218,7 @@ tailwind.config = {
     { id: 'inv-canvas-map2', src: _b('YXNzZXRzL2ltYWdlcy9ITFRWLU1BUDIuanBlZw==') },
     { id: 'inv-canvas-map3', src: _b('YXNzZXRzL2ltYWdlcy9ITFRWLU1BUDMuanBlZw==') }
   ];
-  var BLUR = 6; // px — strong enough to obscure content
+  var BLUR = 3; // px — light; images are fake placeholders so this only needs to look redacted
   imgs.forEach(function (item) {
     var canvas = document.getElementById(item.id);
     if (!canvas) return;
