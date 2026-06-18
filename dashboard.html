@@ -705,6 +705,15 @@ function generateReport(uid){
   var sectionDwellVal=secKeys.length?secKeys.sort(function(a,b){return sectionDwell[b]-sectionDwell[a];}).map(function(s){return '<b>'+(SECNAME[s]||s)+'</b>: '+sfmt(sectionDwell[s]);}).join('<br>'):'—';
   var scrollVal=maxScroll?('<b>'+maxScroll+'%</b>'):'—';
 
+  // ── PHASE B: method expand · cta hover · exit section · engagement score ──
+  var methodExpand=ue.some(function(r){return r.event==='method_expand';});
+  var ctaHover=ue.some(function(r){return r.event==='cta_hover';});
+  var lastSec='';
+  ue.forEach(function(r){if(r.event==='section_dwell'||r.event==='section_view'){var s=xe(r).section;if(s)lastSec=s;}});
+  var exitSecVal=lastSec?(SECNAME[lastSec]||lastSec):'—';
+  var engScore=Math.min(100,(tabOrder.length*8)+((tabOrder.indexOf('vault')>-1)?15:0)+(Object.keys(videoData).length*5)+(ctaClicked?25:0)+(ndaAccept?25:(ndaOpen?10:0))+(printEv?10:0)+(sessions>1?10:0)+(maxScroll>=75?5:0));
+  var engVal='<b style="color:'+(engScore>=70?'#16a34a':engScore>=40?'#d97706':'#dc2626')+'">'+engScore+' / 100</b>';
+
   // ── LAYER 2 DATA ────────────────────────────────────────────────────────
   var tooltips={};
   ue.filter(function(r){return r.event==='tooltip_hover';}).forEach(function(r){
@@ -974,6 +983,12 @@ function generateReport(uid){
     dr('Evidence opened',evidenceVal,'Lightbox / modal','Opened HLTV screenshots / Telegram chat = chasing proof.')+
     dr('Time per section',sectionDwellVal,'Section dwell','Where attention actually went, chapter by chapter.')+
     dr('Max scroll depth',scrollVal,'Scroll tracker','How far down the page they got.')+
+
+    sh('Intent & Engagement (computed)','#0891b2')+
+    dr('Engagement score',engVal,'Composite','0–100 across sections, video, NDA, CTA, scroll & return visits.')+
+    dr('Methodology expanded',methodExpand?'<b style="color:#16a34a">YES</b>':'—','Expand toggle','Opened "How Integra detects" — wants the method, not just the verdict.')+
+    dr('CTA hover (pre-click intent)',ctaHover?'<b style="color:#d97706">YES</b>':'—','mouseover','Hovered the pilot CTA — interest even without a click (desktop).')+
+    dr('Exit section',exitSecVal,'Last section seen','Where they dropped off — the weakest hand-off point.')+
 
     '</tbody></table>';
 

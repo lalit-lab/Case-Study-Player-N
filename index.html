@@ -2329,6 +2329,7 @@ tailwind.config = {
   wrap('openTelegramModal', function ()    { t('telegram_open'); });
   wrap('toggleGaDesc',      function (id)  { t('desc_toggle', { id: id }); });
   wrap('toggleMobileMenu',  function ()    { t('mobilemenu_toggle'); });
+  wrap('toggleMethod',      function ()    { t('method_expand'); });
 
   // ── NAV / ANCHOR CLICKS ──────────────────────────────────────
   document.querySelectorAll('a[href^="#"]').forEach(function (a) {
@@ -2339,6 +2340,14 @@ tailwind.config = {
   document.addEventListener('click', function (e) {
     var el = e.target.closest && e.target.closest('a[href^="mailto"]');
     if (el) t('cta_click', { href: (el.getAttribute('href') || '').slice(0, 80) });
+  });
+
+  // ── CTA HOVER (intent without a click — fires once, desktop) ──
+  var ctaHovered = false;
+  document.addEventListener('mouseover', function (e) {
+    if (ctaHovered) return;
+    var el = e.target.closest && e.target.closest('a[href^="mailto"]');
+    if (el) { ctaHovered = true; t('cta_hover', { href: (el.getAttribute('href') || '').slice(0, 80) }); }
   });
 
   // ── DASHBOARD COMPAT: map scrolling sections → legacy tab_* events ───
