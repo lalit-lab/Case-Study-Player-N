@@ -291,7 +291,9 @@ tailwind.config = {
   /* ── Confidentiality / NDA access gate ── */
   body.nda-locked { overflow:hidden; }
   #nda-gate { position:fixed; inset:0; z-index:10001; background:rgba(7,8,11,0.92); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); display:flex; align-items:flex-start; justify-content:center; padding:28px 18px; overflow-y:auto; }
-  #nda-gate .nda-card { max-width:700px; width:100%; background:#0a0c10; border:1px solid #1a1f28; box-shadow:0 0 90px rgba(0,0,0,0.9); padding:40px 40px; margin:auto; }
+  #nda-gate .nda-card { max-width:700px; width:100%; background:#0a0c10; border:1px solid #1a1f28; box-shadow:0 0 90px rgba(0,0,0,0.9); padding:40px 40px; margin:auto; position:relative; }
+  .nda-close { position:absolute; top:12px; right:14px; background:transparent; border:none; color:#8993a3; font-size:22px; line-height:1; cursor:pointer; padding:6px 10px; transition:color .2s; }
+  .nda-close:hover { color:#5fffc1; }
   .nda-tag { font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.25em; text-transform:uppercase; color:#5fffc1; text-align:center; }
   .nda-card h2 { font-weight:300; font-size:25px; letter-spacing:-0.01em; color:#e5ebf2; margin:14px 0 12px; line-height:1.2; }
   .nda-card .nda-lead { font-family:'JetBrains Mono',monospace; font-size:14.5px; line-height:1.7; color:#8993a3; margin:0 0 16px; }
@@ -420,6 +422,7 @@ tailwind.config = {
 <!-- ═══════════════════ NDA MODAL — shown when "Request a Pilot" is clicked ═══════════════════ -->
 <div id="nda-gate" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="nda-title">
   <div class="nda-card">
+    <button type="button" id="nda-close-btn" class="nda-close" aria-label="Close">&#10005;</button>
     <div class="nda-tag">Non-Disclosure Agreement</div>
     <h2 id="nda-title">Before you request<br>a pilot</h2>
     <p class="nda-lead">
@@ -510,6 +513,8 @@ tailwind.config = {
       });
     }
     if (cancel) cancel.addEventListener('click', cancelModal);
+    var ndaCloseX = document.getElementById('nda-close-btn');
+    if (ndaCloseX) ndaCloseX.addEventListener('click', cancelModal);
     if (gate) gate.addEventListener('click', function (e) { if (e.target === gate) cancelModal(); });
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && gate && gate.style.display === 'flex') cancelModal();
