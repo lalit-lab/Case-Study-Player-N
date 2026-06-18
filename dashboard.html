@@ -714,6 +714,10 @@ function generateReport(uid){
   var engScore=Math.min(100,(tabOrder.length*8)+((tabOrder.indexOf('vault')>-1)?15:0)+(Object.keys(videoData).length*5)+(ctaClicked?25:0)+(ndaAccept?25:(ndaOpen?10:0))+(printEv?10:0)+(sessions>1?10:0)+(maxScroll>=75?5:0));
   var engVal='<b style="color:'+(engScore>=70?'#16a34a':engScore>=40?'#d97706':'#dc2626')+'">'+engScore+' / 100</b>';
 
+  // ── PHASE C: client IP (added server-side by track.asp) → geo link ──
+  var ipAddr=''; for(var _i=0;_i<ue.length;_i++){if(ue[_i].ip){ipAddr=ue[_i].ip;break;}}
+  var ipVal=ipAddr?('<a href="https://ipinfo.io/'+esc(ipAddr)+'" target="_blank" style="color:#2563eb;text-decoration:underline">'+esc(ipAddr)+' ↗</a>'):'—';
+
   // ── LAYER 2 DATA ────────────────────────────────────────────────────────
   var tooltips={};
   ue.filter(function(r){return r.event==='tooltip_hover';}).forEach(function(r){
@@ -940,6 +944,7 @@ function generateReport(uid){
       sessions>1?'Re-reading = showing to someone else. Prepare for a group call.':'Single visit — no return signal yet.')+
     dr('First seen / Last seen',firstSeen+' → '+lastSeen,'Server timestamps','Time window of engagement.')+
     dr('Device / screen',deviceVal,'session_start','Mobile vs desktop — tailor your follow-up & what you send.',deviceType==='mobile')+
+    dr('IP / location',ipVal,'track.asp','Click to geolocate (country / city / org) — who & where is viewing.')+
 
     sh('Section Engagement')+
     dr('Time on each section (01–07)',tabDwellVal,'Scroll dwell tracker','Interest weighting across your argument. Longest dwell = deepest conviction.')+

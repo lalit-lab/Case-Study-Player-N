@@ -36,11 +36,19 @@ If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
     Dim tsStr
     tsStr = Year(ts) & "-" & mm & "-" & dd & "T" & hh & ":" & mi & ":" & ss & "Z"
 
+    ' Client IP — prefer Cloudflare / proxy forwarded header, else REMOTE_ADDR
+    Dim clientIp
+    clientIp = Request.ServerVariables("HTTP_CF_CONNECTING_IP")
+    If clientIp = "" Then clientIp = Request.ServerVariables("HTTP_X_FORWARDED_FOR")
+    If clientIp = "" Then clientIp = Request.ServerVariables("REMOTE_ADDR")
+    If InStr(clientIp, ",") > 0 Then clientIp = Trim(Left(clientIp, InStr(clientIp, ",") - 1))
+    clientIp = Replace(clientIp, """", "")
+
     Dim jsonLine
     If Len(body) > 1 Then
-        jsonLine = "{""ts"":""" & tsStr & """," & Mid(body, 2)
+        jsonLine = "{""ts"":""" & tsStr & """,""ip"":""" & clientIp & """," & Mid(body, 2)
     Else
-        jsonLine = "{""ts"":""" & tsStr & """}"
+        jsonLine = "{""ts"":""" & tsStr & """,""ip"":""" & clientIp & """}"
     End If
 
     Dim fso, filePath, f
