@@ -291,20 +291,20 @@ tailwind.config = {
   /* ── Confidentiality / NDA access gate ── */
   body.nda-locked { overflow:hidden; }
   #nda-gate { position:fixed; inset:0; z-index:10001; background:rgba(7,8,11,0.92); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); display:flex; align-items:flex-start; justify-content:center; padding:28px 18px; overflow-y:auto; }
-  #nda-gate .nda-card { max-width:600px; width:100%; background:#0a0c10; border:1px solid #1a1f28; box-shadow:0 0 90px rgba(0,0,0,0.9); padding:34px 32px; margin:auto; }
+  #nda-gate .nda-card { max-width:700px; width:100%; background:#0a0c10; border:1px solid #1a1f28; box-shadow:0 0 90px rgba(0,0,0,0.9); padding:40px 40px; margin:auto; }
   .nda-tag { font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.25em; text-transform:uppercase; color:#5fffc1; }
   .nda-card h2 { font-weight:300; font-size:25px; letter-spacing:-0.01em; color:#e5ebf2; margin:14px 0 12px; line-height:1.2; }
-  .nda-card .nda-lead { font-family:'JetBrains Mono',monospace; font-size:12.5px; line-height:1.7; color:#8993a3; margin:0 0 16px; }
+  .nda-card .nda-lead { font-family:'JetBrains Mono',monospace; font-size:14.5px; line-height:1.7; color:#8993a3; margin:0 0 16px; }
   .nda-key { list-style:none; padding:0; margin:0 0 18px; border-top:1px solid #1a1f28; }
-  .nda-key li { font-family:'JetBrains Mono',monospace; font-size:12px; line-height:1.6; color:#a0a8b4; padding:11px 0 11px 22px; border-bottom:1px solid #1a1f28; position:relative; }
+  .nda-key li { font-family:'JetBrains Mono',monospace; font-size:14px; line-height:1.6; color:#a0a8b4; padding:11px 0 11px 22px; border-bottom:1px solid #1a1f28; position:relative; }
   .nda-key li::before { content:'\27A4'; color:#5fffc1; position:absolute; left:0; top:11px; font-size:10px; }
-  .nda-readlink { display:inline-block; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#5fffc1; border:1px solid #2a8a6c; padding:8px 14px; text-decoration:none; margin-bottom:22px; transition:background .2s; }
+  .nda-readlink { display:inline-block; font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:0.12em; text-transform:uppercase; color:#5fffc1; border:1px solid #2a8a6c; padding:8px 14px; text-decoration:none; margin-bottom:22px; transition:background .2s; }
   .nda-readlink:hover { background:rgba(95,255,193,0.1); }
   .nda-consent { display:flex; gap:12px; align-items:flex-start; margin-bottom:22px; cursor:pointer; }
   .nda-consent input { margin-top:2px; width:16px; height:16px; accent-color:#5fffc1; flex-shrink:0; cursor:pointer; }
-  .nda-consent span { font-family:'JetBrains Mono',monospace; font-size:12px; line-height:1.6; color:#c8cfd9; }
+  .nda-consent span { font-family:'JetBrains Mono',monospace; font-size:14px; line-height:1.6; color:#c8cfd9; }
   .nda-actions { display:flex; gap:12px; flex-wrap:wrap; align-items:stretch; }
-  .nda-btn { font-family:'JetBrains Mono',monospace; font-size:12.5px; letter-spacing:0.16em; text-transform:uppercase; padding:14px 22px; border:1px solid #2a8a6c; background:transparent; color:#8993a3; cursor:pointer; transition:all .2s; }
+  .nda-btn { font-family:'JetBrains Mono',monospace; font-size:14.5px; letter-spacing:0.16em; text-transform:uppercase; padding:14px 22px; border:1px solid #2a8a6c; background:transparent; color:#8993a3; cursor:pointer; transition:all .2s; }
   .nda-btn:hover { color:#e5ebf2; }
   .nda-btn-primary { background:#2a8a6c; color:#07080b; border-color:#2a8a6c; font-weight:600; flex:1; min-width:210px; }
   .nda-btn-primary:disabled { opacity:0.4; cursor:not-allowed; }
@@ -423,15 +423,14 @@ tailwind.config = {
     <div class="nda-tag">● Confidential · Case File 095-X1</div>
     <h2 id="nda-title">Before you request<br>a pilot</h2>
     <p class="nda-lead">
-      A pilot gives you access to full, unredacted case material. That material — and the preview on
-      this page — is shared in confidence under a Confidentiality &amp; Access Agreement. Please review
-      and accept it before we continue to your request.
+      A pilot gives you access to full, unredacted case material. Please review
+      and accept it before we continue your request.
     </p>
     <ul class="nda-key">
-      <li>It is illustrative analysis — <strong>not an allegation, finding, or proof of misconduct</strong> against any person, team, or organisation. The presumption of innocence applies.</li>
+      <li>It is an illustrative analysis — <strong>not an allegation, finding, or proof of misconduct</strong> against any person, team, or organisation. The presumption of innocence applies.</li>
       <!-- <li>You will not copy, screenshot, forward, publish, or otherwise distribute any part of it.</li> -->
-      <li>You will not use it to identify, name, accuse, sanction, or take any action against any individual.</li>
-      <li>You access it as an authorised, named recipient, for evaluation only.</li>
+      <!-- <li>You will not use it to identify, name, accuse, sanction, or take any action against any individual.</li> -->
+      <!-- <li>You access it as an authorised, named recipient, for evaluation only.</li> -->
     </ul>
     <a class="nda-readlink" href="./INTEGRA_NDA.pdf" target="_blank" rel="noopener">Read the full agreement (PDF) ↗</a>
     <label class="nda-consent" for="nda-agree-check">
@@ -754,7 +753,7 @@ tailwind.config = {
     </h1>
 
     <p class="mt-10 max-w-2xl text-smoke text-lg leading-relaxed font-light">
-      Before the map went live, his kill line fell — 15.5 to 13.5, a drop the match odds don't tell.<span class="text-bone"> Integra captured the drift as the very first sign.</span>
+      Before the map 3 went live, his kill line fell — 15.5 to 13.5, a drop the match odds don't tell.<span class="text-bone"> Integra captured the drift as the first sign.</span>
     </p>
 
     <!-- Kill Line explainer + key fact cards -->
@@ -872,7 +871,7 @@ tailwind.config = {
     <!-- INDEX -->
     <div id="perf-panel-index" class="perf-panel hidden border hr-thin border-t-0 bg-ink p-10 md:p-14">
       <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#5fffc1;" class="mb-3">PERFORMANCE INDEX</div>
-      <p class="font-mono text-xs text-mute mb-8">% of career avg baseline — gold line = 100% (normal)</p>
+      <p class="font-mono text-xs text-mute mb-8">% of career avg baseline — % anomaly map 3 >= 40% (KDR, KPR, ADR, ACC)</p>
       <div style="position:relative;height:540px;"><canvas id="perfChart"></canvas></div>
     </div>
 
@@ -1697,7 +1696,7 @@ tailwind.config = {
 
     <!-- Final score bar -->
     <div class="mt-6 border hr-thin bg-ink p-6 reveal">
-      <div class="font-mono text-sm text-bone leading-relaxed"><span style="color:#5fffc1;">➤ </span>These five signals run on every suspicious match — markets, performance, behaviour, chatter and gameplay. On Map 3, all five triggered together: the betting kill line dropped −2.0 pt before the map, it was his 2nd-worst performance of 2025, his aim and reaction drifted past his own baseline, private Telegram chatter named him beforehand, and a detailed review of 6 rounds showed decisions the situation doesn't explain.
+      <div class="font-mono text-sm text-bone leading-relaxed"><span style="color:#5fffc1;">➤ </span>These five signals run on every suspicious match — markets, performance matrix, integrasight, SMT and gameplay. On Map 3, all five triggered together: the betting kill line dropped −2.0 pt before the map, it was his 2nd-worst performance of 2025, his aim and reaction drifted past his own baseline, private Telegram chatter named him beforehand, and a detailed review of 6 rounds showed decisions the situation doesn't explain.
       </div>
     </div>
 
@@ -1712,7 +1711,7 @@ tailwind.config = {
       </p>
 
       <div class="reveal">
-        <a href="mailto:dhruvyadav@integritymentors.in?subject=Integra%20pilot%20—%20095-X1" class="block font-mono text-xs tracking-[.18em] uppercase mb-4 transition-opacity hover:opacity-80" style="color:#ffb454;cursor:pointer;"><span style="color:#5fffc1;">➤ </span>Signing the <span style="text-decoration:underline;text-underline-offset:3px;">NDA</span> is compulsory</a>
+        <a href="mailto:dhruvyadav@integritymentors.in?subject=Integra%20pilot%20—%20095-X1" class="block font-mono text-xs tracking-[.18em] uppercase mb-4 transition-opacity hover:opacity-80" style="color:#ffb454;cursor:pointer;"><span style="color:#5fffc1;">➤ </span>Signing the <span style="text-decoration:underline;text-underline-offset:3px;">NDA</span> is mandatory</a>
         <a href="mailto:dhruvyadav@integritymentors.in?subject=Integra%20pilot%20—%20095-X1"
            class="inline-flex items-center gap-4 px-10 py-5 bg-signal text-ink font-mono text-sm tracking-[.18em] uppercase font-semibold hover:bg-bone transition-colors">
           Request a Pilot →
