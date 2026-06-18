@@ -660,6 +660,51 @@ function generateReport(uid){
     timeToCta=Math.round((new Date(ctaEv.ts)-new Date(sessionStartEv.ts))/1000);
   }
 
+  // ── NEW EVENTS: NDA funnel · device · sights · evidence · section dwell · scroll ──
+  var ndaOpen=ue.filter(function(r){return r.event==='nda_open';}).length;
+  var ndaPdf=ue.some(function(r){return r.event==='nda_pdf_click';});
+  var ndaCheck=ue.some(function(r){return r.event==='nda_agree_check';});
+  var ndaAccept=ue.some(function(r){return r.event==='nda_accept';});
+  var ndaCancel=ue.filter(function(r){return r.event==='nda_cancel';}).length;
+
+  var dev=xe(sessionStartEv||{});
+  var deviceType=dev.device||'';
+  var viewport=(dev.vw&&dev.vh)?(dev.vw+'×'+dev.vh):'';
+  var referrer=dev.ref||'';
+
+  var SIGHTNAME={drift:'Crosshair',reflex:'Reflex',watch:'Suppress',phantom:'Phantom'};
+  var sightDwell={};
+  ue.filter(function(r){return r.event==='sight_dwell';}).forEach(function(r){var s=xe(r).sight||'';if(s)sightDwell[s]=(sightDwell[s]||0)+(xe(r).ms||0);});
+  var sightOpens={};
+  ue.forEach(function(r){var m=(r.event||'').match(/^sight_(drift|reflex|watch|phantom)$/);if(m)sightOpens[m[1]]=(sightOpens[m[1]]||0)+1;});
+
+  var lightboxes=ue.filter(function(r){return r.event==='lightbox_open';}).map(function(r){return xe(r).img||'image';});
+  var telegramOpen=ue.some(function(r){return r.event==='telegram_open';});
+
+  var SECNAME={'chapter-02':'Method/Case','hero':'Market Drift','chapter-03':'Performance','chapter-04':'IntegraSight','chapter-05':'Surveillance','chapter-06':'Gameplay','chapter-07':'Summary'};
+  var sectionDwell={};
+  ue.filter(function(r){return r.event==='section_dwell';}).forEach(function(r){var s=xe(r).section||'';if(s)sectionDwell[s]=(sectionDwell[s]||0)+(xe(r).ms||0);});
+  var maxScroll=0;
+  ue.forEach(function(r){if(r.event==='scroll_depth'){var p=xe(r).pct||0;if(p>maxScroll)maxScroll=p;}});
+
+  // ── value strings for the new panels ──
+  var deviceVal=deviceType?('<b>'+esc(deviceType.toUpperCase())+'</b>'+(viewport?' · '+esc(viewport):'')+(referrer?'<br><span style="font-size:11px;color:#64748b">ref: '+esc(referrer.slice(0,50))+'</span>':'')):(viewport?esc(viewport):'—');
+  var ndaStageVal=
+    '<span style="color:'+(ndaOpen?'#1e3a5f':'#94a3b8')+'">Opened gate: '+(ndaOpen?'<b>'+ndaOpen+'×</b>':'—')+'</span><br>'+
+    '<span style="color:'+(ndaPdf?'#1e3a5f':'#94a3b8')+'">Read full PDF: '+(ndaPdf?'<b>YES</b>':'—')+'</span><br>'+
+    '<span style="color:'+(ndaCheck?'#1e3a5f':'#94a3b8')+'">Ticked agree: '+(ndaCheck?'<b>YES</b>':'—')+'</span><br>'+
+    '<span style="color:'+(ndaAccept?'#16a34a':'#94a3b8')+'">Accepted: '+(ndaAccept?'<b>✅ YES</b>':'—')+'</span><br>'+
+    '<span style="color:'+(ndaCancel?'#dc2626':'#94a3b8')+'">Cancelled: '+(ndaCancel?'<b>'+ndaCancel+'×</b>':'—')+'</span>';
+  var sightKeys=[...new Set(Object.keys(sightOpens).concat(Object.keys(sightDwell)))];
+  var sightVal=sightKeys.length?sightKeys.map(function(s){return '<b>'+(SIGHTNAME[s]||s)+'</b>: '+(sightDwell[s]?sfmt(sightDwell[s]):'opened');}).join('<br>'):'—';
+  var evArr=[];
+  if(lightboxes.length)evArr.push('HLTV: '+[...new Set(lightboxes)].map(esc).join(', '));
+  if(telegramOpen)evArr.push('Telegram modal: <b>opened</b>');
+  var evidenceVal=evArr.length?evArr.join('<br>'):'—';
+  var secKeys=Object.keys(sectionDwell);
+  var sectionDwellVal=secKeys.length?secKeys.sort(function(a,b){return sectionDwell[b]-sectionDwell[a];}).map(function(s){return '<b>'+(SECNAME[s]||s)+'</b>: '+sfmt(sectionDwell[s]);}).join('<br>'):'—';
+  var scrollVal=maxScroll?('<b>'+maxScroll+'%</b>'):'—';
+
   // ── LAYER 2 DATA ────────────────────────────────────────────────────────
   var tooltips={};
   ue.filter(function(r){return r.event==='tooltip_hover';}).forEach(function(r){
@@ -774,6 +819,15 @@ function generateReport(uid){
       'Viewing on a small screen. Tables and charts may have been hard to read.',
       'Send a PDF summary or verify mobile layout is intact.');
 
+  if(ndaAccept)
+    rec(0,'📝','CRITICAL','Accepted the NDA — serious pilot intent',
+      uid+' read & accepted the Confidentiality Agreement — an explicit hand-raise to proceed.',
+      'Hot lead. Send the pilot agreement + next steps today.');
+  else if(ndaOpen)
+    rec(1,'📄','HIGH','Opened the NDA gate but did not accept ('+ndaOpen+'×)',
+      'Reached the confidentiality gate — evaluating seriously, hesitated at the terms.',
+      'Follow up on confidentiality/terms; offer to walk through the agreement on a call.');
+
   recs.sort(function(a,b){return a.p-b.p;});
 
   // ── HTML HELPERS ─────────────────────────────────────────────────────────
@@ -876,14 +930,15 @@ function generateReport(uid){
       'Cookie / localStorage',
       sessions>1?'Re-reading = showing to someone else. Prepare for a group call.':'Single visit — no return signal yet.')+
     dr('First seen / Last seen',firstSeen+' → '+lastSeen,'Server timestamps','Time window of engagement.')+
+    dr('Device / screen',deviceVal,'session_start','Mobile vs desktop — tailor your follow-up & what you send.',deviceType==='mobile')+
 
-    sh('Tab Engagement')+
-    dr('Time on each tab (01–05)',tabDwellVal,'Page-level dwell tracker','Interest weighting across your argument. Longest dwell = deepest conviction.')+
-    dr('Tab visit order',
+    sh('Section Engagement')+
+    dr('Time on each section (01–07)',tabDwellVal,'Scroll dwell tracker','Interest weighting across your argument. Longest dwell = deepest conviction.')+
+    dr('Section visit order',
       tabSeqLabels.length?tabSeqLabels.join(' → '):'—',
-      'Sidebar nav clicks',
+      'Scroll-into-view order',
       patternStr)+
-    dr('Reached Tab 05 (Action Analysis)',
+    dr('Reached Gameplay (video evidence)',
       reachedVault?'<b style="color:#16a34a">YES — visited</b>':'<span style="color:#dc2626">NO — did not reach</span>',
       'Funnel pass-through',
       reachedVault?'Completed the full funnel. Saw the video evidence.':'Dropped before video evidence. Consider restructuring the funnel.')+
@@ -901,6 +956,9 @@ function generateReport(uid){
     dr('Copy + selection text',copyVal,'copy event','What they wanted to verify or paste in Slack. Shows active fact-checking.')+
     dr('Tab focus-out > 30s',focusVal,'visibilitychange','Went to research something or pull in a colleague.')+
 
+    sh('Confidentiality · NDA Gate','#7c3aed')+
+    dr('NDA funnel',ndaStageVal,'NDA modal','The pilot-request gate. "Accepted" = explicit intent to proceed.',ndaAccept)+
+
     sh('Content Engagement')+
     dr('Video plays & watch % per clip',videoPlaysVal,'Action Analysis tab','Which rounds resonated, which were skipped.')+
     dr('Video replays',videoReplayVal,'Action Analysis tab','A replay is a stronger signal than a first play. High conviction on specific round.')+
@@ -912,6 +970,10 @@ function generateReport(uid){
       intelCrosslink?'<b style="color:#16a34a">YES — followed thread</b>':'—',
       'Profile tab → Intel',
       'The reader followed the evidence trail = engaged, high-intent.')+
+    dr('IntegraSight — sights opened',sightVal,'Sight tabs','Which behavioural test (Crosshair/Reflex/Suppress) they dug into.')+
+    dr('Evidence opened',evidenceVal,'Lightbox / modal','Opened HLTV screenshots / Telegram chat = chasing proof.')+
+    dr('Time per section',sectionDwellVal,'Section dwell','Where attention actually went, chapter by chapter.')+
+    dr('Max scroll depth',scrollVal,'Scroll tracker','How far down the page they got.')+
 
     '</tbody></table>';
 
