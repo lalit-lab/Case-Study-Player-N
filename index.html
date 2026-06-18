@@ -489,8 +489,8 @@ tailwind.config = {
 
     // Intercept every "Request a Pilot" click (nav, mobile menu, and the main CTA).
     document.addEventListener('click', function (e) {
-      var a = e.target.closest && e.target.closest('a[href^="mailto"]');
-      if (a && isPilotLink(a)) { e.preventDefault(); openModal(a.getAttribute('href')); }
+      var a = e.target.closest && e.target.closest('a[data-nda-gate]');
+      if (a) { e.preventDefault(); openModal(a.getAttribute('href')); }
     }, true);
 
     // "Read the full agreement (PDF)" link
@@ -1716,7 +1716,7 @@ tailwind.config = {
       </p>
 
       <div class="reveal">
-        <a href="mailto:dhruvyadav@integritymentors.in?subject=Integra%20pilot%20—%20095-X1" class="block font-mono text-xs tracking-[.18em] uppercase mb-4 transition-opacity hover:opacity-80" style="color:#ffb454;cursor:pointer;"><span style="color:#5fffc1;">➤ </span>Signing the <span style="text-decoration:underline;text-underline-offset:3px;">NDA</span> is mandatory</a>
+        <a href="mailto:dhruvyadav@integritymentors.in?subject=Integra%20pilot%20—%20095-X1" data-nda-gate class="block font-mono text-xs tracking-[.18em] uppercase mb-4 transition-opacity hover:opacity-80" style="color:#ffb454;cursor:pointer;"><span style="color:#5fffc1;">➤ </span>Signing the <span style="text-decoration:underline;text-underline-offset:3px;">NDA</span> is mandatory</a>
         <a href="mailto:dhruvyadav@integritymentors.in?subject=Integra%20pilot%20—%20095-X1"
            class="inline-flex items-center gap-4 px-10 py-5 bg-signal text-ink font-mono text-sm tracking-[.18em] uppercase font-semibold hover:bg-bone transition-colors">
           Request a Pilot →
@@ -1734,7 +1734,7 @@ tailwind.config = {
 
     <div class="reveal mb-6">
       <div class="chapter-num text-sm mb-4"><span style="color:#5fffc1;">➤ </span>EDUCATION PROGRAMME</div>
-      <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em] max-w-3xl">Stop the next case<br>before it <span style="color:#5fffc1;">starts.</span></h2>
+      <h2 class="font-light text-4xl md:text-5xl tracking-[-0.02em] max-w-3xl">Education is First<br>line of defence.<span style="color:#5fffc1;"></span></h2>
     </div>
 
     <p class="font-mono text-sm text-smoke max-w-2xl mt-6 mb-14 reveal leading-relaxed">
