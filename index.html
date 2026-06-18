@@ -2341,6 +2341,31 @@ tailwind.config = {
     if (el) t('cta_click', { href: (el.getAttribute('href') || '').slice(0, 80) });
   });
 
+  // ── DASHBOARD COMPAT: map scrolling sections → legacy tab_* events ───
+  // dashboard.html was built for the old tabbed UI (profile/market/perf/intel/
+  // vault). Emit the same tab_dwell / tab_bounce / tab_return / tab_<id> events
+  // as chapters scroll into view, so the existing dashboard works unchanged.
+  // DOM order chapter-02→hero→03→04→05→06 maps to profile→market→perf→intel→vault.
+  var SEC2TAB = { 'chapter-02':'profile', 'hero':'market', 'chapter-03':'perf', 'chapter-04':'perf', 'chapter-05':'intel', 'chapter-06':'vault' };
+  var curTab = null, curTabEnter = 0, tabsVisited = {}, tabOrderArr = [];
+  function tabSwitch(tab) {
+    if (!tab || tab === curTab) return;
+    var now = Date.now();
+    if (curTab) {
+      var dwell = now - curTabEnter;
+      t('tab_dwell', { tab: curTab, ms: dwell });
+      if (dwell < 5000) t('tab_bounce', { tab: curTab, ms: dwell });
+    }
+    if (tabsVisited[tab]) t('tab_return', { tab: tab, times: tabsVisited[tab] + 1 });
+    tabsVisited[tab] = (tabsVisited[tab] || 0) + 1;
+    tabOrderArr.push(tab);
+    t('tab_' + tab, { order: tabOrderArr.join('→'), n: tabOrderArr.length });
+    curTab = tab; curTabEnter = now;
+  }
+  function flushTab() {
+    if (curTab) { t('tab_dwell', { tab: curTab, ms: Date.now() - curTabEnter }); curTab = null; }
+  }
+
   // ── SECTION VIEW (first view) + DWELL (time spent per chapter) ───────
   var seenSection = {};
   var sectionEnter = {};
@@ -2356,6 +2381,7 @@ tailwind.config = {
       if (e.isIntersecting) {
         if (!seenSection[e.target.id]) { seenSection[e.target.id] = 1; t('section_view', { section: e.target.id }); }
         if (!sectionEnter[e.target.id]) sectionEnter[e.target.id] = Date.now();
+        tabSwitch(SEC2TAB[e.target.id]);   // drive the legacy tab funnel for dashboard.html
       } else {
         flushSection(e.target.id);
       }
@@ -2493,6 +2519,7 @@ tailwind.config = {
   // last / max duration per cid+visit.
   function sendSessionEnd() {
     flushSections();   // capture dwell for whatever chapter is on-screen at exit
+    flushTab();        // capture the final tab dwell for the dashboard funnel
     var dur = Math.round((Date.now() - sessionStartTime) / 1000);
     var payload = JSON.stringify({ cid: cid, event: 'session_end', extra: { duration_s: dur, max_depth: maxDepth }, visit: visits, url: location.pathname });
     try {
