@@ -28,7 +28,7 @@
 <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
 <script>
 tailwind.config = {
@@ -427,7 +427,7 @@ tailwind.config = {
   .nda-mtab.active { background:#2a8a6c; color:#07080b; border-color:#2a8a6c; font-weight:600; }
   .nda-mpanel { margin-bottom:6px; }
   .nda-mpanel input[type=text] { width:100%; background:#07080b; border:1px solid #1a1f28; color:#e5ebf2; font-family:'JetBrains Mono',monospace; font-size:14px; padding:10px 11px; border-radius:2px; }
-  .nda-sigprev { min-height:54px; margin-top:8px; padding:6px 12px; border:1px dashed #2a8a6c; color:#e5ebf2 !important; font-family:'Segoe Script','Brush Script MT','Bradley Hand',cursive !important; font-size:34px; line-height:1.4; }
+  .nda-sigprev { min-height:54px; margin-top:8px; padding:6px 12px; border:1px dashed #2a8a6c; color:#e5ebf2 !important; font-family:'Dancing Script','Segoe Script','Brush Script MT',cursive !important; font-size:32px; line-height:1.4; }
   #nda-canvas { width:100%; height:150px; background:#07080b; border:1px solid #2a8a6c; border-radius:2px; touch-action:none; cursor:crosshair; display:block; }
   .nda-mini { margin-top:8px; background:transparent; border:1px solid #1a1f28; color:#8993a3; font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.1em; padding:6px 12px; cursor:pointer; }
   .nda-mpanel input[type=file] { color:#c8cfd9; font-family:'JetBrains Mono',monospace; font-size:12.5px; }
@@ -451,6 +451,7 @@ tailwind.config = {
   .ndoc-sigimg { min-height:60px; border-bottom:1px solid #333; margin-bottom:10px; }
   .ndoc-field { font-size:12px; margin-bottom:9px; border-bottom:1px solid #ccc; padding-bottom:3px; min-height:19px; }
   .ndoc-attest { margin-top:18px; padding-top:8px; border-top:1px solid #ccc; font-size:10px; font-style:italic; }
+  #nda-doc .ndoc-sig-typed, #nda-doc-view .ndoc-sig-typed, .nda-doc-print .ndoc-sig-typed { font-family:'Dancing Script','Segoe Script',cursive !important; font-size:30px; }
   #nda-doc-overlay { position:fixed; inset:0; z-index:10003; background:rgba(7,8,11,0.9); display:none; align-items:center; justify-content:center; padding:18px; }
   .nda-doc-shell { width:100%; max-width:840px; max-height:92vh; display:flex; flex-direction:column; box-shadow:0 0 80px rgba(0,0,0,.85); }
   .nda-doc-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; background:#0c0e13; border:1px solid #1a1f28; padding:10px 14px; }
@@ -507,6 +508,7 @@ tailwind.config = {
       </div>
       <div class="nda-mpanel" id="nda-mp-upload" hidden>
         <input type="file" id="nda-file" accept=".pdf,image/*">
+        <button type="button" id="nda-file-clear" class="nda-mini" style="display:none;margin-left:8px">Remove file ✕</button>
         <div class="nda-hint">Print the NDA, sign it, then scan / photo &amp; upload (PDF or image).</div>
       </div>
       <div class="nda-err" id="nda-err"></div>
@@ -634,9 +636,13 @@ tailwind.config = {
       set('nda-doc-email', payload.email); set('nda-doc-date', payload.date); set('nda-doc-eff', payload.date);
       var sg = g('nda-doc-sig');
       if (sg) {
-        var u = getSigImgUrl(payload);
-        if (u) sg.innerHTML = '<img src="' + u + '" alt="signature" style="max-height:58px;max-width:280px">';
-        else sg.textContent = (payload.method === 'upload') ? ('Signed via uploaded document: ' + (payload.uploadName || 'file')) : '(electronically accepted)';
+        if (payload.method === 'type') {
+          sg.innerHTML = '<span class="ndoc-sig-typed">' + (payload.typed || payload.name || '') + '</span>';
+        } else if (payload.method === 'draw' && payload.signature) {
+          sg.innerHTML = '<img src="' + payload.signature + '" alt="signature" style="max-height:58px;max-width:280px">';
+        } else if (payload.method === 'upload') {
+          sg.textContent = 'Signed via uploaded document: ' + (payload.uploadName || 'file');
+        } else { sg.textContent = '(electronically accepted)'; }
       }
       var at = g('nda-doc-attest');
       if (at) at.textContent = payload.name
@@ -662,10 +668,11 @@ tailwind.config = {
         + '.ndoc-sigimg{min-height:60px;border-bottom:1px solid #333;margin-bottom:10px;}'
         + '.ndoc-sigimg img{max-height:58px;max-width:280px;}'
         + '.ndoc-field{font-size:12px;margin-bottom:9px;border-bottom:1px solid #ccc;padding-bottom:3px;}'
-        + '.ndoc-attest{margin-top:18px;padding-top:8px;border-top:1px solid #ccc;font-size:10px;font-style:italic;color:#555;}';
+        + '.ndoc-attest{margin-top:18px;padding-top:8px;border-top:1px solid #ccc;font-size:10px;font-style:italic;color:#555;}'
+        + '.ndoc-sig-typed{font-family:"Dancing Script","Segoe Script",cursive;font-size:30px;}';
     }
     function buildSignedHtml(){
-      return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Integra NDA - 095-X1</title><style>' + ndaStyleCss() + '</style></head><body>' + g('nda-doc').innerHTML + '</body></html>';
+      return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Integra NDA - 095-X1</title><link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet"><style>' + ndaStyleCss() + '</style></head><body>' + g('nda-doc').innerHTML + '</body></html>';
     }
     function printNdaDoc(){
       var html = buildSignedHtml();
@@ -744,7 +751,7 @@ tailwind.config = {
       var pl = { name:((g('nda-f-name')||{}).value||'').trim(), email:((g('nda-f-email')||{}).value||'').trim(),
         org:((g('nda-f-org')||{}).value||'').trim(), date:((g('nda-f-date')||{}).value||'').trim(),
         caseRef:'095-X1', method:sigMethod, ip:clientIp, signature:'', upload:'', uploadName:'' };
-      if (sigMethod==='type'){ var t=((g('nda-typed')||{}).value||'').trim(); if(t) pl.signature=typedToImage(t); }
+      if (sigMethod==='type'){ var t=((g('nda-typed')||{}).value||'').trim(); if(t){ pl.signature=typedToImage(t); pl.typed=t; } }
       else if (sigMethod==='draw'){ if(ndaDrew && ndaCanvas) pl.signature=ndaCanvas.toDataURL('image/png'); }
       else { var f=(g('nda-file')||{}).files; if(f&&f[0]) pl.uploadName=f[0].name; }
       return pl;
@@ -755,11 +762,14 @@ tailwind.config = {
       showErr(''); fillNdaDoc(pl); openDocViewer();
     }
     var pvBtn = g('nda-preview-btn'); if (pvBtn) pvBtn.addEventListener('click', previewSignature);
+    var fileInput = g('nda-file'), fileClear = g('nda-file-clear');
+    if (fileInput) fileInput.addEventListener('change', function(){ if (fileClear) fileClear.style.display = (fileInput.files && fileInput.files.length) ? 'inline-block' : 'none'; });
+    if (fileClear) fileClear.addEventListener('click', function(){ if (fileInput) { fileInput.value=''; } fileClear.style.display='none'; });
 
     if (cancel) cancel.addEventListener('click', cancelModal);
     var ndaCloseX = document.getElementById('nda-close-btn');
     if (ndaCloseX) ndaCloseX.addEventListener('click', cancelModal);
-    if (gate) gate.addEventListener('click', function (e) { if (e.target === gate) cancelModal(); });
+    // Backdrop click does NOT close the modal (prevents losing a part-filled form).
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && gate && gate.style.display === 'flex') cancelModal();
     });
