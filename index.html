@@ -661,10 +661,14 @@ tailwind.config = {
       return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Integra NDA - 095-X1</title><style>' + ndaStyleCss() + '</style></head><body>' + g('nda-doc').innerHTML + '</body></html>';
     }
     function printNdaDoc(){
+      var html = buildSignedHtml();
       var w = window.open('', '_blank');
       if (!w) { showErr('Please allow pop-ups, then click Download again.'); return; }
-      w.document.open(); w.document.write(buildSignedHtml()); w.document.close(); w.focus();
-      setTimeout(function(){ try { w.print(); } catch(e) {} }, 400);
+      w.document.open(); w.document.write(html); w.document.close();
+      var did = false;
+      function go(){ if (did) return; did = true; try { w.focus(); w.print(); } catch(e) {} }
+      w.onload = go;
+      setTimeout(go, 800);
     }
     // Viewer buttons live at end of <body> (added after this script runs) -> use delegated clicks.
     document.addEventListener('click', function (e) {
