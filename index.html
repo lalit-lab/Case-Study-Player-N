@@ -437,8 +437,8 @@ tailwind.config = {
 
   /* ── NDA document (white legal doc) + viewer overlay ── */
   #nda-doc { position:fixed; left:-10000px; top:0; width:760px; background:#fff; padding:46px 52px; box-sizing:border-box; }
-  #nda-doc, #nda-doc-view { background:#fff; }
-  #nda-doc *, #nda-doc-view * { font-family:Georgia,'Times New Roman',serif !important; color:#1a1a1a !important; }
+  #nda-doc, #nda-doc-view, .nda-doc-print { background:#fff; }
+  #nda-doc *, #nda-doc-view *, .nda-doc-print * { font-family:Georgia,'Times New Roman',serif !important; color:#1a1a1a !important; }
   .ndoc-brand { font-weight:bold; letter-spacing:.22em; font-size:12px; color:#888 !important; }
   .ndoc-title { font-size:20px; font-weight:bold; margin-top:6px; }
   .ndoc-sub { font-size:12px; color:#666 !important; margin-bottom:14px; }
@@ -643,10 +643,17 @@ tailwind.config = {
     }
     function downloadDataUri(uri, name){ var a = document.createElement('a'); a.href = uri; a.download = name; document.body.appendChild(a); a.click(); a.remove(); }
     function genSignedPdf(cb){
-      var el = g('nda-doc');
-      if (!el || typeof html2pdf === 'undefined') { cb(''); return; }
-      html2pdf().set({ margin:12, image:{type:'jpeg',quality:0.95}, html2canvas:{scale:2, backgroundColor:'#ffffff'}, jsPDF:{unit:'mm', format:'a4', orientation:'portrait'}, pagebreak:{mode:['css','legacy']} })
-        .from(el).toPdf().get('pdf').then(function(pdf){ try { cb(pdf.output('datauristring')); } catch(e) { cb(''); } }).catch(function(){ cb(''); });
+      var src = g('nda-doc');
+      if (!src || typeof html2pdf === 'undefined') { cb(''); return; }
+      var tmp = document.createElement('div');
+      tmp.className = 'nda-doc-print';
+      tmp.innerHTML = src.innerHTML;
+      tmp.style.cssText = 'position:fixed;left:0;top:0;width:760px;background:#ffffff;padding:46px 52px;box-sizing:border-box;z-index:2147483647;';
+      document.body.appendChild(tmp);
+      var done = function(uri){ try { document.body.removeChild(tmp); } catch(e) {} cb(uri || ''); };
+      html2pdf().set({ margin:12, image:{type:'jpeg',quality:0.95}, html2canvas:{scale:2, backgroundColor:'#ffffff', useCORS:true}, jsPDF:{unit:'mm', format:'a4', orientation:'portrait'}, pagebreak:{mode:['css','legacy']} })
+        .from(tmp).toPdf().get('pdf').then(function(pdf){ var u=''; try { u = pdf.output('datauristring'); } catch(e) {} done(u); })
+        .catch(function(){ done(''); });
     }
     // Viewer buttons live at end of <body> (added after this script runs) -> use delegated clicks.
     document.addEventListener('click', function (e) {
