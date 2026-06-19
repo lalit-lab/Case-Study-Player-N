@@ -494,15 +494,11 @@ tailwind.config = {
         <label class="nda-field">Date<input type="text" id="nda-f-date"></label>
       </div>
       <div class="nda-mtabs">
-        <button type="button" class="nda-mtab active" data-m="type">Type</button>
-        <button type="button" class="nda-mtab" data-m="draw">Draw</button>
+        <button type="button" class="nda-mtab active" data-m="draw">Draw signature</button>
         <button type="button" class="nda-mtab" data-m="upload">Upload signed</button>
       </div>
-      <div class="nda-mpanel" id="nda-mp-type">
-        <input type="text" id="nda-typed" placeholder="Type your full name to sign">
-        <div class="nda-sigprev" id="nda-sigprev"></div>
-      </div>
-      <div class="nda-mpanel" id="nda-mp-draw" hidden>
+      <div class="nda-mpanel" id="nda-mp-draw">
+        <div class="nda-hint" style="margin-top:0;margin-bottom:6px">Draw your signature below (mouse or finger):</div>
         <canvas id="nda-canvas" width="600" height="150"></canvas>
         <button type="button" id="nda-clear" class="nda-mini">Clear</button>
       </div>
@@ -582,7 +578,7 @@ tailwind.config = {
 
     /* ===== NDA signing: Type / Draw / Upload -> Google Sheet (Apps Script) ===== */
     var ENDPOINT = 'https://script.google.com/macros/s/AKfycbz-tJGMGSJV51NxE1NQs-ikz4rGieBA_QV671-57v-HLPfHNP-YdRdR2mOGOaWf5QfmAw/exec';   // <-- apna Apps Script Web App URL yahan daalo
-    var sigMethod = 'type';
+    var sigMethod = 'draw';
     var ndaDrew = false;
     var clientIp = '';
     try { fetch('https://api.ipify.org?format=json').then(function(r){return r.json();}).then(function(j){ clientIp = j.ip || ''; }).catch(function(){}); } catch(e) {}
