@@ -25,6 +25,7 @@
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -433,6 +434,30 @@ tailwind.config = {
   .nda-hint { font-family:'JetBrains Mono',monospace; font-size:11.5px; color:#8993a3; margin-top:8px; line-height:1.5; }
   .nda-err { font-family:'JetBrains Mono',monospace; font-size:12px; color:#ffb454; min-height:16px; margin-top:6px; }
   @media (max-width:640px){ .nda-grid { grid-template-columns:1fr; } }
+
+  /* ── NDA document (white legal doc) + viewer overlay ── */
+  #nda-doc { position:fixed; left:-10000px; top:0; width:760px; background:#fff; padding:46px 52px; box-sizing:border-box; }
+  #nda-doc, #nda-doc-view { background:#fff; }
+  #nda-doc *, #nda-doc-view * { font-family:Georgia,'Times New Roman',serif !important; color:#1a1a1a !important; }
+  .ndoc-brand { font-weight:bold; letter-spacing:.22em; font-size:12px; color:#888 !important; }
+  .ndoc-title { font-size:20px; font-weight:bold; margin-top:6px; }
+  .ndoc-sub { font-size:12px; color:#666 !important; margin-bottom:14px; }
+  .ndoc-h { font-size:13px; font-weight:bold; margin:14px 0 4px; }
+  .ndoc-p { font-size:12px; line-height:1.55; margin:0 0 8px; text-align:justify; }
+  .ndoc-sigwrap { display:flex; gap:30px; margin-top:26px; }
+  .ndoc-sigcol { flex:1; }
+  .ndoc-sigh { font-size:11px; font-weight:bold; letter-spacing:.05em; margin-bottom:10px; }
+  .ndoc-line { border-bottom:1px solid #333; min-height:24px; margin-bottom:14px; font-size:10px; color:#999 !important; }
+  .ndoc-sigimg { min-height:60px; border-bottom:1px solid #333; margin-bottom:10px; }
+  .ndoc-field { font-size:12px; margin-bottom:9px; border-bottom:1px solid #ccc; padding-bottom:3px; min-height:19px; }
+  #nda-doc-overlay { position:fixed; inset:0; z-index:10003; background:rgba(7,8,11,0.9); display:none; align-items:center; justify-content:center; padding:18px; }
+  .nda-doc-shell { width:100%; max-width:840px; max-height:92vh; display:flex; flex-direction:column; box-shadow:0 0 80px rgba(0,0,0,.85); }
+  .nda-doc-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; background:#0c0e13; border:1px solid #1a1f28; padding:10px 14px; }
+  .nda-doc-title { font-family:'JetBrains Mono',monospace !important; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:#5fffc1 !important; }
+  .nda-doc-btn { font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; padding:7px 11px; border:1px solid #2a8a6c; background:transparent; color:#5fffc1; cursor:pointer; margin-left:6px; }
+  .nda-doc-btn:hover { background:rgba(95,255,193,.12); }
+  .nda-doc-scroll { flex:1; overflow:auto; background:#fff; padding:36px 42px; }
+  @media (max-width:640px){ .nda-doc-scroll { padding:20px 16px; } }
 </style>
 </head>
 
@@ -541,7 +566,7 @@ tailwind.config = {
 
     // "Read the full agreement (PDF)" link
     var readlink = document.querySelector('.nda-readlink');
-    if (readlink) readlink.addEventListener('click', function () { ndaTrack('nda_pdf_click'); });
+    if (readlink) readlink.addEventListener('click', function (e) { e.preventDefault(); ndaTrack('nda_pdf_click'); openDocViewer(); });
 
     if (cb && accept) {
       cb.addEventListener('change', function () {
@@ -552,7 +577,7 @@ tailwind.config = {
     }
 
     /* ===== NDA signing: Type / Draw / Upload -> Google Sheet (Apps Script) ===== */
-    var ENDPOINT = 'PASTE_APPS_SCRIPT_WEB_APP_URL_HERE';   // <-- apna Apps Script Web App URL yahan daalo
+    var ENDPOINT = 'https://script.google.com/macros/s/AKfycbz-tJGMGSJV51NxE1NQs-ikz4rGieBA_QV671-57v-HLPfHNP-YdRdR2mOGOaWf5QfmAw/exec';   // <-- apna Apps Script Web App URL yahan daalo
     var sigMethod = 'type';
     var ndaDrew = false;
     var clientIp = '';
@@ -595,25 +620,65 @@ tailwind.config = {
       x.fillStyle = '#e5ebf2'; x.font = '48px \'Segoe Script\',\'Brush Script MT\',cursive'; x.textBaseline = 'middle';
       x.fillText(text || '', 20, 80); return c.toDataURL('image/png');
     }
+    var _ndaPdfUri = '';
+    function getSigImgUrl(payload){
+      if (payload.signature) return payload.signature;
+      if (payload.upload && /^data:image\//.test(payload.upload)) return payload.upload;
+      return '';
+    }
+    function fillNdaDoc(payload){
+      function set(id,v){ var el = g(id); if (el) el.textContent = v || ''; }
+      set('nda-doc-name', payload.name); set('nda-doc-org', payload.org);
+      set('nda-doc-email', payload.email); set('nda-doc-date', payload.date); set('nda-doc-eff', payload.date);
+      var sg = g('nda-doc-sig');
+      if (sg) {
+        var u = getSigImgUrl(payload);
+        if (u) sg.innerHTML = '<img src="' + u + '" alt="signature" style="max-height:58px;max-width:280px">';
+        else sg.textContent = (payload.method === 'upload') ? ('Signed via uploaded document: ' + (payload.uploadName || 'file')) : '(electronically accepted)';
+      }
+    }
+    function openDocViewer(){
+      var ov = g('nda-doc-overlay'), area = g('nda-doc-view'), src = g('nda-doc');
+      if (ov && area && src) { area.innerHTML = src.innerHTML; ov.style.display = 'flex'; }
+    }
+    function downloadDataUri(uri, name){ var a = document.createElement('a'); a.href = uri; a.download = name; document.body.appendChild(a); a.click(); a.remove(); }
+    function genSignedPdf(cb){
+      var el = g('nda-doc');
+      if (!el || typeof html2pdf === 'undefined') { cb(''); return; }
+      html2pdf().set({ margin:12, image:{type:'jpeg',quality:0.95}, html2canvas:{scale:2, backgroundColor:'#ffffff'}, jsPDF:{unit:'mm', format:'a4', orientation:'portrait'}, pagebreak:{mode:['css','legacy']} })
+        .from(el).toPdf().get('pdf').then(function(pdf){ try { cb(pdf.output('datauristring')); } catch(e) { cb(''); } }).catch(function(){ cb(''); });
+    }
+    var docClose = g('nda-doc-close-btn'); if (docClose) docClose.addEventListener('click', function(){ var ov = g('nda-doc-overlay'); if (ov) ov.style.display = 'none'; });
+    var docDl = g('nda-doc-dl-btn'); if (docDl) docDl.addEventListener('click', function(){ showErr(''); genSignedPdf(function(uri){ if (uri) downloadDataUri(uri, 'Integra-NDA.pdf'); }); });
+
     function ndaFinish(){
       var card = document.querySelector('#nda-gate .nda-card');
       if (!card) return;
       card.innerHTML = '<div class="nda-tag" style="text-align:center">Non-Disclosure Agreement</div>'
-        + '<div style="text-align:center;padding:26px 4px">'
-        + '<div style="font-size:46px;line-height:1;color:#5fffc1;margin-bottom:14px">&#10003;</div>'
+        + '<div style="text-align:center;padding:22px 4px">'
+        + '<div style="font-size:46px;line-height:1;color:#5fffc1;margin-bottom:12px">&#10003;</div>'
         + '<h2 style="font-weight:300;font-size:24px;color:#e5ebf2;margin:0 0 10px">Signed &amp; received</h2>'
-        + '<p style="font-family:JetBrains Mono,monospace;font-size:13.5px;color:#8993a3;line-height:1.7;margin:0 auto 22px;max-width:440px">Thank you. Your signed confidentiality agreement has been recorded and our team has been notified. We will be in touch shortly about your pilot.</p>'
-        + '<button type="button" id="nda-done-x" class="nda-btn nda-btn-primary nda-btn-ready" style="min-width:160px">Close</button></div>';
+        + '<p style="font-family:JetBrains Mono,monospace;font-size:13.5px;color:#8993a3;line-height:1.7;margin:0 auto 20px;max-width:450px">Your signed agreement has been recorded and a copy emailed to you. Our team has been notified and will be in touch shortly.</p>'
+        + '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
+        + '<button type="button" id="nda-view-signed" class="nda-btn">View signed NDA</button>'
+        + (_ndaPdfUri ? '<button type="button" id="nda-dl-signed" class="nda-btn nda-btn-primary nda-btn-ready">Download PDF</button>' : '')
+        + '<button type="button" id="nda-done-x" class="nda-btn">Close</button></div></div>';
+      var vs = g('nda-view-signed'); if (vs) vs.addEventListener('click', openDocViewer);
+      var ds = g('nda-dl-signed'); if (ds) ds.addEventListener('click', function(){ downloadDataUri(_ndaPdfUri, 'Integra-NDA-signed.pdf'); });
       var dx = g('nda-done-x'); if (dx) dx.addEventListener('click', closeModal);
     }
     function ndaSend(payload){
-      showErr('Submitting...');
+      showErr('Preparing your signed copy...');
+      fillNdaDoc(payload);
       ndaTrack('nda_accept', { method: sigMethod });
       try { localStorage.setItem('_nda_ts', new Date().toISOString()); } catch(e) {}
-      try {
-        fetch(ENDPOINT, { method:'POST', mode:'no-cors', body: JSON.stringify(payload) })
-          .then(function(){ ndaFinish(); }).catch(function(){ ndaFinish(); });
-      } catch(e) { ndaFinish(); }
+      genSignedPdf(function(uri){
+        _ndaPdfUri = uri; if (uri) payload.signedPdf = uri;
+        try {
+          fetch(ENDPOINT, { method:'POST', mode:'no-cors', body: JSON.stringify(payload) })
+            .then(function(){ ndaFinish(); }).catch(function(){ ndaFinish(); });
+        } catch(e) { ndaFinish(); }
+      });
     }
     function submitSignature(){
       if (!cb || !cb.checked) { showErr('Please tick the agreement box first.'); return; }
@@ -2678,5 +2743,71 @@ tailwind.config = {
 // ── END TRACKING ──────────────────────────────────────────────────
 </script>
 
+
+<!-- ── NDA full document (rendered + downloadable) ── -->
+<div id="nda-doc-overlay">
+  <div class="nda-doc-shell">
+    <div class="nda-doc-bar">
+      <span class="nda-doc-title">Confidentiality &amp; Access Agreement · 095-X1</span>
+      <span><button type="button" id="nda-doc-dl-btn" class="nda-doc-btn">Download PDF</button><button type="button" id="nda-doc-close-btn" class="nda-doc-btn">Close &#10005;</button></span>
+    </div>
+    <div id="nda-doc-view" class="nda-doc-scroll"></div>
+  </div>
+</div>
+<div id="nda-doc">
+  <div class="ndoc-brand">INTEGRA</div>
+  <div class="ndoc-title">Confidentiality &amp; Access Agreement</div>
+  <div class="ndoc-sub">(Non-Disclosure Agreement — Case File 095-X1)</div>
+  <p class="ndoc-p">This Confidentiality &amp; Access Agreement (the "Agreement") is made and entered into as of <span id="nda-doc-eff"></span> (the "Effective Date") between: (1) Integrity Mentors (the "Disclosing Party"), operator of the Integra service; and (2) the Recipient identified in the signature block below (the "Recipient").</p>
+  <p class="ndoc-h">A. Background</p>
+  <p class="ndoc-p">Integrity Mentors operates Integra, a methodology and service for the assessment of esports integrity signals. In connection with the Recipient's evaluation of a potential pilot engagement (the "Purpose"), Integrity Mentors may give the Recipient access to confidential case material, including a redacted (blurred) preview at a private link, and may un-blur or otherwise disclose further material. The Recipient agrees to the terms below as a strict condition of, and in consideration for, that access.</p>
+  <p class="ndoc-h">1. Definitions</p>
+  <p class="ndoc-p">"Confidential Information" means all information disclosed by or on behalf of Integrity Mentors in connection with the Purpose, in any form, including without limitation: Case File 095-X1; the private link and its contents; the blurred preview and any un-blurred or full-resolution material; all dossiers, reports, analyses, ratings, tables, images, screenshots, data and signal interpretations; and the Integra product, methodology and know-how. "Subject Material" means any part that names, depicts, references, or could reasonably be associated with any natural person, team, organisation, or match.</p>
+  <p class="ndoc-h">2. Grant and Condition of Access</p>
+  <p class="ndoc-p">Integrity Mentors grants the Recipient a limited, personal, non-transferable, revocable right to view the Confidential Information solely for the Purpose. Access is conditional on this Agreement. The Recipient's acceptance of these terms and/or any access to or viewing of the Confidential Information constitutes agreement to be bound by this Agreement.</p>
+  <p class="ndoc-h">3. Nature of the Material; No Allegation</p>
+  <p class="ndoc-p">The Recipient acknowledges and agrees that: (a) the Subject Material is illustrative analytical signal interpretation, provided only to demonstrate and evaluate the Integra methodology; (b) it does NOT constitute an allegation, accusation, finding, conclusion or imputation of cheating, match-fixing, corruption or any misconduct by any natural person, team or organisation; (c) it does not carry the status of any regulatory, disciplinary, investigatory or judicial determination; (d) the presumption of innocence applies to every individual referenced; (e) any names, identifiers or images are incidental to a methodology demonstration and must never be read as a statement of fact about any identifiable person.</p>
+  <p class="ndoc-h">4. Confidentiality Obligations</p>
+  <p class="ndoc-p">The Recipient shall: (a) keep the Confidential Information strictly confidential and secure; (b) not disclose it to any third party, limiting internal access to personnel who strictly need it and are bound by no-less-protective obligations; (c) not copy, photograph, screenshot, screen-record, download, scrape or reproduce it except as expressly authorised in writing; and (d) not distribute, forward, publish, post, broadcast or otherwise make it available to any person.</p>
+  <p class="ndoc-h">5. Restrictions on Use</p>
+  <p class="ndoc-p">The Recipient shall NOT: (a) use it for any purpose other than the Purpose; (b) use it to identify, name, "out", accuse, defame, harass, sanction, discipline or take any adverse or punitive action against any individual, team or organisation; (c) rely upon it as evidence of, or a basis for any decision concerning, any person's conduct; or (d) state, suggest or imply that the material constitutes a finding or proof of wrongdoing.</p>
+  <p class="ndoc-h">6. No Reliance; No Warranty</p>
+  <p class="ndoc-p">The Confidential Information is provided "as is" and "as available", with no representation or warranty as to accuracy, completeness or fitness. The Recipient accesses it at its own risk, forms its own independent judgement, and will independently verify any matter before acting. To the maximum extent permitted by law, Integrity Mentors shall have no liability arising out of the Recipient's access to, use of, or reliance on the Confidential Information.</p>
+  <p class="ndoc-h">7. Data Protection</p>
+  <p class="ndoc-p">To the extent the Confidential Information contains personal data, the Recipient shall process it only for the Purpose and in compliance with applicable data-protection and privacy laws, shall not attempt to re-identify any individual, and shall delete it on request.</p>
+  <p class="ndoc-h">8. Intellectual Property</p>
+  <p class="ndoc-p">All intellectual property rights in Integra, the methodology and the Confidential Information remain the exclusive property of Integrity Mentors (or its licensors). Nothing transfers or licenses any such rights to the Recipient, save the limited right of access in clause 2.</p>
+  <p class="ndoc-h">9. Return and Destruction</p>
+  <p class="ndoc-p">Upon Integrity Mentors' request or conclusion of the Purpose, the Recipient shall immediately cease access and destroy or permanently delete all copies, and certify such destruction in writing if requested.</p>
+  <p class="ndoc-h">10. Term and Survival</p>
+  <p class="ndoc-p">This Agreement applies from the Effective Date and continues for five (5) years from disclosure of each item, except that obligations regarding personal data, sensitive material and trade secrets, and the acknowledgements in clause 3, survive indefinitely.</p>
+  <p class="ndoc-h">11. Remedies</p>
+  <p class="ndoc-p">The Recipient acknowledges that any breach may cause irreparable harm for which damages are inadequate; Integrity Mentors may seek injunctive and equitable relief in addition to any other remedy, without proving special damage.</p>
+  <p class="ndoc-h">12. Indemnity</p>
+  <p class="ndoc-p">The Recipient shall indemnify and hold harmless Integrity Mentors and its officers, employees and agents from all claims, losses, damages, liabilities and costs (including reasonable legal fees) arising out of the Recipient's breach or unauthorised access, use, disclosure or publication of the Confidential Information.</p>
+  <p class="ndoc-h">13. No Obligation; No Partnership</p>
+  <p class="ndoc-p">This Agreement does not oblige either Party to proceed with any pilot or transaction, and creates no partnership, joint venture or agency.</p>
+  <p class="ndoc-h">14. General</p>
+  <p class="ndoc-p">This Agreement is the entire agreement on its subject matter and supersedes prior discussions. Variations must be in writing. No failure to exercise a right is a waiver. If any provision is invalid, the remainder continues. The Recipient may not assign without consent. This Agreement may be accepted or executed electronically and in counterparts.</p>
+  <p class="ndoc-h">15. Governing Law and Jurisdiction</p>
+  <p class="ndoc-p">This Agreement is governed by the laws of India, and the courts at India shall have exclusive jurisdiction.</p>
+  <p class="ndoc-p" style="margin-top:14px"><b>AGREED AND ACCEPTED.</b> By signing below (or accepting electronically at the private link), the Recipient confirms it has read, understood and agrees to be bound by this Agreement, and that it is an authorised, named recipient.</p>
+  <div class="ndoc-sigwrap">
+    <div class="ndoc-sigcol">
+      <div class="ndoc-sigh">For and on behalf of INTEGRITY MENTORS</div>
+      <div class="ndoc-line">Signature</div>
+      <div class="ndoc-line">Name</div>
+      <div class="ndoc-line">Date</div>
+    </div>
+    <div class="ndoc-sigcol">
+      <div class="ndoc-sigh">RECIPIENT</div>
+      <div class="ndoc-sigimg" id="nda-doc-sig"></div>
+      <div class="ndoc-field">Name: <span id="nda-doc-name"></span></div>
+      <div class="ndoc-field">Organisation: <span id="nda-doc-org"></span></div>
+      <div class="ndoc-field">Email: <span id="nda-doc-email"></span></div>
+      <div class="ndoc-field">Date: <span id="nda-doc-date"></span></div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
