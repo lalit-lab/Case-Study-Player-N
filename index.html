@@ -513,6 +513,7 @@ tailwind.config = {
     </div>
     <div class="nda-actions">
       <button type="button" id="nda-cancel-btn" class="nda-btn">Cancel</button>
+      <button type="button" id="nda-preview-btn" class="nda-btn">Preview</button>
       <button type="button" id="nda-accept-btn" class="nda-btn nda-btn-primary" disabled>Agree &amp; Sign →</button>
     </div>
     <p class="nda-fine">
@@ -698,11 +699,9 @@ tailwind.config = {
         + '<h2 style="font-weight:300;font-size:24px;color:#e5ebf2;margin:0 0 10px">Signed &amp; received</h2>'
         + '<p style="font-family:JetBrains Mono,monospace;font-size:13.5px;color:#8993a3;line-height:1.7;margin:0 auto 20px;max-width:450px">Your signed agreement has been recorded and a copy emailed to you. Our team has been notified and will be in touch shortly.</p>'
         + '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
-        + '<button type="button" id="nda-view-signed" class="nda-btn">View signed NDA</button>'
-        + '<button type="button" id="nda-dl-signed" class="nda-btn nda-btn-primary nda-btn-ready">Download PDF</button>'
+        + '<button type="button" id="nda-view-signed" class="nda-btn nda-btn-primary nda-btn-ready">View / download signed NDA</button>'
         + '<button type="button" id="nda-done-x" class="nda-btn">Close</button></div></div>';
       var vs = g('nda-view-signed'); if (vs) vs.addEventListener('click', openDocViewer);
-      var ds = g('nda-dl-signed'); if (ds) ds.addEventListener('click', printNdaDoc);
       var dx = g('nda-done-x'); if (dx) dx.addEventListener('click', closeModal);
     }
     function ndaSend(payload){
@@ -741,6 +740,21 @@ tailwind.config = {
       }
     }
     if (accept) accept.addEventListener('click', submitSignature);
+    function buildPayloadFromForm(){
+      var pl = { name:((g('nda-f-name')||{}).value||'').trim(), email:((g('nda-f-email')||{}).value||'').trim(),
+        org:((g('nda-f-org')||{}).value||'').trim(), date:((g('nda-f-date')||{}).value||'').trim(),
+        caseRef:'095-X1', method:sigMethod, ip:clientIp, signature:'', upload:'', uploadName:'' };
+      if (sigMethod==='type'){ var t=((g('nda-typed')||{}).value||'').trim(); if(t) pl.signature=typedToImage(t); }
+      else if (sigMethod==='draw'){ if(ndaDrew && ndaCanvas) pl.signature=ndaCanvas.toDataURL('image/png'); }
+      else { var f=(g('nda-file')||{}).files; if(f&&f[0]) pl.uploadName=f[0].name; }
+      return pl;
+    }
+    function previewSignature(){
+      var pl = buildPayloadFromForm();
+      if (!pl.name) { showErr('Add your name (and signature) first to preview.'); return; }
+      showErr(''); fillNdaDoc(pl); openDocViewer();
+    }
+    var pvBtn = g('nda-preview-btn'); if (pvBtn) pvBtn.addEventListener('click', previewSignature);
 
     if (cancel) cancel.addEventListener('click', cancelModal);
     var ndaCloseX = document.getElementById('nda-close-btn');
