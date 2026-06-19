@@ -428,7 +428,7 @@ tailwind.config = {
   .nda-mpanel { margin-bottom:6px; }
   .nda-mpanel input[type=text] { width:100%; background:#07080b; border:1px solid #1a1f28; color:#e5ebf2; font-family:'JetBrains Mono',monospace; font-size:14px; padding:10px 11px; border-radius:2px; }
   .nda-sigprev { min-height:54px; margin-top:8px; padding:6px 12px; border:1px dashed #2a8a6c; color:#e5ebf2 !important; font-family:'Dancing Script','Segoe Script','Brush Script MT',cursive !important; font-size:32px; line-height:1.4; }
-  #nda-canvas { width:100%; height:150px; background:#07080b; border:1px solid #2a8a6c; border-radius:2px; touch-action:none; cursor:crosshair; display:block; }
+  #nda-canvas { width:100%; height:150px; background:#ffffff; border:1px solid #2a8a6c; border-radius:2px; touch-action:none; cursor:crosshair; display:block; }
   .nda-mini { margin-top:8px; background:transparent; border:1px solid #1a1f28; color:#8993a3; font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.1em; padding:6px 12px; cursor:pointer; }
   .nda-mpanel input[type=file] { color:#c8cfd9; font-family:'JetBrains Mono',monospace; font-size:12.5px; }
   .nda-hint { font-family:'JetBrains Mono',monospace; font-size:11.5px; color:#8993a3; margin-top:8px; line-height:1.5; }
@@ -605,10 +605,10 @@ tailwind.config = {
     if (g('nda-typed')) g('nda-typed').addEventListener('input', renderTyped);
     var ndaCanvas = g('nda-canvas');
     if (ndaCanvas) {
-      var cx = ndaCanvas.getContext('2d'); cx.strokeStyle = '#e5ebf2'; cx.lineWidth = 2; cx.lineCap = 'round';
+      var cx = ndaCanvas.getContext('2d'); cx.strokeStyle = '#10131a'; cx.lineWidth = 2.2; cx.lineCap = 'round';
       var drawing = false;
       function ndaPos(ev){ var r = ndaCanvas.getBoundingClientRect(); var t = ev.touches ? ev.touches[0] : ev; return { x:(t.clientX-r.left)*(ndaCanvas.width/r.width), y:(t.clientY-r.top)*(ndaCanvas.height/r.height) }; }
-      function ndaStart(ev){ drawing = true; var p = ndaPos(ev); cx.beginPath(); cx.moveTo(p.x,p.y); ev.preventDefault(); }
+      function ndaStart(ev){ drawing = true; ndaDrew = true; var p = ndaPos(ev); cx.beginPath(); cx.moveTo(p.x,p.y); ev.preventDefault(); }
       function ndaMove(ev){ if(!drawing) return; var p = ndaPos(ev); cx.lineTo(p.x,p.y); cx.stroke(); ndaDrew = true; ev.preventDefault(); }
       function ndaEnd(){ drawing = false; }
       ndaCanvas.addEventListener('mousedown', ndaStart); ndaCanvas.addEventListener('mousemove', ndaMove); window.addEventListener('mouseup', ndaEnd);
