@@ -450,6 +450,7 @@ tailwind.config = {
   .ndoc-line { border-bottom:1px solid #333; min-height:24px; margin-bottom:14px; font-size:10px; color:#999 !important; }
   .ndoc-sigimg { min-height:60px; border-bottom:1px solid #333; margin-bottom:10px; }
   .ndoc-field { font-size:12px; margin-bottom:9px; border-bottom:1px solid #ccc; padding-bottom:3px; min-height:19px; }
+  .ndoc-attest { margin-top:18px; padding-top:8px; border-top:1px solid #ccc; font-size:10px; font-style:italic; }
   #nda-doc-overlay { position:fixed; inset:0; z-index:10003; background:rgba(7,8,11,0.9); display:none; align-items:center; justify-content:center; padding:18px; }
   .nda-doc-shell { width:100%; max-width:840px; max-height:92vh; display:flex; flex-direction:column; box-shadow:0 0 80px rgba(0,0,0,.85); }
   .nda-doc-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; background:#0c0e13; border:1px solid #1a1f28; padding:10px 14px; }
@@ -636,6 +637,10 @@ tailwind.config = {
         if (u) sg.innerHTML = '<img src="' + u + '" alt="signature" style="max-height:58px;max-width:280px">';
         else sg.textContent = (payload.method === 'upload') ? ('Signed via uploaded document: ' + (payload.uploadName || 'file')) : '(electronically accepted)';
       }
+      var at = g('nda-doc-attest');
+      if (at) at.textContent = payload.name
+        ? ('Electronically signed by ' + payload.name + (payload.email ? ' (' + payload.email + ')' : '') + ' on ' + payload.date + '  -  method: ' + (payload.method || '') + '  -  Case 095-X1' + (payload.ip ? '  -  IP ' + payload.ip : '') + '. This signature is bound to, and valid only for, this agreement.')
+        : '';
     }
     function openDocViewer(){
       var ov = g('nda-doc-overlay'), area = g('nda-doc-view'), src = g('nda-doc');
@@ -655,7 +660,8 @@ tailwind.config = {
         + '.ndoc-line{border-bottom:1px solid #333;min-height:24px;margin-bottom:14px;font-size:10px;color:#999;}'
         + '.ndoc-sigimg{min-height:60px;border-bottom:1px solid #333;margin-bottom:10px;}'
         + '.ndoc-sigimg img{max-height:58px;max-width:280px;}'
-        + '.ndoc-field{font-size:12px;margin-bottom:9px;border-bottom:1px solid #ccc;padding-bottom:3px;}';
+        + '.ndoc-field{font-size:12px;margin-bottom:9px;border-bottom:1px solid #ccc;padding-bottom:3px;}'
+        + '.ndoc-attest{margin-top:18px;padding-top:8px;border-top:1px solid #ccc;font-size:10px;font-style:italic;color:#555;}';
     }
     function buildSignedHtml(){
       return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Integra NDA - 095-X1</title><style>' + ndaStyleCss() + '</style></head><body>' + g('nda-doc').innerHTML + '</body></html>';
@@ -2831,6 +2837,7 @@ tailwind.config = {
     </div>
     <div class="ndoc-sigcol">
       <div class="ndoc-sigh">RECIPIENT</div>
+      <div class="ndoc-field" style="border:0;margin-bottom:2px;font-weight:bold">Signature:</div>
       <div class="ndoc-sigimg" id="nda-doc-sig"></div>
       <div class="ndoc-field">Name: <span id="nda-doc-name"></span></div>
       <div class="ndoc-field">Organisation: <span id="nda-doc-org"></span></div>
@@ -2838,6 +2845,7 @@ tailwind.config = {
       <div class="ndoc-field">Date: <span id="nda-doc-date"></span></div>
     </div>
   </div>
+  <div class="ndoc-attest" id="nda-doc-attest"></div>
 </div>
 </body>
 </html>
