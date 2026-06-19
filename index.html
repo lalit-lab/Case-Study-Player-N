@@ -414,6 +414,25 @@ tailwind.config = {
   @media (max-width:640px){
     #chapter-07 .text-center .chapter-num { font-size:21px !important; }
   }
+
+  /* ── NDA signing block (Type / Draw / Upload) ── */
+  .nda-sign { border-top:1px solid #1a1f28; padding-top:18px; margin-bottom:18px; }
+  .nda-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+  .nda-field { display:flex; flex-direction:column; gap:5px; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:#8993a3; }
+  .nda-field input { background:#07080b; border:1px solid #1a1f28; color:#e5ebf2; font-family:'JetBrains Mono',monospace; font-size:14px; padding:9px 11px; border-radius:2px; }
+  .nda-field input:focus { outline:none; border-color:#2a8a6c; }
+  .nda-mtabs { display:flex; gap:8px; margin-bottom:12px; }
+  .nda-mtab { flex:1; background:transparent; border:1px solid #1a1f28; color:#8993a3; font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.1em; text-transform:uppercase; padding:9px 6px; cursor:pointer; transition:all .2s; }
+  .nda-mtab.active { background:#2a8a6c; color:#07080b; border-color:#2a8a6c; font-weight:600; }
+  .nda-mpanel { margin-bottom:6px; }
+  .nda-mpanel input[type=text] { width:100%; background:#07080b; border:1px solid #1a1f28; color:#e5ebf2; font-family:'JetBrains Mono',monospace; font-size:14px; padding:10px 11px; border-radius:2px; }
+  .nda-sigprev { min-height:54px; margin-top:8px; padding:6px 12px; border:1px dashed #2a8a6c; color:#e5ebf2 !important; font-family:'Segoe Script','Brush Script MT','Bradley Hand',cursive !important; font-size:34px; line-height:1.4; }
+  #nda-canvas { width:100%; height:150px; background:#07080b; border:1px solid #2a8a6c; border-radius:2px; touch-action:none; cursor:crosshair; display:block; }
+  .nda-mini { margin-top:8px; background:transparent; border:1px solid #1a1f28; color:#8993a3; font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.1em; padding:6px 12px; cursor:pointer; }
+  .nda-mpanel input[type=file] { color:#c8cfd9; font-family:'JetBrains Mono',monospace; font-size:12.5px; }
+  .nda-hint { font-family:'JetBrains Mono',monospace; font-size:11.5px; color:#8993a3; margin-top:8px; line-height:1.5; }
+  .nda-err { font-family:'JetBrains Mono',monospace; font-size:12px; color:#ffb454; min-height:16px; margin-top:6px; }
+  @media (max-width:640px){ .nda-grid { grid-template-columns:1fr; } }
 </style>
 </head>
 
@@ -440,9 +459,35 @@ tailwind.config = {
       <input type="checkbox" id="nda-agree-check">
       <span>I have read and agree to the Confidentiality &amp; Access Agreement, and confirm I am an authorised named recipient.</span>
     </label>
+    <div class="nda-sign">
+      <div class="nda-grid">
+        <label class="nda-field">Full name<input type="text" id="nda-f-name" placeholder="Your full name"></label>
+        <label class="nda-field">Email<input type="email" id="nda-f-email" placeholder="you@org.com"></label>
+        <label class="nda-field">Organisation / Team<input type="text" id="nda-f-org" placeholder="(optional)"></label>
+        <label class="nda-field">Date<input type="text" id="nda-f-date"></label>
+      </div>
+      <div class="nda-mtabs">
+        <button type="button" class="nda-mtab active" data-m="type">Type</button>
+        <button type="button" class="nda-mtab" data-m="draw">Draw</button>
+        <button type="button" class="nda-mtab" data-m="upload">Upload signed</button>
+      </div>
+      <div class="nda-mpanel" id="nda-mp-type">
+        <input type="text" id="nda-typed" placeholder="Type your full name to sign">
+        <div class="nda-sigprev" id="nda-sigprev"></div>
+      </div>
+      <div class="nda-mpanel" id="nda-mp-draw" hidden>
+        <canvas id="nda-canvas" width="600" height="150"></canvas>
+        <button type="button" id="nda-clear" class="nda-mini">Clear</button>
+      </div>
+      <div class="nda-mpanel" id="nda-mp-upload" hidden>
+        <input type="file" id="nda-file" accept=".pdf,image/*">
+        <div class="nda-hint">Print the NDA, sign it, then scan / photo &amp; upload (PDF or image).</div>
+      </div>
+      <div class="nda-err" id="nda-err"></div>
+    </div>
     <div class="nda-actions">
       <button type="button" id="nda-cancel-btn" class="nda-btn">Cancel</button>
-      <button type="button" id="nda-accept-btn" class="nda-btn nda-btn-primary" disabled>Agree &amp; continue to request →</button>
+      <button type="button" id="nda-accept-btn" class="nda-btn nda-btn-primary" disabled>Agree &amp; Sign →</button>
     </div>
     <p class="nda-fine">
       Acceptance is recorded with date and time. Access and use are logged for integrity and
@@ -476,6 +521,7 @@ tailwind.config = {
       if (gate) gate.style.display = 'flex';
       document.body.classList.add('nda-locked');
       ndaTrack('nda_open', { href: (href || '').slice(0, 80) });
+      try { prefillNda(); } catch (e) {}
     }
     function closeModal() {
       if (gate) gate.style.display = 'none';
@@ -503,15 +549,98 @@ tailwind.config = {
         accept.classList.toggle('nda-btn-ready', cb.checked);
         if (cb.checked) ndaTrack('nda_agree_check');
       });
-      accept.addEventListener('click', function () {
-        if (!cb.checked) return;
-        var href = pendingHref;
-        ndaTrack('nda_accept', { href: (href || '').slice(0, 80) });
-        try { localStorage.setItem('_nda_ts', new Date().toISOString()); } catch (e) {}
-        closeModal();
-        if (href) window.location.href = href;   // proceed to the pilot request
-      });
     }
+
+    /* ===== NDA signing: Type / Draw / Upload -> Google Sheet (Apps Script) ===== */
+    var ENDPOINT = 'PASTE_APPS_SCRIPT_WEB_APP_URL_HERE';   // <-- apna Apps Script Web App URL yahan daalo
+    var sigMethod = 'type';
+    var ndaDrew = false;
+    var clientIp = '';
+    try { fetch('https://api.ipify.org?format=json').then(function(r){return r.json();}).then(function(j){ clientIp = j.ip || ''; }).catch(function(){}); } catch(e) {}
+    function g(id){ return document.getElementById(id); }
+    function showErr(m){ if (g('nda-err')) g('nda-err').textContent = m || ''; }
+    function renderTyped(){ if (g('nda-sigprev') && g('nda-typed')) g('nda-sigprev').textContent = g('nda-typed').value; }
+    function prefillNda(){
+      var q = new URLSearchParams(location.search);
+      var nm = q.get('name') || '', em = q.get('email') || '';
+      if (g('nda-f-name') && !g('nda-f-name').value) g('nda-f-name').value = nm;
+      if (g('nda-f-email') && !g('nda-f-email').value) g('nda-f-email').value = em;
+      if (g('nda-f-date')) g('nda-f-date').value = new Date().toLocaleDateString();
+      if (g('nda-typed') && !g('nda-typed').value && nm) { g('nda-typed').value = nm; renderTyped(); }
+      showErr('');
+    }
+    document.querySelectorAll('.nda-mtab').forEach(function(b){
+      b.addEventListener('click', function(){
+        sigMethod = b.getAttribute('data-m');
+        document.querySelectorAll('.nda-mtab').forEach(function(x){ x.classList.toggle('active', x === b); });
+        ['type','draw','upload'].forEach(function(m){ var el = g('nda-mp-'+m); if (el) el.hidden = (m !== sigMethod); });
+        showErr('');
+      });
+    });
+    if (g('nda-typed')) g('nda-typed').addEventListener('input', renderTyped);
+    var ndaCanvas = g('nda-canvas');
+    if (ndaCanvas) {
+      var cx = ndaCanvas.getContext('2d'); cx.strokeStyle = '#e5ebf2'; cx.lineWidth = 2; cx.lineCap = 'round';
+      var drawing = false;
+      function ndaPos(ev){ var r = ndaCanvas.getBoundingClientRect(); var t = ev.touches ? ev.touches[0] : ev; return { x:(t.clientX-r.left)*(ndaCanvas.width/r.width), y:(t.clientY-r.top)*(ndaCanvas.height/r.height) }; }
+      function ndaStart(ev){ drawing = true; var p = ndaPos(ev); cx.beginPath(); cx.moveTo(p.x,p.y); ev.preventDefault(); }
+      function ndaMove(ev){ if(!drawing) return; var p = ndaPos(ev); cx.lineTo(p.x,p.y); cx.stroke(); ndaDrew = true; ev.preventDefault(); }
+      function ndaEnd(){ drawing = false; }
+      ndaCanvas.addEventListener('mousedown', ndaStart); ndaCanvas.addEventListener('mousemove', ndaMove); window.addEventListener('mouseup', ndaEnd);
+      ndaCanvas.addEventListener('touchstart', ndaStart, {passive:false}); ndaCanvas.addEventListener('touchmove', ndaMove, {passive:false}); ndaCanvas.addEventListener('touchend', ndaEnd);
+      if (g('nda-clear')) g('nda-clear').addEventListener('click', function(){ cx.clearRect(0,0,ndaCanvas.width,ndaCanvas.height); ndaDrew = false; });
+    }
+    function typedToImage(text){
+      var c = document.createElement('canvas'); c.width = 600; c.height = 150; var x = c.getContext('2d');
+      x.fillStyle = '#e5ebf2'; x.font = '48px \'Segoe Script\',\'Brush Script MT\',cursive'; x.textBaseline = 'middle';
+      x.fillText(text || '', 20, 80); return c.toDataURL('image/png');
+    }
+    function ndaFinish(){
+      var card = document.querySelector('#nda-gate .nda-card');
+      if (!card) return;
+      card.innerHTML = '<div class="nda-tag" style="text-align:center">Non-Disclosure Agreement</div>'
+        + '<div style="text-align:center;padding:26px 4px">'
+        + '<div style="font-size:46px;line-height:1;color:#5fffc1;margin-bottom:14px">&#10003;</div>'
+        + '<h2 style="font-weight:300;font-size:24px;color:#e5ebf2;margin:0 0 10px">Signed &amp; received</h2>'
+        + '<p style="font-family:JetBrains Mono,monospace;font-size:13.5px;color:#8993a3;line-height:1.7;margin:0 auto 22px;max-width:440px">Thank you. Your signed confidentiality agreement has been recorded and our team has been notified. We will be in touch shortly about your pilot.</p>'
+        + '<button type="button" id="nda-done-x" class="nda-btn nda-btn-primary nda-btn-ready" style="min-width:160px">Close</button></div>';
+      var dx = g('nda-done-x'); if (dx) dx.addEventListener('click', closeModal);
+    }
+    function ndaSend(payload){
+      showErr('Submitting...');
+      ndaTrack('nda_accept', { method: sigMethod });
+      try { localStorage.setItem('_nda_ts', new Date().toISOString()); } catch(e) {}
+      try {
+        fetch(ENDPOINT, { method:'POST', mode:'no-cors', body: JSON.stringify(payload) })
+          .then(function(){ ndaFinish(); }).catch(function(){ ndaFinish(); });
+      } catch(e) { ndaFinish(); }
+    }
+    function submitSignature(){
+      if (!cb || !cb.checked) { showErr('Please tick the agreement box first.'); return; }
+      var name = ((g('nda-f-name')||{}).value || '').trim();
+      if (!name) { showErr('Please enter your full name.'); return; }
+      var payload = {
+        name: name, email: ((g('nda-f-email')||{}).value||'').trim(), org: ((g('nda-f-org')||{}).value||'').trim(),
+        date: ((g('nda-f-date')||{}).value||'').trim(), caseRef: '095-X1', consent: true, method: sigMethod,
+        ip: clientIp, page: location.href, ua: (navigator.userAgent||'').slice(0,180),
+        signature: '', typed: '', upload: '', uploadName: ''
+      };
+      if (sigMethod === 'type') {
+        var t = ((g('nda-typed')||{}).value||'').trim();
+        if (!t) { showErr('Type your name to sign.'); return; }
+        payload.typed = t; payload.signature = typedToImage(t); ndaSend(payload);
+      } else if (sigMethod === 'draw') {
+        if (!ndaDrew || !ndaCanvas) { showErr('Please draw your signature.'); return; }
+        payload.signature = ndaCanvas.toDataURL('image/png'); ndaSend(payload);
+      } else {
+        var f = (g('nda-file')||{}).files;
+        if (!f || !f[0]) { showErr('Please upload your signed copy.'); return; }
+        payload.uploadName = f[0].name;
+        var fr = new FileReader(); fr.onload = function(){ payload.upload = fr.result; ndaSend(payload); }; fr.readAsDataURL(f[0]);
+      }
+    }
+    if (accept) accept.addEventListener('click', submitSignature);
+
     if (cancel) cancel.addEventListener('click', cancelModal);
     var ndaCloseX = document.getElementById('nda-close-btn');
     if (ndaCloseX) ndaCloseX.addEventListener('click', cancelModal);
