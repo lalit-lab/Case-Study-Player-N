@@ -648,8 +648,13 @@ tailwind.config = {
       html2pdf().set({ margin:12, image:{type:'jpeg',quality:0.95}, html2canvas:{scale:2, backgroundColor:'#ffffff'}, jsPDF:{unit:'mm', format:'a4', orientation:'portrait'}, pagebreak:{mode:['css','legacy']} })
         .from(el).toPdf().get('pdf').then(function(pdf){ try { cb(pdf.output('datauristring')); } catch(e) { cb(''); } }).catch(function(){ cb(''); });
     }
-    var docClose = g('nda-doc-close-btn'); if (docClose) docClose.addEventListener('click', function(){ var ov = g('nda-doc-overlay'); if (ov) ov.style.display = 'none'; });
-    var docDl = g('nda-doc-dl-btn'); if (docDl) docDl.addEventListener('click', function(){ showErr(''); genSignedPdf(function(uri){ if (uri) downloadDataUri(uri, 'Integra-NDA.pdf'); }); });
+    // Viewer buttons live at end of <body> (added after this script runs) -> use delegated clicks.
+    document.addEventListener('click', function (e) {
+      var t = e.target && e.target.closest ? e.target.closest('#nda-doc-close-btn, #nda-doc-dl-btn') : null;
+      if (!t) return;
+      if (t.id === 'nda-doc-close-btn') { var ov = g('nda-doc-overlay'); if (ov) ov.style.display = 'none'; }
+      else { showErr(''); genSignedPdf(function (uri) { if (uri) downloadDataUri(uri, 'Integra-NDA.pdf'); }); }
+    });
 
     function ndaFinish(){
       var card = document.querySelector('#nda-gate .nda-card');
