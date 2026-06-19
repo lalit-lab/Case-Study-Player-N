@@ -662,13 +662,18 @@ tailwind.config = {
     }
     function printNdaDoc(){
       var html = buildSignedHtml();
-      var w = window.open('', '_blank');
-      if (!w) { showErr('Please allow pop-ups, then click Download again.'); return; }
-      w.document.open(); w.document.write(html); w.document.close();
-      var did = false;
-      function go(){ if (did) return; did = true; try { w.focus(); w.print(); } catch(e) {} }
-      w.onload = go;
-      setTimeout(go, 800);
+      var ifr = document.createElement('iframe');
+      ifr.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0;';
+      document.body.appendChild(ifr);
+      var doc = ifr.contentWindow.document;
+      doc.open(); doc.write(html); doc.close();
+      var done = false;
+      function go(){ if (done) return; done = true;
+        try { ifr.contentWindow.focus(); ifr.contentWindow.print(); } catch(e) {}
+        setTimeout(function(){ try { document.body.removeChild(ifr); } catch(e) {} }, 3000);
+      }
+      ifr.onload = go;
+      setTimeout(go, 700);
     }
     // Viewer buttons live at end of <body> (added after this script runs) -> use delegated clicks.
     document.addEventListener('click', function (e) {
