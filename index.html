@@ -642,25 +642,36 @@ tailwind.config = {
       if (ov && area && src) { area.innerHTML = src.innerHTML; ov.style.display = 'flex'; }
     }
     function downloadDataUri(uri, name){ var a = document.createElement('a'); a.href = uri; a.download = name; document.body.appendChild(a); a.click(); a.remove(); }
-    function genSignedPdf(cb){
-      var src = g('nda-doc');
-      if (!src || typeof html2pdf === 'undefined') { cb(''); return; }
-      var tmp = document.createElement('div');
-      tmp.className = 'nda-doc-print';
-      tmp.innerHTML = src.innerHTML;
-      tmp.style.cssText = 'position:absolute;left:0;top:0;width:760px;background:#ffffff;padding:46px 52px;box-sizing:border-box;z-index:2147483647;';
-      document.body.appendChild(tmp);
-      var done = function(uri){ try { document.body.removeChild(tmp); } catch(e) {} cb(uri || ''); };
-      html2pdf().set({ margin:12, image:{type:'jpeg',quality:0.95}, html2canvas:{scale:2, backgroundColor:'#ffffff', useCORS:true}, jsPDF:{unit:'mm', format:'a4', orientation:'portrait'}, pagebreak:{mode:['css','legacy']} })
-        .from(tmp).toPdf().get('pdf').then(function(pdf){ var u=''; try { u = pdf.output('datauristring'); } catch(e) {} done(u); })
-        .catch(function(){ done(''); });
+    function ndaStyleCss(){
+      return 'body{font-family:Georgia,"Times New Roman",serif;color:#1a1a1a;background:#fff;margin:0;padding:40px 48px;}'
+        + '.ndoc-brand{font-weight:bold;letter-spacing:.2em;font-size:12px;color:#888;}'
+        + '.ndoc-title{font-size:20px;font-weight:bold;margin-top:6px;}'
+        + '.ndoc-sub{font-size:12px;color:#666;margin-bottom:14px;}'
+        + '.ndoc-h{font-size:13px;font-weight:bold;margin:14px 0 4px;}'
+        + '.ndoc-p{font-size:12px;line-height:1.55;margin:0 0 8px;text-align:justify;}'
+        + '.ndoc-sigwrap{display:flex;gap:30px;margin-top:26px;}'
+        + '.ndoc-sigcol{flex:1;}'
+        + '.ndoc-sigh{font-size:11px;font-weight:bold;margin-bottom:10px;}'
+        + '.ndoc-line{border-bottom:1px solid #333;min-height:24px;margin-bottom:14px;font-size:10px;color:#999;}'
+        + '.ndoc-sigimg{min-height:60px;border-bottom:1px solid #333;margin-bottom:10px;}'
+        + '.ndoc-sigimg img{max-height:58px;max-width:280px;}'
+        + '.ndoc-field{font-size:12px;margin-bottom:9px;border-bottom:1px solid #ccc;padding-bottom:3px;}';
+    }
+    function buildSignedHtml(){
+      return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Integra NDA - 095-X1</title><style>' + ndaStyleCss() + '</style></head><body>' + g('nda-doc').innerHTML + '</body></html>';
+    }
+    function printNdaDoc(){
+      var w = window.open('', '_blank');
+      if (!w) { showErr('Please allow pop-ups, then click Download again.'); return; }
+      w.document.open(); w.document.write(buildSignedHtml()); w.document.close(); w.focus();
+      setTimeout(function(){ try { w.print(); } catch(e) {} }, 400);
     }
     // Viewer buttons live at end of <body> (added after this script runs) -> use delegated clicks.
     document.addEventListener('click', function (e) {
       var t = e.target && e.target.closest ? e.target.closest('#nda-doc-close-btn, #nda-doc-dl-btn') : null;
       if (!t) return;
       if (t.id === 'nda-doc-close-btn') { var ov = g('nda-doc-overlay'); if (ov) ov.style.display = 'none'; }
-      else { showErr(''); genSignedPdf(function (uri) { if (uri) downloadDataUri(uri, 'Integra-NDA.pdf'); }); }
+      else { printNdaDoc(); }
     });
 
     function ndaFinish(){
@@ -673,24 +684,22 @@ tailwind.config = {
         + '<p style="font-family:JetBrains Mono,monospace;font-size:13.5px;color:#8993a3;line-height:1.7;margin:0 auto 20px;max-width:450px">Your signed agreement has been recorded and a copy emailed to you. Our team has been notified and will be in touch shortly.</p>'
         + '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
         + '<button type="button" id="nda-view-signed" class="nda-btn">View signed NDA</button>'
-        + (_ndaPdfUri ? '<button type="button" id="nda-dl-signed" class="nda-btn nda-btn-primary nda-btn-ready">Download PDF</button>' : '')
+        + '<button type="button" id="nda-dl-signed" class="nda-btn nda-btn-primary nda-btn-ready">Download PDF</button>'
         + '<button type="button" id="nda-done-x" class="nda-btn">Close</button></div></div>';
       var vs = g('nda-view-signed'); if (vs) vs.addEventListener('click', openDocViewer);
-      var ds = g('nda-dl-signed'); if (ds) ds.addEventListener('click', function(){ downloadDataUri(_ndaPdfUri, 'Integra-NDA-signed.pdf'); });
+      var ds = g('nda-dl-signed'); if (ds) ds.addEventListener('click', printNdaDoc);
       var dx = g('nda-done-x'); if (dx) dx.addEventListener('click', closeModal);
     }
     function ndaSend(payload){
-      showErr('Preparing your signed copy...');
+      showErr('Submitting...');
       fillNdaDoc(payload);
+      payload.signedHtml = buildSignedHtml();
       ndaTrack('nda_accept', { method: sigMethod });
       try { localStorage.setItem('_nda_ts', new Date().toISOString()); } catch(e) {}
-      genSignedPdf(function(uri){
-        _ndaPdfUri = uri; if (uri) payload.signedPdf = uri;
-        try {
-          fetch(ENDPOINT, { method:'POST', mode:'no-cors', body: JSON.stringify(payload) })
-            .then(function(){ ndaFinish(); }).catch(function(){ ndaFinish(); });
-        } catch(e) { ndaFinish(); }
-      });
+      try {
+        fetch(ENDPOINT, { method:'POST', mode:'no-cors', body: JSON.stringify(payload) })
+          .then(function(){ ndaFinish(); }).catch(function(){ ndaFinish(); });
+      } catch(e) { ndaFinish(); }
     }
     function submitSignature(){
       if (!cb || !cb.checked) { showErr('Please tick the agreement box first.'); return; }
